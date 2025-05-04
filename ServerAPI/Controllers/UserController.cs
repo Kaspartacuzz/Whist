@@ -20,6 +20,27 @@ public class UserController : ControllerBase
     // Returnerer en liste med brugere hentet fra Userrepository
     public User[] GetAll()
     {
-        return _userRepository.GetAll();
+        return _userRepository.GetAll(); // Kalder Userrepositoryets GetAll-metode
+    }
+    
+    [HttpGet("{id}")]
+    // Returnerer én bruger baseret på det angivne ID
+    public User? GetById(int id)
+    {
+        return _userRepository.GetById(id); // Kalder Userrepositoryets GetById-metode
+    }
+    
+    [HttpPost]
+    // Tilføjer en ny bruger til listen i UserRepository
+    public void Add(User user)
+    {
+        _userRepository.Add(user); // Kalder Userrepositoryets Add-metode
+    }
+    
+    [HttpDelete("{id}")]
+    // Sletter en bruger baseret på det angivne ID
+    public void Delete(int id)
+    {
+        _userRepository.Delete(id); // Kalder Userrepositoryets Delete-metode
     }
 }
