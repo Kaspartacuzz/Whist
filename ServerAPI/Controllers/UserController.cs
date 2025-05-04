@@ -10,7 +10,7 @@ public class UserController : ControllerBase
 {
     // Dependency Injection: vi får et IUserRepository-objekt udefra
     // og gemmer det i en privat variabel, så vi kan bruge det i controllerens metoder
-    private readonly IUserRepository _userRepository;
+    private IUserRepository _userRepository;
     public UserController(IUserRepository userRepository)
     {
         _userRepository = userRepository;

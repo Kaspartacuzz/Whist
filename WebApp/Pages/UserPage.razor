@@ -1,0 +1,33 @@
+@using Core
+
+@page "/users"
+@inject WebApp.Service.IUserService UserService
+
+<h3>Brugere</h3>
+
+@if (users == null)
+{
+    <p>Indlæser brugere...</p>
+}
+else if (users.Length == 0)
+{
+    <p>Ingen brugere fundet.</p>
+}
+else
+{
+    <ul>
+        @foreach (var user in users)
+        {
+            <li>@user.Name (@user.Email)</li>
+        }
+    </ul>
+}
+
+@code {
+    private User[]? users;
+
+    protected override async Task OnInitializedAsync()
+    {
+        users = await UserService.GetAll();
+    }
+}
