@@ -1,10 +1,22 @@
-@using Core
-
 @page "/users"
-@inject WebApp.Service.IUserService UserService
+@using Core
+@using WebApp.Service
+@inject IUserService UserService
 
 <h3>Brugere</h3>
 
+<!-- Formular til at tilføje ny bruger -->
+<EditForm Model="newUser" OnValidSubmit="HandleAddUser">
+    <InputText @bind-Value="newUser.Name" placeholder="Navn" class="form-control mb-2" />
+    <InputText @bind-Value="newUser.Email" placeholder="Email" class="form-control mb-2" />
+    <InputText @bind-Value="newUser.NickName" placeholder="Kaldenavn" class="form-control mb-2" />
+    <InputText @bind-Value="newUser.Password" placeholder="Kodeord" class="form-control mb-2" />
+    <button class="btn btn-primary" type="submit">Tilføj bruger</button>
+</EditForm>
+
+<hr />
+
+<!-- Liste over eksisterende brugere -->
 @if (users == null)
 {
     <p>Indlæser brugere...</p>
@@ -18,16 +30,29 @@ else
     <ul>
         @foreach (var user in users)
         {
-            <li>@user.Name (@user.Email)</li>
+            <li><strong>@user.Name</strong> – @user.Email</li>
         }
     </ul>
 }
 
 @code {
     private User[]? users;
+    private User newUser = new(); // Bruger der udfyldes i formularen
 
     protected override async Task OnInitializedAsync()
     {
+        await LoadUsers();
+    }
+
+    private async Task LoadUsers()
+    {
         users = await UserService.GetAll();
+    }
+
+    private async Task HandleAddUser()
+    {
+        await UserService.Add(newUser);
+        newUser = new(); // Nulstil formularen
+        await LoadUsers(); // Genindlæs listen
     }
 }
