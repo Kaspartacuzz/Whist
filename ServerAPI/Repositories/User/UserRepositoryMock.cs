@@ -5,7 +5,17 @@ namespace ServerAPI.Repositories;
 public class UserRepositoryMock : IUserRepository
 {
     // Intern liste til at gemme brugere midlertidigt (mock-database)
-    private List<User> _users = new();
+    private List<User> _users = new()
+    {
+        new User
+        {
+            Id = 1,
+            Name = "Kasper Test",
+            NickName = "Kasper",
+            Email = "kasper",
+            Password = "123"
+        }
+    };
 
     // Returnerer alle brugere som et array
     public User[] GetAll()

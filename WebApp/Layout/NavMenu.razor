@@ -1,35 +1,53 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">WebApp</a>
-        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
-            <span class="navbar-toggler-icon"></span>
+﻿@using Core
+@using WebApp.Components
+@inject WebApp.Service.AuthServices.IAuthService AuthService
+
+<nav class="navbar navbar-expand-lg navbar-light bg-light px-4">
+    <a class="navbar-brand fw-bold" href="">Kortklub</a>
+
+    <div class="collapse navbar-collapse">
+        <ul class="navbar-nav me-auto">
+            <li class="nav-item"><NavLink class="nav-link" href="">Forside</NavLink></li>
+            <li class="nav-item"><NavLink class="nav-link" href="boder">Bøder</NavLink></li>
+            <li class="nav-item"><NavLink class="nav-link" href="highlights">Highlights</NavLink></li>
+            <li class="nav-item"><NavLink class="nav-link" href="users">Medlemmer</NavLink></li>
+            <li class="nav-item"><NavLink class="nav-link" href="RulesPage">Regler</NavLink></li>
+        </ul>
+
+        <button class="btn btn-outline-primary ms-auto" @onclick="ToggleLogin">
+            @(_currentUser is null ? "Log ind" : "Log ud")
         </button>
     </div>
-</div>
 
-<div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
-    <nav class="flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="users">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> User
-            </NavLink>
-        </div>
-    </nav>
-</div>
+    <LoginComponent @ref="_loginComponent" OnLoginSuccess="HandleLoginSuccess" />
+</nav>
 
 @code {
-    private bool collapseNavMenu = true;
+    private Core.User? _currentUser;
+    private LoginComponent? _loginComponent;
 
-    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
-
-    private void ToggleNavMenu()
+    protected override async Task OnInitializedAsync()
     {
-        collapseNavMenu = !collapseNavMenu;
+        _currentUser = await AuthService.GetCurrentUser();
     }
 
+    private async Task HandleLoginSuccess()
+    {
+        _currentUser = await AuthService.GetCurrentUser();
+        StateHasChanged();
+    }
+
+    private async Task ToggleLogin()
+    {
+        if (_currentUser is null)
+        {
+            _loginComponent?.Show(); // Åbn login-dialog
+        }
+        else
+        {
+            await AuthService.Logout(); // Log ud
+            _currentUser = null;
+            StateHasChanged();
+        }
+    }
 }

@@ -1,0 +1,50 @@
+@using WebApp.Service.AuthServices
+@inject IAuthService AuthService
+
+<div class="modal" tabindex="-1" style="display:@(show ? "block" : "none"); background-color:rgba(0,0,0,0.4);">
+    <div class="modal-dialog">
+        <div class="modal-content p-3">
+            <h5>Log ind</h5>
+            <input class="form-control my-2" placeholder="Email" @bind="email" />
+            <input class="form-control my-2" placeholder="Adgangskode" @bind="password" type="password" />
+            <button class="btn btn-success me-2" @onclick="Login">Log ind</button>
+            <button class="btn btn-secondary" @onclick="Hide">Annuller</button>
+            <p class="text-danger">@errorMessage</p>
+        </div>
+    </div>
+</div>
+
+@code {
+    private bool show = false;
+    private string email = "";
+    private string password = "";
+    private string errorMessage = "";
+
+    [Parameter] public EventCallback OnLoginSuccess { get; set; }
+
+    public void Show()
+    {
+        show = true;
+        StateHasChanged();
+    }
+
+    public void Hide()
+    {
+        show = false;
+        email = password = errorMessage = "";
+    }
+
+    private async Task Login()
+    {
+        var success = await AuthService.Login(email, password);
+        if (success)
+        {
+            await OnLoginSuccess.InvokeAsync();
+            Hide();
+        }
+        else
+        {
+            errorMessage = "Forkert email eller adgangskode";
+        }
+    }
+}
