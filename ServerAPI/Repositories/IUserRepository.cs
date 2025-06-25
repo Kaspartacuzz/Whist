@@ -6,6 +6,6 @@ public interface IUserRepository
 {
     User[] GetAll();
     User? GetById(int id);
-    void Add(User user);
+    void AddUser(User user);
     void Delete(int id);
 }

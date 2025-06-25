@@ -34,7 +34,7 @@ public class UserController : ControllerBase
     // Tilføjer en ny bruger til listen i UserRepository
     public void Add(User user)
     {
-        _userRepository.Add(user); // Kalder Userrepositoryets Add-metode
+        _userRepository.AddUser(user); // Kalder Userrepositoryets Add-metode
     }
     
     [HttpDelete("{id}")]

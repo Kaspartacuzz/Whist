@@ -20,7 +20,7 @@ public class UserRepositoryMock : IUserRepository
     }
 
     // Tilføjer en ny bruger til listen
-    public void Add(User user)
+    public void AddUser(User user)
     {
         _users.Add(user);
     }

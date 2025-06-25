@@ -22,7 +22,7 @@ public class UserServiceMock : IUserService
         return await client.GetFromJsonAsync<User?>($"api/user/{id}");
     }
 
-    public async Task Add(User user)
+    public async Task AddUser(User user)
     { 
         await client.PostAsJsonAsync("api/user", user);       
     }

@@ -6,7 +6,7 @@
 <h3>Brugere</h3>
 
 <!-- Formular til at tilføje ny bruger -->
-<EditForm Model="newUser" OnValidSubmit="HandleAddUser">
+<EditForm Model="newUser" OnValidSubmit="AddUser">
     <InputText @bind-Value="newUser.Name" placeholder="Navn" class="form-control mb-2" />
     <InputText @bind-Value="newUser.Email" placeholder="Email" class="form-control mb-2" />
     <InputText @bind-Value="newUser.NickName" placeholder="Kaldenavn" class="form-control mb-2" />
@@ -49,9 +49,9 @@ else
         users = await UserService.GetAll();
     }
 
-    private async Task HandleAddUser()
+    private async Task AddUser()
     {
-        await UserService.Add(newUser);
+        await UserService.AddUser(newUser);
         newUser = new(); // Nulstil formularen
         await LoadUsers(); // Genindlæs listen
     }
