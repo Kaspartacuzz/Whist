@@ -3,14 +3,19 @@
 @using Core
 @using WebApp.Components
 @using WebApp.Service
+@using WebApp.Service.AuthServices
 @using WebApp.Service.FineServices
 @inject IUserService UserService
 @inject IFineService FineService
+@inject IAuthService AuthService
 
 <h2>Medlemmer</h2>
 
 <!-- Knappen til at åbne opret-bruger-modal -->
-<button @onclick="OpenAddUserModal">Tilføj bruger</button>
+@if (CurrentUser is not null)
+{
+    <button @onclick="OpenAddUserModal">Tilføj bruger</button>
+}
 <AddUserComponent @ref="addUserComponent" OnUserAdded="ReloadUsers" />
 
 <!-- Bokse med info om alle brugere -->
@@ -38,9 +43,11 @@
 @code {
     private List<User> Users = new();
     private AddUserComponent? addUserComponent;
+    private User? CurrentUser;
 
     protected override async Task OnInitializedAsync()
     {
+        CurrentUser = await AuthService.GetCurrentUser();
         await LoadUsers();
     }
 

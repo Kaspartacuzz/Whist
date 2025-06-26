@@ -1,14 +1,17 @@
 ﻿@using Core
 @using WebApp.Components
-@using WebApp.Components
-@inject WebApp.Service.AuthServices.IAuthService AuthService
+@inject Service.AuthServices.IAuthService AuthService
+@inject NavigationManager NavigationManager
 
 <nav class="navbar navbar-expand-lg navbar-light bg-light px-4">
 
     <div class="collapse navbar-collapse">
         <ul class="navbar-nav">
             <li class="nav-item"><NavLink class="nav-link" href="">Forside</NavLink></li>
-            <li class="nav-item"><NavLink class="nav-link" href="FinePage">Bøder</NavLink></li>
+            @if (_currentUser is not null)
+            {
+                <li class="nav-item"><NavLink class="nav-link" href="FinePage">Bøder</NavLink></li>
+            }
             <li class="nav-item"><NavLink class="nav-link" href="HighlightPage">Highlights</NavLink></li>
             <li class="nav-item"><NavLink class="nav-link" href="users">Medlemmer</NavLink></li>
             <li class="nav-item"><NavLink class="nav-link" href="RulesPage">Regler</NavLink></li>
@@ -24,7 +27,7 @@
 </nav>
 
 @code {
-    private Core.User? _currentUser;
+    private User? _currentUser;
     private LoginComponent? _loginComponent;
 
     protected override async Task OnInitializedAsync()
@@ -42,13 +45,13 @@
     {
         if (_currentUser is null)
         {
-            _loginComponent?.Show(); // Åbn login-dialog
+            _loginComponent?.Show();
         }
         else
         {
-            await AuthService.Logout(); // Log ud
+            await AuthService.Logout();
             _currentUser = null;
-            StateHasChanged();
+            NavigationManager.NavigateTo("/");
         }
     }
 }

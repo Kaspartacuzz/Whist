@@ -3,7 +3,6 @@
 @using Core
 @using WebApp.Components
 @using WebApp.Service
-@using WebApp.Service.AuthServices
 @inject Service.HighlightServices.IHighlightService HighlightService
 @inject Service.AuthServices.IAuthService AuthService
 @inject IUserService UserService
@@ -11,7 +10,10 @@
 
 <h2>Highlights</h2>
 
-<button @onclick="OpenAddModal">Opret highlight</button>
+@if (CurrentUser is not null)
+{
+    <button @onclick="OpenAddModal">Opret highlight</button>
+}
 <AddHighlightComponent @ref="addComponent" OnHighlightAdded="LoadHighlights" />
 
 <!-- 🔍 Filtrering -->
@@ -43,8 +45,11 @@
                 <img src="@h.ImageUrl" alt="Highlight billede" width="300" />
             }
             
-            <button @onclick="() => EditHighlight(h)">Redigér</button>
-            <button @onclick="() => ConfirmDelete(h)">Slet</button>
+            @if (CurrentUser is not null)
+            {
+                <button @onclick="() => EditHighlight(h)">Redigér</button>
+                <button @onclick="() => ConfirmDelete(h)">Slet</button>
+            }
         </div>
     }
 </div>
