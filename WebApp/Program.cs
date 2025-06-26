@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using WebApp;
 using WebApp.Service;
 using WebApp.Service.AuthServices;
+using WebApp.Service.FineServices;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 
@@ -14,5 +15,7 @@ builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("http://localhost:5176/") });
 builder.Services.AddScoped<IUserService, UserServiceMock>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IFineService, FineServiceMock>();
+
 
 await builder.Build().RunAsync();

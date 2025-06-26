@@ -1,4 +1,5 @@
 using ServerAPI.Repositories;
+using ServerAPI.Repositories.Fines;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -8,6 +9,8 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddSingleton<IUserRepository, UserRepositoryMock>();
+builder.Services.AddSingleton<IFineRepository, FineRepositoryMock>();
+
 
 builder.Services.AddCors(options =>
 {

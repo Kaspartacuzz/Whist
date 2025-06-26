@@ -1,0 +1,38 @@
+@if (IsVisible)
+{
+    <div class="modal-overlay">
+        <div class="modal-box">
+            <p>@Message</p>
+            <div class="modal-actions">
+                <button @onclick="Confirm">Ja</button>
+                <button @onclick="Cancel">Nej</button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public EventCallback OnConfirm { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+    [Parameter] public string Message { get; set; } = "Er du sikker på at du vil slette dette?";
+
+    public bool IsVisible { get; private set; } = false;
+
+    public void Show()
+    {
+        IsVisible = true;
+        StateHasChanged();
+    }
+
+    private async Task Confirm()
+    {
+        IsVisible = false;
+        await OnConfirm.InvokeAsync();
+    }
+
+    private async Task Cancel()
+    {
+        IsVisible = false;
+        await OnCancel.InvokeAsync();
+    }
+}

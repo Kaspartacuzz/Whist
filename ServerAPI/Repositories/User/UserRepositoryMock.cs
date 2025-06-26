@@ -13,7 +13,8 @@ public class UserRepositoryMock : IUserRepository
             Name = "Kasper Test",
             NickName = "Kasper",
             Email = "kasper",
-            Password = "123"
+            Password = "123",
+            PhoneNumber = "60160042"
         }
     };
 

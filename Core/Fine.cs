@@ -10,5 +10,6 @@ public class Fine
     public DateTime Date { get; set; }          // Hvornår bøden blev givet
     public bool IsPaid { get; set; } = false;   // Om bøden er betalt
     public DateTime? PaidDate { get; set; }     // Dato for betaling, hvis betalt
+    public string FineType { get; set; } = "Almindelig"; // "Almindelig" eller "Stjerne"
     public User? User { get; set; }             // Navigation property til brugerobjektet
 }

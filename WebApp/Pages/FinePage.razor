@@ -1,5 +1,198 @@
 @page "/FinePage"
+@using Core
+@using WebApp.Service
+@using WebApp.Service.AuthServices
+@using WebApp.Service.FineServices
+@using WebApp.Components
+
+@inject IFineService FineService
+@inject IUserService UserService
+@inject IAuthService AuthService
+@inject IJSRuntime JSRuntime
+
+<h2>Bøder</h2>
+
+<!-- 1. Brugerbokse -->
+<div class="user-boxes">
+    @foreach (var user in Users)
+    {
+        var userFines = Fines.Where(f => f.UserId == user.Id).ToList();
+        var total = userFines.Sum(f => f.Amount);
+        var paid = userFines.Where(f => f.IsPaid).Sum(f => f.Amount);
+        var unpaid = total - paid;
+
+        <div class="user-box">
+            <p><strong>@user.NickName</strong></p>
+            <p>I alt: @total kr</p>
+            <p>Betalt: @paid kr</p>
+            <p>Mangler: @unpaid kr</p>
+        </div>
+        
+        @if (LoggedInUser?.Id == user.Id)
+        {
+            <button @onclick="PayNow">Betal nu</button>
+        }
+    }
+</div>
+
+<!-- 2. Samlet oversigt -->
+<div class="overview-box">
+    <p><strong>Bøder i alt:</strong> @TotalAmount kr</p>
+    <p><strong>Mangler at blive betalt:</strong> @TotalUnpaid kr</p>
+</div>
+
+<button @onclick="OpenAddFineModal">Tilføj bøde</button>
+<AddFineComponent @ref="addFineComponent" OnFineAdded="ReloadFines" />
+
+<div class="filter-box">
+    <input placeholder="Søg navn eller kommentar..." @bind-value="searchTerm" @bind-value:event="oninput" />
+
+    <input type="date" @bind-value="filterFromDate" @bind-value:event="oninput" />
+    <input type="date" @bind-value="filterToDate" @bind-value:event="oninput" />
+
+    <input type="number" placeholder="Min beløb" @bind-value="filterMinAmount" @bind-value:event="oninput" />
+    <input type="number" placeholder="Max beløb" @bind-value="filterMaxAmount" @bind-value:event="oninput" />
+</div>
 
 
-<p>Hej</p>
+<!-- 3. Tabel over alle bøder -->
+<div class="fine-table">
+    
+    <table>
+        <thead>
+        <tr>
+            <th>Dato</th>
+            <th>Navn</th>
+            <th>Beløb</th>
+            <th>Kommentar</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var fine in FilteredFines)
+        {
+            var user = Users.FirstOrDefault(u => u.Id == fine.UserId);
+            <tr>
+                <td>@fine.Date.ToShortDateString()</td>
+                <td>@user?.NickName</td>
+                <td>@fine.Amount kr</td>
+                <td>@fine.Comment</td>
+                <td> <button @onclick="() => ConfirmDelete(fine)">Slet</button> </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+    <ConfirmDeleteComponent @ref="confirmComponent"
+                            OnConfirm="DeleteConfirmed"
+                            OnCancel="CancelDelete"
+                            Message="Er du sikker på at du vil slette denne bøde?"/>
+</div>
+
+@code {
+    private List<Fine> Fines = new();
+    private List<User> Users = new();
+    private string searchTerm = "";
+    private User? LoggedInUser;
+    private AddFineComponent? addFineComponent;
+    private ConfirmDeleteComponent? confirmComponent;
+    private Fine? FineToDelete = null;
+    
+    //Filtreringer
+    private DateTime? filterFromDate = null;
+    private DateTime? filterToDate = null;
+    private decimal? filterMinAmount = null;
+    private decimal? filterMaxAmount = null;
+    
+    private decimal TotalAmount => Fines.Sum(f => f.Amount);
+    private decimal TotalUnpaid => Fines.Where(f => !f.IsPaid).Sum(f => f.Amount);
+
+    private IEnumerable<Fine> FilteredFines => Fines
+        .Where(f =>
+            // Søgefelt (navn eller kommentar)
+            (string.IsNullOrWhiteSpace(searchTerm) ||
+             Users.FirstOrDefault(u => u.Id == f.UserId)?.NickName?.ToLower().Contains(searchTerm.ToLower()) == true ||
+             f.Comment.ToLower().Contains(searchTerm.ToLower()))
+
+            // Dato filter
+            && (!filterFromDate.HasValue || f.Date.Date >= filterFromDate.Value.Date)
+            && (!filterToDate.HasValue || f.Date.Date <= filterToDate.Value.Date)
+
+            // Beløb filter
+            && (!filterMinAmount.HasValue || f.Amount >= filterMinAmount.Value)
+            && (!filterMaxAmount.HasValue || f.Amount <= filterMaxAmount.Value)
+        )
+        .OrderByDescending(f => f.Date);
+
+    
+    private decimal UserUnpaid =>
+        LoggedInUser is null
+            ? 0
+            : Fines.Where(f => f.UserId == LoggedInUser.Id && !f.IsPaid).Sum(f => f.Amount);
+
+    protected override async Task OnInitializedAsync()
+    {
+        Fines = (await FineService.GetAll()).ToList();
+        Users = (await UserService.GetAll()).ToList();
+        LoggedInUser = await AuthService.GetCurrentUser();
+    }
+    
+    private async Task OpenAddFineModal()
+    {
+        if (addFineComponent != null)
+            await addFineComponent.Show();
+    }
+
+    private async Task ReloadFines()
+    {
+        Fines = (await FineService.GetAll()).ToList();
+        StateHasChanged();
+    }
+    
+    private async Task PayNow()
+    {
+        if (LoggedInUser is null)
+            return;
+
+        if (UserUnpaid <= 0)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "Du har ingen ubetalte bøder – stærkt gået 💪");
+            return;
+        }
+
+        // URL til mobilepay boks
+        var mobilePayUrl = $"https://qr.mobilepay.dk/box/fe1b90f5-2c86-49be-af9f-8562d21a5b3a/pay-in";
+
+        await JSRuntime.InvokeVoidAsync("open", mobilePayUrl, "_blank");
+
+        // Marker som betalt
+        foreach (var fine in Fines.Where(f => f.UserId == LoggedInUser.Id && !f.IsPaid))
+        {
+            fine.IsPaid = true;
+            fine.PaidDate = DateTime.Now;
+            await FineService.Update(fine);
+        }
+
+        await ReloadFines();
+    }
+    
+    private void ConfirmDelete(Fine fine)
+    {
+        FineToDelete = fine;
+        confirmComponent?.Show();
+    }
+
+    private async Task DeleteConfirmed()
+    {
+        if (FineToDelete is not null)
+        {
+            await FineService.Delete(FineToDelete.Id);
+            FineToDelete = null;
+            await ReloadFines();
+        }
+    }
+
+    private void CancelDelete()
+    {
+        FineToDelete = null;
+    }
+}
 

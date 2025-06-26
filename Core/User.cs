@@ -8,6 +8,7 @@ public class User
     public string NickName { get; set; } = "";                              // Brugerens kaldenavn (visningsnavn)
     public string Email { get; set; } = "";                                 // Brugerens e-mailadresse
     public string Password { get; set; } = "";                              // Brugerens adgangskode (skal senere hashes i rigtig database)
-    public bool IsAdmin { get; set; } = false;                        
+    public bool IsAdmin { get; set; } = false;      
+    public string PhoneNumber { get; set; } = "";
     public ICollection<Fine> Fines { get; set; } = new List<Fine>();        // Liste over bøder
 }

@@ -1,0 +1,72 @@
+@using Core
+@using WebApp.Service
+@using WebApp.Service.AuthServices
+@using WebApp.Service.FineServices
+@inject IFineService FineService
+@inject IAuthService AuthService
+@inject IUserService UserService
+
+@if (IsVisible)
+{
+    <div class="modal-overlay">
+        <div class="modal-box">
+            <h4>Tilføj bøde</h4>
+
+            <div>
+                <label>Bruger:</label><br />
+                <select @bind="NewFine.UserId">
+                    <option value="">-- Vælg bruger --</option>
+                    @foreach (var user in Users)
+                    {
+                        <option value="@user.Id">@user.NickName</option>
+                    }
+                </select>
+            </div>
+
+            <div>
+                <label>Beløb (kr):</label><br />
+                <input type="number" @bind="NewFine.Amount" />
+            </div>
+
+            <div>
+                <label>Kommentar:</label><br />
+                <input @bind="NewFine.Comment" />
+            </div>
+
+            <div class="modal-actions">
+                <button @onclick="Submit">Gem bøde</button>
+                <button @onclick="Close">Annuller</button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public EventCallback OnFineAdded { get; set; }
+
+    private Fine NewFine = new();
+    private List<User> Users = new();
+
+    public bool IsVisible { get; set; } = false;
+
+    public async Task Show()
+    {
+        Users = (await UserService.GetAll()).ToList();
+        IsVisible = true;
+        StateHasChanged();
+    }
+
+    public void Close()
+    {
+        IsVisible = false;
+        StateHasChanged();
+    }
+
+    private async Task Submit()
+    {
+        NewFine.FineType = "Almindelig";
+        await FineService.Add(NewFine);
+        await OnFineAdded.InvokeAsync();
+        Close();
+    }
+}
