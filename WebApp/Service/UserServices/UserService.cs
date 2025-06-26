@@ -3,11 +3,11 @@ using Core;
 
 namespace WebApp.Service;
 
-public class UserServiceMock : IUserService
+public class UserService : IUserService
 {
     private HttpClient client;
     
-    public UserServiceMock(HttpClient client)
+    public UserService(HttpClient client)
     {
         this.client = client;
     }

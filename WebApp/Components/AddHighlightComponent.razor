@@ -1,0 +1,110 @@
+@using Core
+@using Microsoft.AspNetCore.Components.Forms
+
+@inject Service.HighlightServices.IHighlightService HighlightService
+@inject Service.AuthServices.IAuthService AuthService
+
+@if (showModal)
+{
+    <div style="border: 1px solid gray; background: white; padding: 20px; margin-top: 20px;">
+        <h3>@(HighlightToEdit is null ? "Opret nyt highlight" : "Rediger highlight")</h3>
+
+        <input @bind="Title" placeholder="Titel" />
+        <br />
+        <textarea @bind="Description" placeholder="Beskrivelse"></textarea>
+        <br />
+        <InputFile OnChange="HandleImageUpload" accept="image/*" />
+        <br />
+        @if (!string.IsNullOrEmpty(PreviewUrl))
+        {
+            <img src="@PreviewUrl" alt="Preview" width="200" />
+        }
+
+        <div>
+            <button @onclick="CreateHighlight">@(HighlightToEdit is null ? "Opret highlight" : "Gem ændringer")</button>
+            <button @onclick="Close">Annuller</button>
+        </div>
+    </div>
+}
+
+@code {
+    private bool showModal = false;
+    private string Title = "";
+    private string Description = "";
+    private IBrowserFile? UploadedImage;
+    private string? PreviewUrl;
+
+    [Parameter] public EventCallback OnHighlightAdded { get; set; }
+    [Parameter] public Highlight? HighlightToEdit { get; set; }
+
+    public void Show(Highlight? highlight = null)
+    {
+        HighlightToEdit = highlight;
+        if (HighlightToEdit is not null)
+        {
+            Title = HighlightToEdit.Title;
+            Description = HighlightToEdit.Description;
+            PreviewUrl = HighlightToEdit.ImageUrl;
+        }
+        else
+        {
+            Title = "";
+            Description = "";
+            UploadedImage = null;
+            PreviewUrl = null;
+        }
+
+        showModal = true;
+        StateHasChanged();
+    }
+
+    private void Close()
+    {
+        showModal = false;
+        Title = "";
+        Description = "";
+        UploadedImage = null;
+        PreviewUrl = null;
+    }
+
+    private async Task HandleImageUpload(InputFileChangeEventArgs e)
+    {
+        UploadedImage = e.File;
+        var buffer = new byte[UploadedImage.Size];
+        await UploadedImage.OpenReadStream().ReadAsync(buffer);
+        PreviewUrl = $"data:{UploadedImage.ContentType};base64,{Convert.ToBase64String(buffer)}";
+    }
+
+    private async Task CreateHighlight()
+    {
+        var user = await AuthService.GetCurrentUser();
+        if (user is null) return;
+
+        if (HighlightToEdit is not null)
+        {
+            // Redigér eksisterende highlight
+            HighlightToEdit.Title = Title;
+            HighlightToEdit.Description = Description;
+            HighlightToEdit.ImageUrl = PreviewUrl ?? HighlightToEdit.ImageUrl;
+
+            await HighlightService.Update(HighlightToEdit);
+        }
+        else
+        {
+            // Opret nyt highlight
+            var newHighlight = new Highlight
+            {
+                Title = Title,
+                Description = Description,
+                UserId = user.Id,
+                ImageUrl = PreviewUrl ?? "",
+                Date = DateTime.Now
+            };
+
+            await HighlightService.Add(newHighlight);
+        }
+
+        await OnHighlightAdded.InvokeAsync();
+        Close();
+    }
+}

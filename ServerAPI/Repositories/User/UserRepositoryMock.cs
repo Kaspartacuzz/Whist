@@ -11,7 +11,7 @@ public class UserRepositoryMock : IUserRepository
         {
             Id = 1,
             Name = "Kasper Test",
-            NickName = "Kasper",
+            NickName = "DP",
             Email = "kasper",
             Password = "123",
             PhoneNumber = "60160042"

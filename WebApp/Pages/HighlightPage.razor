@@ -1,6 +1,113 @@
 @page "/HighlightPage"
-<h3>HighlightPage</h3>
+
+@using Core
+@using WebApp.Components
+@using WebApp.Service
+@inject Service.HighlightServices.IHighlightService HighlightService
+@inject IUserService UserService
+
+
+<h2>Highlights</h2>
+
+<button @onclick="OpenAddModal">Opret highlight</button>
+<AddHighlightComponent @ref="addComponent" OnHighlightAdded="LoadHighlights" />
+
+<!-- 🔍 Filtrering -->
+<div class="filter-box">
+    <input placeholder="Søg..."@bind="searchTerm" @bind:event="oninput" />
+
+    <input type="date" @bind="filterFrom" />
+    <input type="date" @bind="filterTo" />
+</div>
+
+<!-- 📜 Liste af highlights -->
+<div class="highlight-list">
+    @foreach (var h in FilteredHighlights)
+    {
+        var user = Users.FirstOrDefault(u => u.Id == h.UserId);
+        <div class="highlight-card">
+            <h4>@h.Title (@h.Date.ToShortDateString())</h4>
+            <p>@h.Description</p>
+            <p><em>- @user?.NickName</em></p>
+
+            @if (!string.IsNullOrEmpty(h.ImageUrl))
+            {
+                <img src="@h.ImageUrl" alt="Highlight billede" width="300" />
+            }
+            
+            <button @onclick="() => EditHighlight(h)">Redigér</button>
+            <button @onclick="() => ConfirmDelete(h)">Slet</button>
+        </div>
+    }
+</div>
+
+<ConfirmDeleteComponent @ref="confirmComponent"
+                        OnConfirm="DeleteConfirmed"
+                        OnCancel="CancelDelete"
+                        Message="Er du sikker på at du vil slette dette highlight?" />
 
 @code {
+    private List<Highlight> Highlights = new();
+    private List<User> Users = new();
+    private string searchTerm = "";
+    private DateTime? filterFrom = null;
+    private DateTime? filterTo = null;
+
+    private AddHighlightComponent? addComponent;
+
+    private IEnumerable<Highlight> FilteredHighlights => Highlights
+        .Where(h =>
+            (string.IsNullOrWhiteSpace(searchTerm)
+             || h.Title.ToLower().Contains(searchTerm.ToLower())
+             || h.Description.ToLower().Contains(searchTerm.ToLower()))
+            && (!filterFrom.HasValue || h.Date.Date >= filterFrom.Value.Date)
+            && (!filterTo.HasValue || h.Date.Date <= filterTo.Value.Date)
+        )
+        .OrderByDescending(h => h.Date);
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadHighlights();
+    }
+
+    private async Task LoadHighlights()
+    {
+        Highlights = (await HighlightService.GetAll()).ToList();
+        Users = (await UserService.GetAll()).ToList();
+    }
+
+    private async Task OpenAddModal()
+    {
+        if (addComponent is not null)
+            addComponent.Show();
+    }
     
+    private ConfirmDeleteComponent? confirmComponent;
+    private Highlight? HighlightToDelete;
+
+    private void ConfirmDelete(Highlight highlight)
+    {
+        HighlightToDelete = highlight;
+        confirmComponent?.Show();
+    }
+
+    private async Task DeleteConfirmed()
+    {
+        if (HighlightToDelete is not null)
+        {
+            await HighlightService.Delete(HighlightToDelete.Id);
+            HighlightToDelete = null;
+            await LoadHighlights(); // Genindlæs
+        }
+    }
+
+    private void CancelDelete()
+    {
+        HighlightToDelete = null;
+    }
+    
+    private async Task EditHighlight(Highlight h)
+    {
+        addComponent?.Show(h);
+    }
 }

@@ -5,6 +5,7 @@ using WebApp;
 using WebApp.Service;
 using WebApp.Service.AuthServices;
 using WebApp.Service.FineServices;
+using WebApp.Service.HighlightServices;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 
@@ -13,9 +14,11 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 builder.Services.AddBlazoredLocalStorage();
 
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("http://localhost:5176/") });
-builder.Services.AddScoped<IUserService, UserServiceMock>();
+builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IFineService, FineServiceMock>();
+builder.Services.AddScoped<IHighlightService, HighlightService>();
+
 
 
 await builder.Build().RunAsync();

@@ -1,5 +1,6 @@
 using ServerAPI.Repositories;
 using ServerAPI.Repositories.Fines;
+using ServerAPI.Repositories.Highlights;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,7 +11,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddSingleton<IUserRepository, UserRepositoryMock>();
 builder.Services.AddSingleton<IFineRepository, FineRepositoryMock>();
-
+builder.Services.AddSingleton<IHighlightRepository, HighlightRepositoryMock>();
 
 builder.Services.AddCors(options =>
 {
