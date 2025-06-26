@@ -43,4 +43,18 @@ public class UserController : ControllerBase
     {
         _userRepository.Delete(id); // Kalder Userrepositoryets Delete-metode
     }
+
+    [HttpPut("{id}")]
+    public async Task<IActionResult> UpdateUser(int id, [FromBody] User updatedUser)
+    {
+        if (id != updatedUser.Id)
+            return BadRequest("ID i URL og body matcher ikke");
+
+        var existingUser = _userRepository.GetById(id);
+        if (existingUser == null)
+            return NotFound("Bruger ikke fundet");
+
+        await _userRepository.UpdateUser(updatedUser);
+        return NoContent();
+    }
 }

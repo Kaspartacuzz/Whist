@@ -8,4 +8,5 @@ public interface IUserRepository
     User? GetById(int id);
     void AddUser(User user);
     void Delete(int id);
+    Task UpdateUser(User user);
 }

@@ -5,7 +5,7 @@
 @if (showModal)
 {
     <div style="border: 1px solid gray; background: white; padding: 20px; margin-top: 20px;">
-        <h3>Opret ny bruger</h3>
+        <h3>@(UserToEdit is null ? "Opret ny bruger" : "Rediger bruger")</h3>
 
         <input @bind="Name" placeholder="Fulde navn" />
         <br />
@@ -29,7 +29,7 @@
         }
 
         <div style="margin-top: 10px;">
-            <button @onclick="CreateUser">Opret bruger</button>
+            <button @onclick="CreateUser">@(UserToEdit is null ? "Opret bruger" : "Gem ændringer")</button>
             <button @onclick="Close">Annuller</button>
         </div>
     </div>
@@ -46,13 +46,43 @@
     private string FunFact = "";
     private IBrowserFile? UploadedImage;
     private string? ImagePreview;
+    private User? UserToEdit = null;
+    private string ImageUrl = "";
 
     [Parameter] public EventCallback OnUserAdded { get; set; }
 
-    public void Show()
+    public Task Show(User? userToEdit = null)
     {
+        UserToEdit = userToEdit;
+
+        if (userToEdit is not null)
+        {
+            // Udfyld formular med eksisterende brugerdata
+            Name = userToEdit.Name;
+            Email = userToEdit.Email;
+            NickName = userToEdit.NickName;
+            Password = userToEdit.Password;
+            PhoneNumber = userToEdit.PhoneNumber;
+            Description = userToEdit.Description;
+            FunFact = userToEdit.FunFact;
+            ImageUrl = userToEdit.ImageUrl;
+        }
+        else
+        {
+            // Nulstil felter
+            Name = "";
+            Email = "";
+            NickName = "";
+            Password = "";
+            PhoneNumber = "";
+            Description = "";
+            FunFact = "";
+            ImageUrl = "";
+        }
+
         showModal = true;
         StateHasChanged();
+        return Task.CompletedTask;
     }
 
     private void Close()
@@ -70,22 +100,41 @@
         await UploadedImage.OpenReadStream().ReadAsync(buffer);
         ImagePreview = $"data:{UploadedImage.ContentType};base64,{Convert.ToBase64String(buffer)}";
     }
-
+    
     private async Task CreateUser()
     {
-        var newUser = new User
+        if (UserToEdit is not null)
         {
-            Name = Name,
-            NickName = NickName,
-            Email = Email,
-            Password = Password,
-            PhoneNumber = PhoneNumber,
-            Description = Description,
-            FunFact = FunFact,
-            ImageUrl = ImagePreview ?? ""
-        };
+            // Rediger eksisterende bruger
+            UserToEdit.Name = Name;
+            UserToEdit.NickName = NickName;
+            UserToEdit.Email = Email;
+            UserToEdit.Password = Password;
+            UserToEdit.PhoneNumber = PhoneNumber;
+            UserToEdit.Description = Description;
+            UserToEdit.FunFact = FunFact;
+            UserToEdit.ImageUrl = ImagePreview ?? UserToEdit.ImageUrl;
 
-        await UserService.AddUser(newUser);
+            await UserService.Update(UserToEdit);
+        }
+        else
+        {
+            // Opret ny bruger
+            var newUser = new User
+            {
+                Name = Name,
+                NickName = NickName,
+                Email = Email,
+                Password = Password,
+                PhoneNumber = PhoneNumber,
+                Description = Description,
+                FunFact = FunFact,
+                ImageUrl = ImagePreview ?? ""
+            };
+
+            await UserService.AddUser(newUser);
+        }
+
         await OnUserAdded.InvokeAsync();
         Close();
     }

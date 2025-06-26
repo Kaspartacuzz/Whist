@@ -76,7 +76,10 @@
                 <td>@user?.NickName</td>
                 <td>@fine.Amount kr</td>
                 <td>@fine.Comment</td>
-                <td> <button @onclick="() => ConfirmDelete(fine)">Slet</button> </td>
+                <td>
+                    <button @onclick="() => EditFine(fine)">Rediger</button>
+                    <button @onclick="() => ConfirmDelete(fine)">Slet</button>
+                </td>
             </tr>
         }
         </tbody>
@@ -189,9 +192,18 @@
         }
     }
 
+
     private void CancelDelete()
     {
         FineToDelete = null;
+    }
+    
+    private async Task EditFine(Fine fine)
+    {
+        FineToDelete = null; // 🧹 vigtig!
+    
+        if (addFineComponent is not null)
+            await addFineComponent.Show(fine);
     }
 }
 

@@ -45,4 +45,9 @@ public class UserRepositoryMock : IUserRepository
             _users.Remove(user);
         }
     }
+
+    public Task UpdateUser(User user)
+    {
+        throw new NotImplementedException();
+    }
 }

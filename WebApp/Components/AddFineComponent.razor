@@ -1,72 +1,108 @@
 @using Core
 @using WebApp.Service
-@using WebApp.Service.AuthServices
-@using WebApp.Service.FineServices
-@inject IFineService FineService
-@inject IAuthService AuthService
 @inject IUserService UserService
+@inject Service.FineServices.IFineService FineService
 
-@if (IsVisible)
+@if (showModal)
 {
-    <div class="modal-overlay">
-        <div class="modal-box">
-            <h4>Tilføj bøde</h4>
+    <div style="border: 1px solid gray; background: white; padding: 20px; margin-top: 20px;">
+        <h3>@(FineToEdit is null ? "Opret ny bøde" : "Rediger bøde")</h3>
 
-            <div>
-                <label>Bruger:</label><br />
-                <select @bind="NewFine.UserId">
-                    <option value="">-- Vælg bruger --</option>
-                    @foreach (var user in Users)
-                    {
-                        <option value="@user.Id">@user.NickName</option>
-                    }
-                </select>
-            </div>
+        @if (FineToEdit is null)
+        {
+            <select @bind="SelectedUserId">
+                <option value="0">-- Vælg bruger --</option>
+                @foreach (var user in Users)
+                {
+                    <option value="@user.Id">@user.NickName</option>
+                }
+            </select>
+        }
 
-            <div>
-                <label>Beløb (kr):</label><br />
-                <input type="number" @bind="NewFine.Amount" />
-            </div>
+        <input type="number" @bind="Amount" placeholder="Beløb" />
+        <input type="text" @bind="Comment" placeholder="Kommentar" />
 
-            <div>
-                <label>Kommentar:</label><br />
-                <input @bind="NewFine.Comment" />
-            </div>
-
-            <div class="modal-actions">
-                <button @onclick="Submit">Gem bøde</button>
-                <button @onclick="Close">Annuller</button>
-            </div>
+        <div>
+            <button @onclick="Submit">@(FineToEdit is null ? "Tilføj bøde" : "Gem ændringer")</button>
+            <button @onclick="Close">Annuller</button>
         </div>
     </div>
 }
 
 @code {
+    private bool showModal = false;
+    private int SelectedUserId = 0;
+    private decimal Amount = 0;
+    private string Comment = "";
+    private Fine? FineToEdit = null;
+
     [Parameter] public EventCallback OnFineAdded { get; set; }
+    [Parameter] public List<User> Users { get; set; } = new();
 
-    private Fine NewFine = new();
-    private List<User> Users = new();
-
-    public bool IsVisible { get; set; } = false;
-
-    public async Task Show()
+    public async Task Show(Fine? fine = null)
     {
-        Users = (await UserService.GetAll()).ToList();
-        IsVisible = true;
+        FineToEdit = fine;
+        await LoadUsers();
+
+        if (FineToEdit is not null)
+        {
+            SelectedUserId = fine.UserId;
+            Amount = fine.Amount;
+            Comment = fine.Comment;
+        }
+        else
+        {
+            SelectedUserId = 0;
+            Amount = 0;
+            Comment = "";
+        }
+
+        showModal = true;
         StateHasChanged();
     }
 
-    public void Close()
+    private void Close()
     {
-        IsVisible = false;
-        StateHasChanged();
+        showModal = false;
+        SelectedUserId = 0;
+        Amount = 0;
+        Comment = "";
+        FineToEdit = null;
     }
 
     private async Task Submit()
     {
-        NewFine.FineType = "Almindelig";
-        await FineService.Add(NewFine);
+        if (SelectedUserId <= 0 || Amount <= 0)
+            return;
+
+        if (FineToEdit is not null)
+        {
+            FineToEdit.UserId = SelectedUserId;
+            FineToEdit.Amount = Amount;
+            FineToEdit.Comment = Comment;
+
+            await FineService.Update(FineToEdit);
+        }
+        else
+        {
+            var fine = new Fine
+            {
+                UserId = SelectedUserId,
+                Amount = Amount,
+                Comment = Comment,
+                Date = DateTime.Now,
+                IsPaid = false
+            };
+
+            await FineService.Add(fine);
+        }
+
         await OnFineAdded.InvokeAsync();
         Close();
+    }
+    
+    private async Task LoadUsers()
+    {
+        Users = (await UserService.GetAll()).ToList();
     }
 }

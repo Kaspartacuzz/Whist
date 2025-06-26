@@ -17,8 +17,11 @@ public class UserRepositoryMongoDB : IUserRepository
 
     public User[] GetAll() => _users.Find(_ => true).ToList().ToArray();
 
-    public User? GetById(int id) => _users.Find(u => u.Id == id).FirstOrDefault();
-
+    public User GetById(int id)
+    {
+        var filter = Builders<User>.Filter.Eq(u => u.Id, id);
+        return _users.Find(filter).FirstOrDefault();
+    }
     public void AddUser(User user)
     {
         user.Id = _users.AsQueryable().Any() ? _users.AsQueryable().Max(u => u.Id) + 1 : 1;
@@ -28,5 +31,11 @@ public class UserRepositoryMongoDB : IUserRepository
     public void Delete(int id)
     {
         _users.DeleteOne(u => u.Id == id);
+    }
+    
+    public async Task UpdateUser(User user)
+    {
+        var filter = Builders<User>.Filter.Eq(u => u.Id, user.Id);
+        await _users.ReplaceOneAsync(filter, user);
     }
 }

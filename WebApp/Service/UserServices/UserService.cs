@@ -31,4 +31,9 @@ public class UserService : IUserService
     {
         await client.DeleteAsync($"api/user/{id}");       
     }
+    
+    public async Task Update(User user)
+    {
+        await client.PutAsJsonAsync($"api/user/{user.Id}", user);
+    }
 }

@@ -36,14 +36,27 @@
             <p><strong>Beskrivelse:</strong> @user.Description</p>
             <p><strong>Fun fact:</strong> @user.FunFact</p>
             <p><strong>Samlet antal bøder:</strong> @totalFines kr</p>
+            
+            @if (CurrentUser is not null)
+            {
+                <button @onclick="() => EditUser(user)">Rediger</button>
+                <button @onclick="() => ConfirmDeleteUser(user)">Slet</button>
+            }
         </div>
     }
 </div>
+
+<ConfirmDeleteComponent @ref="confirmDeleteComponent"
+                        OnConfirm="DeleteConfirmed"
+                        OnCancel="CancelDelete"
+                        Message="Er du sikker på at du vil slette denne bruger?" />
 
 @code {
     private List<User> Users = new();
     private AddUserComponent? addUserComponent;
     private User? CurrentUser;
+    private User? UserToDelete = null;
+    private ConfirmDeleteComponent? confirmDeleteComponent;
 
     protected override async Task OnInitializedAsync()
     {
@@ -65,5 +78,32 @@
     private void OpenAddUserModal()
     {
         addUserComponent?.Show();
+    }
+    
+    private async Task EditUser(User user)
+    {
+        if (addUserComponent is not null)
+            await addUserComponent.Show(user);
+    }
+
+    private void ConfirmDeleteUser(User user)
+    {
+        UserToDelete = user;
+        confirmDeleteComponent?.Show();
+    }
+
+    private async Task DeleteConfirmed()
+    {
+        if (UserToDelete is not null)
+        {
+            await UserService.Delete(UserToDelete.Id);
+            UserToDelete = null;
+            await ReloadUsers();
+        }
+    }
+
+    private void CancelDelete()
+    {
+        UserToDelete = null;
     }
 }

@@ -1,4 +1,9 @@
 ﻿@page "/"
+@using WebApp.Service
+
+@inject IUserService UserService
+@inject Service.HighlightServices.IHighlightService HighlightService
+
 
 <div class="text-center mt-4">
 
@@ -27,8 +32,61 @@
 
     </div>
 
-    <!-- Billede af jer fire -->
-    <img src="images/vennegruppe.jpg" alt="Klubmedlemmer" class="img-fluid rounded-circle shadow mt-5"
-         style="max-width: 300px; width: 100%; height: auto;" />
+    <!-- Diasshow -->
+    @if (CurrentImage is not null)
+    {
+        <img src="@CurrentImage" class="img-fluid rounded-circle shadow mt-5 @fadeClass"
+             style="max-width: 300px; width: 100%; height: auto;" />
+    }
+    else
+    {
+        <p>Ingen billeder endnu...</p>
+    }
 
 </div>
+
+@code {
+    private List<string> ImageUrls = new();
+    private int currentImageIndex = 0;
+    private string? CurrentImage => ImageUrls.Count > 0 ? ImageUrls[currentImageIndex] : null;
+    private string fadeClass = "fade-image";
+
+    private System.Timers.Timer? timer;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var users = await UserService.GetAll();
+        var highlights = await HighlightService.GetAll();
+
+        ImageUrls = users
+            .Where(u => !string.IsNullOrEmpty(u.ImageUrl))
+            .Select(u => u.ImageUrl!)
+            .ToList();
+
+        ImageUrls.AddRange(highlights
+            .Where(h => !string.IsNullOrEmpty(h.ImageUrl))
+            .Select(h => h.ImageUrl!));
+
+        timer = new System.Timers.Timer(3000); // Skift hvert 3. sekund
+        timer.Elapsed += (s, e) =>
+        {
+            fadeClass = "";
+            InvokeAsync(StateHasChanged);
+
+            Task.Delay(100).ContinueWith(_ =>
+            {
+                currentImageIndex = (currentImageIndex + 1) % ImageUrls.Count;
+                fadeClass = "fade-image";
+                InvokeAsync(StateHasChanged);
+            });
+        };
+
+        timer.Start(); // ✅ Dette aktiverer billedskiftet!
+    }
+
+    public void Dispose()
+    {
+        timer?.Stop();
+        timer?.Dispose();
+    }
+}

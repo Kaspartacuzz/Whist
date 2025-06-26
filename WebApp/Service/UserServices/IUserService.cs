@@ -9,4 +9,5 @@ public interface IUserService
     Task<User?> GetById(int id);      // Henter én bruger baseret på ID
     Task AddUser(User user);              // Tilføjer en ny bruger
     Task Delete(int id);              // Sletter en bruger baseret på ID
+    Task Update (User user);
 }
