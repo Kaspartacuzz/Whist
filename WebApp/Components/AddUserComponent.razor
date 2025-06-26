@@ -1,0 +1,92 @@
+@using Core
+@using Microsoft.AspNetCore.Components.Forms
+@inject Service.IUserService UserService
+
+@if (showModal)
+{
+    <div style="border: 1px solid gray; background: white; padding: 20px; margin-top: 20px;">
+        <h3>Opret ny bruger</h3>
+
+        <input @bind="Name" placeholder="Fulde navn" />
+        <br />
+        <input @bind="NickName" placeholder="Kaldenavn" />
+        <br />
+        <input @bind="Email" placeholder="Email" />
+        <br />
+        <input @bind="Password" placeholder="Kodeord" type="password" />
+        <br />
+        <input @bind="PhoneNumber" placeholder="Telefonnummer" />
+        <br />
+        <textarea @bind="Description" placeholder="Beskrivelse"></textarea>
+        <br />
+        <input @bind="FunFact" placeholder="Fun fact" />
+        <br />
+        <InputFile OnChange="HandleImageUpload" accept="image/*" />
+        <br />
+        @if (!string.IsNullOrEmpty(ImagePreview))
+        {
+            <img src="@ImagePreview" alt="Preview" width="150" />
+        }
+
+        <div style="margin-top: 10px;">
+            <button @onclick="CreateUser">Opret bruger</button>
+            <button @onclick="Close">Annuller</button>
+        </div>
+    </div>
+}
+
+@code {
+    private bool showModal = false;
+    private string Name = "";
+    private string NickName = "";
+    private string Email = "";
+    private string Password = "";
+    private string PhoneNumber = "";
+    private string Description = "";
+    private string FunFact = "";
+    private IBrowserFile? UploadedImage;
+    private string? ImagePreview;
+
+    [Parameter] public EventCallback OnUserAdded { get; set; }
+
+    public void Show()
+    {
+        showModal = true;
+        StateHasChanged();
+    }
+
+    private void Close()
+    {
+        showModal = false;
+        Name = NickName = Email = Password = PhoneNumber = Description = FunFact = "";
+        UploadedImage = null;
+        ImagePreview = null;
+    }
+
+    private async Task HandleImageUpload(InputFileChangeEventArgs e)
+    {
+        UploadedImage = e.File;
+        var buffer = new byte[UploadedImage.Size];
+        await UploadedImage.OpenReadStream().ReadAsync(buffer);
+        ImagePreview = $"data:{UploadedImage.ContentType};base64,{Convert.ToBase64String(buffer)}";
+    }
+
+    private async Task CreateUser()
+    {
+        var newUser = new User
+        {
+            Name = Name,
+            NickName = NickName,
+            Email = Email,
+            Password = Password,
+            PhoneNumber = PhoneNumber,
+            Description = Description,
+            FunFact = FunFact,
+            ImageUrl = ImagePreview ?? ""
+        };
+
+        await UserService.AddUser(newUser);
+        await OnUserAdded.InvokeAsync();
+        Close();
+    }
+}

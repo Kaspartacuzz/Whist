@@ -9,6 +9,9 @@ public class User
     public string Email { get; set; } = "";                                 // Brugerens e-mailadresse
     public string Password { get; set; } = "";                              // Brugerens adgangskode (skal senere hashes i rigtig database)
     public bool IsAdmin { get; set; } = false;      
-    public string PhoneNumber { get; set; } = "";
+    public string PhoneNumber { get; set; } = "";                           // Brugerens telefonnummer - bruges til mobilepay
+    public string Description { get; set; } = "";                           // Lang tekst om personen
+    public string FunFact { get; set; } = "";                               // Sjov info
+    public string ImageUrl { get; set; } = "";                              // Profilbillede
     public ICollection<Fine> Fines { get; set; } = new List<Fine>();        // Liste over bøder
 }

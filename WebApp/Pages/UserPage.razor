@@ -1,43 +1,43 @@
 @page "/users"
+
 @using Core
+@using WebApp.Components
 @using WebApp.Service
+@using WebApp.Service.FineServices
 @inject IUserService UserService
+@inject IFineService FineService
 
-<h3>Brugere</h3>
+<h2>Medlemmer</h2>
 
-<!-- Formular til at tilføje ny bruger -->
-<EditForm Model="newUser" OnValidSubmit="AddUser">
-    <InputText @bind-Value="newUser.Name" placeholder="Navn" class="form-control mb-2" />
-    <InputText @bind-Value="newUser.Email" placeholder="Email" class="form-control mb-2" />
-    <InputText @bind-Value="newUser.NickName" placeholder="Kaldenavn" class="form-control mb-2" />
-    <InputText @bind-Value="newUser.Password" placeholder="Kodeord" class="form-control mb-2" />
-    <button class="btn btn-primary" type="submit">Tilføj bruger</button>
-</EditForm>
+<!-- Knappen til at åbne opret-bruger-modal -->
+<button @onclick="OpenAddUserModal">Tilføj bruger</button>
+<AddUserComponent @ref="addUserComponent" OnUserAdded="ReloadUsers" />
 
-<hr />
+<!-- Bokse med info om alle brugere -->
+<div class="user-boxes">
+    @foreach (var user in Users)
+    {
+        var totalFines = user.Fines?.Sum(f => f.Amount) ?? 0;
 
-<!-- Liste over eksisterende brugere -->
-@if (users == null)
-{
-    <p>Indlæser brugere...</p>
-}
-else if (users.Length == 0)
-{
-    <p>Ingen brugere fundet.</p>
-}
-else
-{
-    <ul>
-        @foreach (var user in users)
-        {
-            <li><strong>@user.Name</strong> – @user.Email</li>
-        }
-    </ul>
-}
+        <div class="user-box" style="border: 1px solid gray; padding: 15px; margin-bottom: 10px;">
+            <h3>@user.NickName</h3>
+
+            @if (!string.IsNullOrEmpty(user.ImageUrl))
+            {
+                <img src="@user.ImageUrl" alt="Billede af @user.NickName" width="150" />
+            }
+
+            <p><strong>Fulde navn:</strong> @user.Name</p>
+            <p><strong>Beskrivelse:</strong> @user.Description</p>
+            <p><strong>Fun fact:</strong> @user.FunFact</p>
+            <p><strong>Samlet antal bøder:</strong> @totalFines kr</p>
+        </div>
+    }
+</div>
 
 @code {
-    private User[]? users;
-    private User newUser = new(); // Bruger der udfyldes i formularen
+    private List<User> Users = new();
+    private AddUserComponent? addUserComponent;
 
     protected override async Task OnInitializedAsync()
     {
@@ -46,13 +46,17 @@ else
 
     private async Task LoadUsers()
     {
-        users = await UserService.GetAll();
+        Users = (await UserService.GetAll()).ToList();
     }
 
-    private async Task AddUser()
+    private async Task ReloadUsers()
     {
-        await UserService.AddUser(newUser);
-        newUser = new(); // Nulstil formularen
-        await LoadUsers(); // Genindlæs listen
+        await LoadUsers();
+        StateHasChanged();
+    }
+
+    private void OpenAddUserModal()
+    {
+        addUserComponent?.Show();
     }
 }
