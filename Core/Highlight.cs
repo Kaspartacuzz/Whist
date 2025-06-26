@@ -9,5 +9,5 @@ public class Highlight
     public DateTime Date { get; set; } = DateTime.Today;    // Dato for highlightet
     public string? ImageUrl { get; set; }                   // Billede uploadet eller taget
     public int UserId { get; set; }                         // ID på den bruger, highlightet tilhører
-    public User? User { get; set; }                         // Navigation property til brugerobjektet
+    public bool IsPrivate { get; set; } = false;            // Bruges til at gøre highlights private
 }  

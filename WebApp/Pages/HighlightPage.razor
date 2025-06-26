@@ -3,7 +3,9 @@
 @using Core
 @using WebApp.Components
 @using WebApp.Service
+@using WebApp.Service.AuthServices
 @inject Service.HighlightServices.IHighlightService HighlightService
+@inject Service.AuthServices.IAuthService AuthService
 @inject IUserService UserService
 
 
@@ -25,10 +27,16 @@
     @foreach (var h in FilteredHighlights)
     {
         var user = Users.FirstOrDefault(u => u.Id == h.UserId);
+        
+        if (h.IsPrivate && CurrentUser is null)
+        {
+            continue;
+        }
+        
         <div class="highlight-card">
             <h4>@h.Title (@h.Date.ToShortDateString())</h4>
             <p>@h.Description</p>
-            <p><em>- @user?.NickName</em></p>
+            <p><em>@user?.NickName</em></p>
 
             @if (!string.IsNullOrEmpty(h.ImageUrl))
             {
@@ -52,6 +60,7 @@
     private string searchTerm = "";
     private DateTime? filterFrom = null;
     private DateTime? filterTo = null;
+    private User? CurrentUser;
 
     private AddHighlightComponent? addComponent;
 
@@ -67,6 +76,7 @@
 
     protected override async Task OnInitializedAsync()
     {
+        CurrentUser = await AuthService.GetCurrentUser();
         await LoadHighlights();
     }
 

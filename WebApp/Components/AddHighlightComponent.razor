@@ -21,6 +21,12 @@
         }
 
         <div>
+            <br />
+            <label>
+                <input type="checkbox" @bind="IsPrivate" />
+                Gør privat (kun synlig for medlemmer)
+            </label>
+            <br />
             <button @onclick="CreateHighlight">@(HighlightToEdit is null ? "Opret highlight" : "Gem ændringer")</button>
             <button @onclick="Close">Annuller</button>
         </div>
@@ -33,6 +39,7 @@
     private string Description = "";
     private IBrowserFile? UploadedImage;
     private string? PreviewUrl;
+    private bool IsPrivate = false;
 
     [Parameter] public EventCallback OnHighlightAdded { get; set; }
     [Parameter] public Highlight? HighlightToEdit { get; set; }
@@ -86,6 +93,7 @@
             HighlightToEdit.Title = Title;
             HighlightToEdit.Description = Description;
             HighlightToEdit.ImageUrl = PreviewUrl ?? HighlightToEdit.ImageUrl;
+            IsPrivate = IsPrivate;
 
             await HighlightService.Update(HighlightToEdit);
         }
@@ -98,7 +106,8 @@
                 Description = Description,
                 UserId = user.Id,
                 ImageUrl = PreviewUrl ?? "",
-                Date = DateTime.Now
+                Date = DateTime.Now,
+                IsPrivate = IsPrivate
             };
 
             await HighlightService.Add(newHighlight);

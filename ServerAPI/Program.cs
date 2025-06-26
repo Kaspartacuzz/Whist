@@ -9,9 +9,9 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddSingleton<IUserRepository, UserRepositoryMock>();
-builder.Services.AddSingleton<IFineRepository, FineRepositoryMock>();
-builder.Services.AddSingleton<IHighlightRepository, HighlightRepositoryMock>();
+builder.Services.AddSingleton<IUserRepository, UserRepositoryMongoDB>();
+builder.Services.AddSingleton<IFineRepository, FineRepositoryMongoDB>();
+builder.Services.AddSingleton<IHighlightRepository, HighlightRepositoryMongoDB>();
 
 builder.Services.AddCors(options =>
 {

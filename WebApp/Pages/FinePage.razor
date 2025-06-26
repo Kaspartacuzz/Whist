@@ -28,7 +28,7 @@
             <p>Mangler: @unpaid kr</p>
         </div>
         
-        @if (LoggedInUser?.Id == user.Id)
+        @if (CurrentUser?.Id == user.Id)
         {
             <button @onclick="PayNow">Betal nu</button>
         }
@@ -91,7 +91,7 @@
     private List<Fine> Fines = new();
     private List<User> Users = new();
     private string searchTerm = "";
-    private User? LoggedInUser;
+    private User? CurrentUser;
     private AddFineComponent? addFineComponent;
     private ConfirmDeleteComponent? confirmComponent;
     private Fine? FineToDelete = null;
@@ -124,15 +124,15 @@
 
     
     private decimal UserUnpaid =>
-        LoggedInUser is null
+        CurrentUser is null
             ? 0
-            : Fines.Where(f => f.UserId == LoggedInUser.Id && !f.IsPaid).Sum(f => f.Amount);
+            : Fines.Where(f => f.UserId == CurrentUser.Id && !f.IsPaid).Sum(f => f.Amount);
 
     protected override async Task OnInitializedAsync()
     {
         Fines = (await FineService.GetAll()).ToList();
         Users = (await UserService.GetAll()).ToList();
-        LoggedInUser = await AuthService.GetCurrentUser();
+        CurrentUser = await AuthService.GetCurrentUser();
     }
     
     private async Task OpenAddFineModal()
@@ -149,7 +149,7 @@
     
     private async Task PayNow()
     {
-        if (LoggedInUser is null)
+        if (CurrentUser is null)
             return;
 
         if (UserUnpaid <= 0)
@@ -164,10 +164,9 @@
         await JSRuntime.InvokeVoidAsync("open", mobilePayUrl, "_blank");
 
         // Marker som betalt
-        foreach (var fine in Fines.Where(f => f.UserId == LoggedInUser.Id && !f.IsPaid))
+        foreach (var fine in Fines.Where(f => f.UserId == CurrentUser.Id && !f.IsPaid))
         {
             fine.IsPaid = true;
-            fine.PaidDate = DateTime.Now;
             await FineService.Update(fine);
         }
 
