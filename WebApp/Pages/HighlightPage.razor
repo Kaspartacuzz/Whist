@@ -7,49 +7,100 @@
 @inject Service.AuthServices.IAuthService AuthService
 @inject IUserService UserService
 
+<div class="page-header">
+    <h2>Highlights</h2>
+    @if (CurrentUser is not null)
+    {
+        <button class="btn-add" @onclick="OpenAddModal">
+            + Tilføj highlight
+        </button>
+    }
+</div>
 
-<h2>Highlights</h2>
-
-@if (CurrentUser is not null)
-{
-    <button @onclick="OpenAddModal">Opret highlight</button>
-}
 <AddHighlightComponent @ref="addComponent" OnHighlightAdded="LoadHighlights" />
 
 <!-- 🔍 Filtrering -->
 <div class="filter-box">
-    <input placeholder="Søg..."@bind="searchTerm" @bind:event="oninput" />
+    <div class="filter-item search">
+        <span class="icon-search">🔍</span>
+        <input placeholder="Søg i highlights..."
+               @bind="searchTerm"
+               @bind:event="oninput" />
+    </div>
 
-    <input type="date" @bind="filterFrom" />
-    <input type="date" @bind="filterTo" />
+    <div class="filter-item date">
+        <span class="icon-calendar">📅</span>
+        <input type="date"
+               @bind="filterFrom" />
+    </div>
+
+    <div class="filter-item date">
+        <span class="icon-calendar">📅</span>
+        <input type="date"
+               @bind="filterTo" />
+    </div>
 </div>
 
 <!-- 📜 Liste af highlights -->
 <div class="highlight-list">
     @foreach (var h in FilteredHighlights)
     {
-        var user = Users.FirstOrDefault(u => u.Id == h.UserId);
-        
         if (h.IsPrivate && CurrentUser is null)
         {
             continue;
         }
-        
-        <div class="highlight-card">
-            <h4>@h.Title (@h.Date.ToShortDateString())</h4>
-            <p>@h.Description</p>
-            <p><em>@user?.NickName</em></p>
+        var user = Users.FirstOrDefault(u => u.Id == h.UserId);
 
-            @if (!string.IsNullOrEmpty(h.ImageUrl))
-            {
-                <img src="@h.ImageUrl" alt="Highlight billede" width="300" />
-            }
-            
-            @if (CurrentUser is not null)
-            {
-                <button @onclick="() => EditHighlight(h)">Redigér</button>
-                <button @onclick="() => ConfirmDelete(h)">Slet</button>
-            }
+        <div class="highlight-card">
+            <div class="card-image">
+                @if (!string.IsNullOrEmpty(h.ImageUrl))
+                {
+                    <img src="@h.ImageUrl" alt="Highlight billede" />
+                }
+                else
+                {
+                    <div class="image-placeholder">Intet billede</div>
+                }
+            </div>
+
+            <div class="card-content">
+                <div class="content-header">
+                    <h3>@h.Title</h3>
+                    <span class="card-date">
+                        @h.Date.ToString("d. MMMM yyyy", 
+                            System.Globalization.CultureInfo.GetCultureInfo("da-DK"))
+                    </span>
+                </div>
+
+                <p class="description">@h.Description</p>
+
+                <div class="content-footer">
+                    <div class="author">
+                    </div>
+
+                    @if (CurrentUser is not null)
+                    {
+                        <div class="actions">
+                            <button class="icon-button blue" title="Redigér" @onclick="() => EditHighlight(h)">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <path d="M12 20h9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </button>
+
+                            <button class="icon-button red" title="Slet" @onclick="() => ConfirmDelete(h)">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <path d="M3 6h18" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                    <path d="M8 6V4h8v2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                    <path d="M10 11v6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                    <path d="M14 11v6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                    <path d="M5 6l1 14h12l1-14" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </button>
+                        </div>
+                    }
+                </div>
+            </div>
         </div>
     }
 </div>
@@ -58,6 +109,7 @@
                         OnConfirm="DeleteConfirmed"
                         OnCancel="CancelDelete"
                         Message="Er du sikker på at du vil slette dette highlight?" />
+
 
 @code {
     private List<Highlight> Highlights = new();
