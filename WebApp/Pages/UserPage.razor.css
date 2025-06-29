@@ -1,0 +1,215 @@
+/* Grundlæggende reset og layout */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Segoe UI', sans-serif;
+    background-color: #f7f7f7 !important;
+    color: #333;
+    padding: 2rem;
+}
+
+h2 {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.add-user-button {
+    background-color: #5b3cc4;
+    color: white;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    float: right;
+    margin-bottom: 1rem;
+}
+
+.user-boxes {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    align-items: center;
+}
+
+.user-card {
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    background-color: #fff;
+    padding: 0;
+    border-radius: 12px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    width: 100%;
+    max-width: 900px;
+    overflow: hidden;
+    gap: 2rem;
+    flex-wrap: wrap;
+    margin-bottom: 2rem;
+}
+
+.user-left {
+    width: 260px;
+    max-width: 260px;
+    word-wrap: break-word;     /* Bryd lange ord */
+    overflow-wrap: break-word; /* Garanter linjeskift hvis nødvendigt */
+    white-space: normal;
+    background-color: #f7f7f7;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    height: 100%;
+    position: relative;
+    min-height: 400px; /* Justér om nødvendigt */
+}
+
+.user-contact {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    text-align: left;
+    font-size: 0.95rem;
+    color: #333;
+    line-height: 1.8;
+}
+
+.user-image {
+    width: 120px;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 50%;
+    margin-bottom: 0.5rem;
+    background-color: #eee;
+}
+
+.nickname {
+    font-style: italic;
+    color: #777;
+}
+
+.user-contact p {
+    margin: 0.2rem 0;
+    font-size: 0.9rem;
+}
+
+.icon {
+    margin-right: 5px;
+}
+
+.user-right {
+    flex: 2;
+    min-width: 250px;
+    max-width: 100%;
+    overflow: hidden;
+    padding: 1.5rem;
+}
+
+.fun-fact {
+    background-color: #f0f3ff; /* lys lilla */
+    padding: 1rem 1.2rem;
+    border-radius: 12px;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: #2f2fcf; /* mørk lilla tekst og ikon */
+    font-size: 1rem;
+    font-weight: 500;
+    max-width: 100%;
+    word-wrap: break-word;
+}
+
+.fun-fact i {
+    font-size: 1.5rem;
+    color: #2f2fcf;
+    flex-shrink: 0;
+}
+
+.fun-fact strong {
+    font-weight: 700;
+}
+
+.user-right h4 {
+    margin-bottom: 0.3rem;
+}
+
+.about-section,
+.about-section p {
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+    word-wrap: break-word;
+    white-space: normal;
+    line-height: 1.5;
+    font-size: 0.98rem;
+    color: #333;
+}
+
+.actions {
+    position: absolute;
+    bottom: 1rem;
+    right: 1rem;
+    display: flex;
+    gap: 0.8rem;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+}
+
+/* Knapper */
+.icon-button {
+    background-color: transparent;
+    border: none;
+    padding: 0.4rem;
+    cursor: pointer;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease;
+}
+
+/* Ikoner i knapper */
+.icon-button svg.icon {
+    width: 22px;
+    height: 22px;
+    stroke-width: 2;
+    stroke: currentColor;
+}
+
+/* Farver og hover-effekter */
+.icon-button.blue {
+    color: #007bff;
+}
+
+.icon-button.blue:hover {
+    background-color: rgba(0, 123, 255, 0.1);
+}
+
+.icon-button.red {
+    color: #f44336;
+}
+
+.icon-button.red:hover {
+    background-color: rgba(244, 67, 54, 0.1);
+}
+
+.content-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: auto;
+}
+
+.user-contact i {
+    width: 20px;            /* Ens bredde til alle ikoner */
+    text-align: center;     /* Centrer ikonet indenfor bredden */
+    margin-right: 8px;      /* Afstand til teksten */
+    font-size: 1.1rem;
+    flex-shrink: 0;         /* Forhindrer ikonet i at krympe */
+}
+

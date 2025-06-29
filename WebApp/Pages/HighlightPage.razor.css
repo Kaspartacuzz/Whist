@@ -113,12 +113,6 @@
     margin-top: auto;
 }
 
-.author {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
 .avatar {
     width: 24px;
     height: 24px;
