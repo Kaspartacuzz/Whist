@@ -1,4 +1,4 @@
-@page "/users"
+@page "/medlemmer"
 
 @using Core
 @using WebApp.Components
@@ -31,7 +31,7 @@
                     <img class="user-image" src="@user.ImageUrl" alt="Billede af @user.NickName" />
                 }
 
-                <div class="user-name">@user.Name</div>
+                <div class="user-name"><strong>@user.Name</strong></div>
                 <div class="user-nickname">"@user.NickName"</div>
 
                 @if (CurrentUser is not null)
