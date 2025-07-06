@@ -1,0 +1,97 @@
+/* --- Modal: baggrund og centrering --- */
+.modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(4px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.modal-container {
+    background-color: #fff;
+    padding: 2rem;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 500px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+    animation: fadeIn 0.25s ease-in-out;
+}
+
+/* --- Modal: overskrift --- */
+.modal-title {
+    font-size: 1.4rem;
+    font-weight: 600;
+    margin-bottom: 1.2rem;
+}
+
+/* --- Modal: inputfelter --- */
+.modal-input,
+.modal-textarea,
+.modal-input-file {
+    width: 100%;
+    margin-bottom: 1rem;
+    padding: 0.6rem 0.8rem;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-family: inherit;
+    background-color: #f9f9f9;
+}
+
+.modal-textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+/* --- Modal: billede preview --- */
+.modal-image-preview {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+}
+
+/* --- Modal: knapper --- */
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+.modal-btn {
+    padding: 0.6rem 1.2rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.modal-btn.primary {
+    background-color: #5b3cc4;
+    color: #fff;
+}
+
+.modal-btn.primary:hover {
+    background-color: #4a2ba5;
+}
+
+.modal-btn.cancel {
+    background-color: #f3f3f3;
+    color: #333;
+}
+
+.modal-btn.cancel:hover {
+    background-color: #e0e0e0;
+}
+
+/* --- Fade animation (valgfri) --- */
+@keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.98); }
+    to { opacity: 1; transform: scale(1); }
+}

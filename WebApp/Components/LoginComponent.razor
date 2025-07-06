@@ -1,18 +1,27 @@
 @using WebApp.Service.AuthServices
 @inject IAuthService AuthService
 
-<div class="modal" tabindex="-1" style="display:@(show ? "block" : "none"); background-color:rgba(0,0,0,0.4);">
-    <div class="modal-dialog">
-        <div class="modal-content p-3">
-            <h5>Log ind</h5>
-            <input class="form-control my-2" placeholder="Email" @bind="email" />
-            <input class="form-control my-2" placeholder="Adgangskode" @bind="password" type="password" />
-            <button class="btn btn-success me-2" @onclick="Login">Log ind</button>
-            <button class="btn btn-secondary" @onclick="Hide">Annuller</button>
-            <p class="text-danger">@errorMessage</p>
+@if (show)
+{
+    <div class="modal-overlay">
+        <div class="modal-box login-modal">
+            <h3>Log ind</h3>
+
+            <input type="email" placeholder="Email" @bind="email" />
+            <input type="password" placeholder="Adgangskode" @bind="password" />
+
+            <div class="modal-actions">
+                <button class="primary" @onclick="Login">Log ind</button>
+                <button class="secondary" @onclick="Hide">Annuller</button>
+            </div>
+
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <p class="error-message">@errorMessage</p>
+            }
         </div>
     </div>
-</div>
+}
 
 @code {
     private bool show = false;

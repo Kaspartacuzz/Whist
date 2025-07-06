@@ -4,33 +4,31 @@
 
 @if (showModal)
 {
-    <div style="border: 1px solid gray; background: white; padding: 20px; margin-top: 20px;">
-        <h3>@(UserToEdit is null ? "Opret ny bruger" : "Rediger bruger")</h3>
+    <div class="modal-backdrop">
+        <div class="modal-container">
+            <h3 class="modal-title">@(UserToEdit is null ? "Opret ny bruger" : "Rediger bruger")</h3>
 
-        <input @bind="Name" placeholder="Fulde navn" />
-        <br />
-        <input @bind="NickName" placeholder="Kaldenavn" />
-        <br />
-        <input @bind="Email" placeholder="Email" />
-        <br />
-        <input @bind="Password" placeholder="Kodeord" type="password" />
-        <br />
-        <input @bind="PhoneNumber" placeholder="Telefonnummer" />
-        <br />
-        <textarea @bind="Description" placeholder="Beskrivelse"></textarea>
-        <br />
-        <input @bind="FunFact" placeholder="Fun fact" />
-        <br />
-        <InputFile OnChange="HandleImageUpload" accept="image/*" />
-        <br />
-        @if (!string.IsNullOrEmpty(ImagePreview))
-        {
-            <img src="@ImagePreview" alt="Preview" width="150" />
-        }
+            <input @bind="Name" placeholder="Fulde navn" class="modal-input" />
+            <input @bind="NickName" placeholder="Kaldenavn" class="modal-input" />
+            <input @bind="Email" placeholder="Email" class="modal-input" />
+            <input @bind="Password" placeholder="Kodeord" type="password" class="modal-input" />
+            <input @bind="PhoneNumber" placeholder="Telefonnummer" class="modal-input" />
+            <textarea @bind="Description" placeholder="Beskrivelse" class="modal-textarea"></textarea>
+            <input @bind="FunFact" placeholder="Fun fact" class="modal-input" />
 
-        <div style="margin-top: 10px;">
-            <button @onclick="CreateUser">@(UserToEdit is null ? "Opret bruger" : "Gem ændringer")</button>
-            <button @onclick="Close">Annuller</button>
+            <InputFile OnChange="HandleImageUpload" accept="image/*" class="modal-input-file" />
+
+            @if (!string.IsNullOrEmpty(ImagePreview))
+            {
+                <img src="@ImagePreview" alt="Preview" class="modal-image-preview" />
+            }
+
+            <div class="modal-actions">
+                <button class="modal-btn primary" @onclick="CreateUser">
+                    @(UserToEdit is null ? "Opret bruger" : "Gem ændringer")
+                </button>
+                <button class="modal-btn cancel" @onclick="Close">Annuller</button>
+            </div>
         </div>
     </div>
 }
