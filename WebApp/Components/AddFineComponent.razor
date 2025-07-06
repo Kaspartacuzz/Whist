@@ -12,7 +12,7 @@
             @if (FineToEdit is null)
             {
                 <select @bind="SelectedUserId" class="modal-input">
-                    <option value="0">-- Vælg bruger --</option>
+                    <option value="0">Vælg bruger</option>
                     @foreach (var user in Users)
                     {
                         <option value="@user.Id">@user.NickName</option>
@@ -20,7 +20,8 @@
                 </select>
             }
 
-            <input type="number" @bind="Amount" placeholder="Beløb" class="modal-input" />
+            <label for="amount" class="modal-label">Beløb</label>
+            <input id="amount" type="number" class="modal-input" @bind="Amount" />
             <input type="text" @bind="Comment" placeholder="Kommentar" class="modal-input" />
 
             <div class="modal-actions">

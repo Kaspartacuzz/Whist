@@ -95,3 +95,29 @@
     from { opacity: 0; transform: scale(0.98); }
     to { opacity: 1; transform: scale(1); }
 }
+
+/* Skjul standard file input */
+.file-input-wrapper {
+    width: 0;
+    height: 0;
+    overflow: hidden;
+}
+
+/* Lilla "Vælg billede" knap */
+.custom-file-label {
+    display: inline-block;
+    background-color: #5b3cc4;
+    color: white;
+    padding: 0.6rem 1rem;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 1rem;
+    margin-bottom: 1rem;
+    transition: background-color 0.2s ease;
+    width: fit-content;
+}
+
+.custom-file-label:hover {
+    background-color: #4829a5;
+}

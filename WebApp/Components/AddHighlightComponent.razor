@@ -14,7 +14,10 @@
 
             <textarea @bind="Description" placeholder="Beskrivelse" class="modal-textarea"></textarea>
 
-            <InputFile OnChange="HandleImageUpload" accept="image/*" class="modal-input-file" />
+            <label for="file-upload" class="custom-file-label">📷 Vedhæft billede</label>
+            <div class="file-input-wrapper">
+                <InputFile id="file-upload" OnChange="HandleImageUpload" accept="image/*" />
+            </div>
 
             @if (!string.IsNullOrEmpty(PreviewUrl))
             {
