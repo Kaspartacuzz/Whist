@@ -37,6 +37,13 @@ h2 {
     background-color: #4829a5;
 }
 
+.page-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(700px, 1fr));
+    gap: 2rem;
+    margin-top: 1rem;
+}
+
 .user-boxes {
     display: flex;
     flex-direction: column;
