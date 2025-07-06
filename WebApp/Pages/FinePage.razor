@@ -10,10 +10,14 @@
 @inject IAuthService AuthService
 @inject IJSRuntime JSRuntime
 
-<h2>Bøder</h2>
+<!-- Tilføj knap -->
+<div class="top-bar">
+    <h2>Bøder</h2>
+    <button class="btn-add" @onclick="OpenAddFineModal">+ Tilføj bøde</button>
+</div>
 
-<!-- 1. Brugerbokse -->
-<div class="user-boxes">
+<!-- Brugeroversigt -->
+<div class="user-grid">
     @foreach (var user in Users)
     {
         var userFines = Fines.Where(f => f.UserId == user.Id).ToList();
@@ -21,74 +25,94 @@
         var paid = userFines.Where(f => f.IsPaid).Sum(f => f.Amount);
         var unpaid = total - paid;
 
-        <div class="user-box">
-            <p><strong>@user.NickName</strong></p>
-            <p>I alt: @total kr</p>
-            <p>Betalt: @paid kr</p>
-            <p>Mangler: @unpaid kr</p>
+        <div class="user-card">
+            <div class="user-header">@user.NickName</div>
+            <div class="user-info">
+                <span>I alt:</span><span class="amount">@total kr</span>
+                <span>Betalt:</span><span class="amount">@paid kr</span>
+                <span>Mangler:</span>
+                <span class="amount @(unpaid > 0 ? "text-red" : "text-green")">@unpaid kr</span>
+            </div>
+
+            @if (CurrentUser?.Id == user.Id && unpaid > 0)
+            {
+                <button class="pay-button" @onclick="PayNow">Betal nu</button>
+            }
         </div>
-        
-        @if (CurrentUser?.Id == user.Id)
-        {
-            <button @onclick="PayNow">Betal nu</button>
-        }
     }
 </div>
 
-<!-- 2. Samlet oversigt -->
+<!-- Samlet oversigt -->
 <div class="overview-box">
-    <p><strong>Bøder i alt:</strong> @TotalAmount kr</p>
-    <p><strong>Mangler at blive betalt:</strong> @TotalUnpaid kr</p>
+    <div class="overview-title">Oversigt</div>
+    <p>👉 <strong>Bøder i alt:</strong> @TotalAmount kr</p>
+    <p>📊 <strong>Mangler at blive betalt:</strong> @TotalUnpaid kr</p>
 </div>
 
-<button @onclick="OpenAddFineModal">Tilføj bøde</button>
-<AddFineComponent @ref="addFineComponent" OnFineAdded="ReloadFines" />
-
+<!-- Filtrering -->
 <div class="filter-box">
-    <input placeholder="Søg navn eller kommentar..." @bind-value="searchTerm" @bind-value:event="oninput" />
+    <div class="filter-item search">
+        <span class="icon-search">🔍</span>
+        <input placeholder="Søg i bøder..." @bind-value="searchTerm" @bind-value:event="oninput" />
+    </div>
 
-    <input type="date" @bind-value="filterFromDate" @bind-value:event="oninput" />
-    <input type="date" @bind-value="filterToDate" @bind-value:event="oninput" />
+    <div class="filter-item date">
+        <span class="icon-calendar">📅</span>
+        <input type="date" @bind-value="filterFromDate" @bind-value:event="oninput" />
+    </div>
 
-    <input type="number" placeholder="Min beløb" @bind-value="filterMinAmount" @bind-value:event="oninput" />
-    <input type="number" placeholder="Max beløb" @bind-value="filterMaxAmount" @bind-value:event="oninput" />
+    <div class="filter-item date">
+        <span class="icon-calendar">📅</span>
+        <input type="date" @bind-value="filterToDate" @bind-value:event="oninput" />
+    </div>
+
+    <div class="filter-item amount">
+        <span class="icon-money">💰</span>
+        <input type="number" placeholder="Min beløb" @bind-value="filterMinAmount" @bind-value:event="oninput" />
+    </div>
+
+    <div class="filter-item amount">
+        <span class="icon-money">💰</span>
+        <input type="number" placeholder="Max beløb" @bind-value="filterMaxAmount" @bind-value:event="oninput" />
+    </div>
 </div>
 
-
-<!-- 3. Tabel over alle bøder -->
+<!-- Tabel -->
 <div class="fine-table">
-    
     <table>
         <thead>
-        <tr>
-            <th>Dato</th>
-            <th>Navn</th>
-            <th>Beløb</th>
-            <th>Kommentar</th>
-        </tr>
+            <tr>
+                <th>Dato</th>
+                <th>Navn</th>
+                <th>Beløb</th>
+                <th>Kommentar</th>
+            </tr>
         </thead>
         <tbody>
-        @foreach (var fine in FilteredFines)
-        {
-            var user = Users.FirstOrDefault(u => u.Id == fine.UserId);
-            <tr>
-                <td>@fine.Date.ToShortDateString()</td>
-                <td>@user?.NickName</td>
-                <td>@fine.Amount kr</td>
-                <td>@fine.Comment</td>
-                <td>
-                    <button @onclick="() => EditFine(fine)">Rediger</button>
-                    <button @onclick="() => ConfirmDelete(fine)">Slet</button>
-                </td>
-            </tr>
-        }
+            @foreach (var fine in FilteredFines)
+            {
+                var user = Users.FirstOrDefault(u => u.Id == fine.UserId);
+                <tr>
+                    <td>@fine.Date.ToShortDateString()</td>
+                    <td>@user?.NickName</td>
+                    <td>@fine.Amount kr</td>
+                    <td>@fine.Comment</td>
+                    <td>
+                        <button class="icon-button blue" @onclick="() => EditFine(fine)">✏️</button>
+                        <button class="icon-button red" @onclick="() => ConfirmDelete(fine)">🗑️</button>
+                    </td>
+                </tr>
+            }
         </tbody>
     </table>
+
     <ConfirmDeleteComponent @ref="confirmComponent"
                             OnConfirm="DeleteConfirmed"
                             OnCancel="CancelDelete"
-                            Message="Er du sikker på at du vil slette denne bøde?"/>
+                            Message="Er du sikker på at du vil slette denne bøde?" />
 </div>
+
+<AddFineComponent @ref="addFineComponent" OnFineAdded="ReloadFines" />
 
 @code {
     private List<Fine> Fines = new();

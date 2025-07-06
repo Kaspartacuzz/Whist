@@ -1,7 +1,7 @@
 /* ======= MAIN CONTENT ======= */
 .main-container {
-    max-width: 900px;
+    max-width: 90%;
     margin: 2rem auto;
-    padding: 0 1rem;
+    padding: 2rem;
     background-color: transparent;
 }

@@ -15,6 +15,10 @@
     cursor: pointer;
 }
 
+.btn-add:hover {
+    background-color: #4829a5;
+}
+
 .filter-box {
     display: flex;
     gap: 1rem;
@@ -141,34 +145,47 @@
 .icon-button {
     background: none;
     border: none;
-    padding: 0.25rem;
-    border-radius: 0.5rem;
     cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+    padding: 0.3rem;
+    border-radius: 6px;
     transition: background-color 0.2s ease;
+    font-size: 1.1rem;
 }
 
-.icon-button .icon {
-    width: 24px;
-    height: 24px;
-    stroke-width: 2;
+.icon-button:hover {
+    background-color: rgba(0, 0, 0, 0.05);
 }
 
 .icon-button.blue {
-    color: #3B82F6; /* blå */
-}
-
-.icon-button.blue:hover {
-    background-color: #e0edff;
+    color: #4a4ae6;
 }
 
 .icon-button.red {
-    color: #EF4444; /* rød */
+    color: #e53935;
+}.fine-table th:nth-child(1),
+ .fine-table td:nth-child(1) {
+     width: 14%;
+ }
+
+.fine-table th:nth-child(2),
+.fine-table td:nth-child(2) {
+    width: 18%;
 }
 
-.icon-button.red:hover {
-    background-color: #fee2e2;
+.fine-table th:nth-child(3),
+.fine-table td:nth-child(3) {
+    width: 12%;
 }
+
+.fine-table th:nth-child(4),
+.fine-table td:nth-child(4) {
+    width: 40%;
+}
+
+.fine-table th:nth-child(5),
+.fine-table td:nth-child(5) {
+    width: 16%;
+    text-align: right; /* knapper helt til højre */
+}
+
 

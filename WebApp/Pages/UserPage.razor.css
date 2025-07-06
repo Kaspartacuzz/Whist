@@ -1,4 +1,10 @@
-/* Grundlæggende reset og layout */
+.top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
 * {
     box-sizing: border-box;
     margin: 0;
@@ -17,15 +23,18 @@ h2 {
     margin-bottom: 1.5rem;
 }
 
-.add-user-button {
-    background-color: #5b3cc4;
+.btn-add {
+    background-color: #6366F1;
     color: white;
-    padding: 0.5rem 1rem;
     border: none;
-    border-radius: 6px;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    font-weight: bold;
     cursor: pointer;
-    float: right;
-    margin-bottom: 1rem;
+}
+
+.btn-add:hover {
+    background-color: #4829a5;
 }
 
 .user-boxes {
@@ -160,56 +169,26 @@ h2 {
     flex-wrap: wrap;
 }
 
-/* Knapper */
 .icon-button {
-    background-color: transparent;
+    background: none;
     border: none;
-    padding: 0.4rem;
     cursor: pointer;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    padding: 0.3rem;
+    border-radius: 6px;
     transition: background-color 0.2s ease;
+    font-size: 1.1rem;
 }
 
-/* Ikoner i knapper */
-.icon-button svg.icon {
-    width: 22px;
-    height: 22px;
-    stroke-width: 2;
-    stroke: currentColor;
+.icon-button:hover {
+    background-color: rgba(0, 0, 0, 0.05);
 }
 
-/* Farver og hover-effekter */
 .icon-button.blue {
-    color: #007bff;
-}
-
-.icon-button.blue:hover {
-    background-color: rgba(0, 123, 255, 0.1);
+    color: #4a4ae6;
 }
 
 .icon-button.red {
-    color: #f44336;
+    color: #e53935;
 }
 
-.icon-button.red:hover {
-    background-color: rgba(244, 67, 54, 0.1);
-}
-
-.content-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: auto;
-}
-
-.user-contact i {
-    width: 20px;            /* Ens bredde til alle ikoner */
-    text-align: center;     /* Centrer ikonet indenfor bredden */
-    margin-right: 8px;      /* Afstand til teksten */
-    font-size: 1.1rem;
-    flex-shrink: 0;         /* Forhindrer ikonet i at krympe */
-}
 
