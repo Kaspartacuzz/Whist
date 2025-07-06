@@ -15,7 +15,6 @@ body {
     font-family: 'Segoe UI', sans-serif;
     background-color: #f7f7f7 !important;
     color: #333;
-    padding: 2rem;
 }
 
 h2 {
@@ -39,15 +38,16 @@ h2 {
 
 .page-container {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(700px, 1fr));
+    grid-template-columns: repeat(2, 1fr); /* 2 kolonner på stor skærm */
     gap: 2rem;
-    margin-top: 1rem;
+    width: 100%;
+    padding: 0;
+    margin: 0 auto;
 }
 
 .user-boxes {
     display: flex;
     flex-direction: column;
-    gap: 2rem;
     align-items: center;
 }
 
@@ -62,26 +62,34 @@ h2 {
     width: 100%;
     max-width: 900px;
     overflow: hidden;
-    gap: 2rem;
     flex-wrap: wrap;
-    margin-bottom: 2rem;
 }
 
 .user-left {
-    width: 260px;
+    width: 200px;
     max-width: 260px;
     word-wrap: break-word;     /* Bryd lange ord */
     overflow-wrap: break-word; /* Garanter linjeskift hvis nødvendigt */
     white-space: normal;
     background-color: #f7f7f7;
-    padding: 20px;
+    padding: 10px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: flex-start;
     height: 100%;
     position: relative;
-    min-height: 400px; /* Justér om nødvendigt */
+    min-height: 350px; /* Justér om nødvendigt */
+}
+
+.user-name {
+    font-size: 0.74rem;                /* Mindre skrift */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: center;
+    margin-bottom: 0.2rem;
+    max-width: 100%;
 }
 
 .user-contact {
@@ -89,28 +97,33 @@ h2 {
     bottom: 20px;
     left: 20px;
     text-align: left;
-    font-size: 0.95rem;
+    font-size: 0.7rem;
     color: #333;
     line-height: 1.8;
 }
 
 .user-image {
-    width: 200px;
-    height: 200px;
+    width: 180px;
+    height: 180px;
     object-fit: cover;
     border-radius: 50%;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.2rem;
     background-color: #eee;
 }
 
 .nickname {
     font-style: italic;
     color: #777;
+    font-size: 1rem;
 }
 
 .user-contact p {
-    margin: 0.2rem 0;
-    font-size: 0.9rem;
+    margin: 0.15rem 0;
+    font-size: 0.7rem;             /* Mindre skriftstørrelse */
+    white-space: nowrap;            /* Undgå linjeskift */
+    overflow: hidden;               /* Skjul overskudstekst */
+    text-overflow: ellipsis;        /* Sæt ... hvis teksten er for lang */
+    max-width: 100%;
 }
 
 .icon {
@@ -121,20 +134,21 @@ h2 {
     flex: 2;
     min-width: 250px;
     max-width: 100%;
-    overflow: hidden;
-    padding: 1.5rem;
+    padding: 0.5rem;
 }
 
 .fun-fact {
     background-color: #f0f3ff; /* lys lilla */
-    padding: 1rem 1.2rem;
+    padding: 1rem 1rem;
     border-radius: 12px;
-    margin-bottom: 1rem;
+    margin-bottom: 1.2rem;
+    margin-top: 1.5rem;
+    margin: 1rem;
     display: flex;
     align-items: center;
     gap: 0.75rem;
     color: #2f2fcf; /* mørk lilla tekst og ikon */
-    font-size: 1rem;
+    font-size: 0.8rem;
     font-weight: 500;
     max-width: 100%;
     word-wrap: break-word;
@@ -147,7 +161,7 @@ h2 {
 }
 
 .fun-fact strong {
-    font-weight: 700;
+    font-weight: 500;
 }
 
 .user-right h4 {
@@ -162,7 +176,7 @@ h2 {
     word-wrap: break-word;
     white-space: normal;
     line-height: 1.5;
-    font-size: 0.98rem;
+    font-size: 0.78rem;
     color: #333;
 }
 
@@ -198,4 +212,63 @@ h2 {
     color: #e53935;
 }
 
+@media (max-width: 768px) {
+    .page-container {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+        padding: 0 1rem;
+    }
 
+    .user-card {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .user-left {
+        width: 100%;
+        max-width: 100%;
+        padding: 1rem;
+        position: static;
+        align-items: center;
+        min-height: auto;
+    }
+
+    .user-right {
+        display: block;
+        width: 100%;
+        padding: 1rem;
+    }
+
+    .fun-fact {
+        margin: 1rem 0;
+        padding: 0.75rem;
+        font-size: 0.78rem;
+    }
+
+    .about-section,
+    .about-section p {
+        display: block;
+        font-size: 0.78rem;
+        line-height: 1.5;
+        word-wrap: break-word;
+        white-space: normal;
+    }
+
+    .user-contact {
+        position: static;
+        font-size: 0.7rem;
+        line-height: 1.4;
+        margin-top: 0.5rem;
+        text-align: center;
+    }
+
+    .user-contact p {
+        white-space: normal;
+    }
+
+    .actions {
+        position: static;
+        margin-top: 1rem;
+        justify-content: center;
+    }
+}
