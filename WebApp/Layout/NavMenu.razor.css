@@ -1,90 +1,19 @@
-/* --------- NAVMENU CSS-ISOLATION --------- */
+@media (max-width: 768px) {
+    .mobile-toggle {
+        display: block !important;
+    }
 
-/* Selve topbaren */
-nav.app-nav {
-    position: sticky;
-    top: 0;
-    width: 100%;
-    background-color: #FFFFFF;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    z-index: 1000;
+    .main-links {
+        display: none !important;
+    }
 }
 
-/* Flex-wrapper inde i navbar */
-nav.app-nav .nav-container {
-    display: flex;
-    align-items: center;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 1rem;
-}
+@media (min-width: 769px) {
+    .mobile-toggle {
+        display: none !important;
+    }
 
-/* Logo/Forside til venstre */
-nav.app-nav .nav-logo .logo-link {
-    font-family: 'Poppins', sans-serif;
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: #4F46E5;
-    text-decoration: none;
-    margin-right: 2rem;
-}
-
-/* Menulinks centreret */
-nav.app-nav .nav-links {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    flex: 1;
-    display: flex;
-    justify-content: center;
-    gap: clamp(1rem, 2vw, 1.5rem);
-}
-
-nav.app-nav .nav-links li {
-    margin: 0;
-    padding: 0;
-}
-
-/* Style på selve links */
-nav.app-nav .nav-links .nav-link {
-    color: #1F2937;
-    text-decoration: none;
-    font-weight: 500;
-    padding: 0.5rem 0;
-    position: relative;
-    transition: color 0.2s;
-}
-
-/* Understregning og hover/aktiv state */
-nav.app-nav .nav-links .nav-link::after {
-    content: "";
-    position: absolute;
-    bottom: -4px;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background: #4F46E5;
-    transform: scaleX(0);
-    transition: transform 0.2s;
-}
-
-nav.app-nav .nav-links .nav-link:hover,
-nav.app-nav .nav-links .nav-link.active {
-    color: #4F46E5;
-}
-
-nav.app-nav .nav-links .nav-link:hover::after,
-nav.app-nav .nav-links .nav-link.active::after {
-    transform: scaleX(1);
-}
-
-/* Login/Log ud-knap helt til højre */
-nav.app-nav .nav-auth {
-    margin-left: auto;
-}
-
-nav.app-nav .nav-auth .btn {
-    font-weight: 600;
-    padding: 0.5rem 1rem;
-    border-radius: 0.375rem;
+    .main-links {
+        display: flex !important;
+    }
 }

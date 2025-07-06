@@ -3,51 +3,117 @@
 @inject Service.AuthServices.IAuthService AuthService
 @inject NavigationManager NavigationManager
 
-<!-- LoginModal-komponenten, som vi kan kalde via @ref -->
-<LoginComponent @ref="_loginComponent"
-                OnLoginSuccess="HandleLogin" />
+<!-- LoginModal-komponenten -->
+<LoginComponent @ref="_loginComponent" OnLoginSuccess="HandleLogin" />
 
-<nav class="app-nav">
-  <div class="nav-container">
-    <!-- Logo / Forside til venstre -->
-    <div class="nav-logo">
-      <NavLink href="" class="logo-link">Forside</NavLink>
+<nav style="background-color: #fff; padding: 1rem 2rem; box-shadow: 0 2px 8px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100; font-family: Poppins, sans-serif;">
+    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;">
+        
+        <!-- Logo -->
+        <div style="font-size: 1.6rem; font-weight: 700; margin-right: 1rem;">
+            <NavLink href="" style="text-decoration: none; color: #1a1a1a;">Whist</NavLink>
+        </div>
+
+        <!-- Mobilmenu ikon -->
+        <button @onclick="ToggleMobileMenu"
+                class="mobile-toggle"
+                style="background: none; border: none; font-size: 1.8rem; display: none; cursor: pointer;">
+            ☰
+        </button>
+
+        <!-- Desktop links -->
+        <ul class="main-links" style="display: flex; gap: 1.5rem; flex-wrap: wrap; justify-content: center; flex-grow: 1; list-style: none; margin: 0; padding: 0;">
+            @if (_currentUser is not null)
+            {
+                <li>
+                    <NavLink href="bøder" style="display: inline-block; padding: 0.5rem 1rem; font-size: 1.05rem; font-weight: 500; color: #26417b; background-color: #fff; border: 1px solid #e0e0e0; border-radius: 8px; text-decoration: none;"
+                             onmouseover="this.style.backgroundColor='#f2f6fd'" 
+                             onmouseout="this.style.backgroundColor='#fff'">
+                        Bøder
+                    </NavLink>
+                </li>
+            }
+            <li>
+                <NavLink href="highlights" style="display: inline-block; padding: 0.5rem 1rem; font-size: 1.05rem; font-weight: 500; color: #26417b; background-color: #fff; border: 1px solid #e0e0e0; border-radius: 8px; text-decoration: none;"
+                         onmouseover="this.style.backgroundColor='#f2f6fd'" 
+                         onmouseout="this.style.backgroundColor='#fff'">
+                    Highlights
+                </NavLink>
+            </li>
+            <li>
+                <NavLink href="medlemmer" style="display: inline-block; padding: 0.5rem 1rem; font-size: 1.05rem; font-weight: 500; color: #26417b; background-color: #fff; border: 1px solid #e0e0e0; border-radius: 8px; text-decoration: none;"
+                         onmouseover="this.style.backgroundColor='#f2f6fd'" 
+                         onmouseout="this.style.backgroundColor='#fff'">
+                    Medlemmer
+                </NavLink>
+            </li>
+            <li>
+                <NavLink href="regler" style="display: inline-block; padding: 0.5rem 1rem; font-size: 1.05rem; font-weight: 500; color: #26417b; background-color: #fff; border: 1px solid #e0e0e0; border-radius: 8px; text-decoration: none;"
+                         onmouseover="this.style.backgroundColor='#f2f6fd'" 
+                         onmouseout="this.style.backgroundColor='#fff'">
+                    Regler
+                </NavLink>
+            </li>
+            <li>
+                <NavLink href="skema" style="display: inline-block; padding: 0.5rem 1rem; font-size: 1.05rem; font-weight: 500; color: #26417b; background-color: #fff; border: 1px solid #e0e0e0; border-radius: 8px; text-decoration: none;"
+                         onmouseover="this.style.backgroundColor='#f2f6fd'" 
+                         onmouseout="this.style.backgroundColor='#fff'">
+                    Skema
+                </NavLink>
+            </li>
+        </ul>
+
+        <!-- Login/Logud knap -->
+        <div style="margin-left: auto;">
+            @if (_currentUser is null)
+            {
+                <button @onclick="ToggleLogin"
+                        style="font-size: 1rem; font-weight: 600; padding: 0.5rem 1.1rem; border-radius: 8px; border: 2px solid #2a9d8f; background-color: white; color: #2a9d8f; cursor: pointer;"
+                        onmouseover="this.style.backgroundColor='#2a9d8f'; this.style.color='white'"
+                        onmouseout="this.style.backgroundColor='white'; this.style.color='#2a9d8f'">
+                    Log ind
+                </button>
+            }
+            else
+            {
+                <button @onclick="ToggleLogin"
+                        style="font-size: 1rem; font-weight: 600; padding: 0.5rem 1.1rem; border-radius: 8px; border: 2px solid #cc3b3b; background-color: white; color: #cc3b3b; cursor: pointer;"
+                        onmouseover="this.style.backgroundColor='#cc3b3b'; this.style.color='white'"
+                        onmouseout="this.style.backgroundColor='white'; this.style.color='#cc3b3b'">
+                    Log ud
+                </button>
+            }
+        </div>
     </div>
 
-    <!-- Menulinks centreret -->
-    <ul class="nav-links">
-      @if (_currentUser is not null)
-      {
-        <li><NavLink href="bøder"   class="nav-link">Bøder</NavLink></li>
-      }
-      <li><NavLink href="highlights" class="nav-link">Highlights</NavLink></li>
-      <li><NavLink href="medlemmer"         class="nav-link">Medlemmer</NavLink></li>
-      <li><NavLink href="regler"     class="nav-link">Regler</NavLink></li>
-      <li><NavLink href="skema" class="nav-link">Skema</NavLink></li>
-    </ul>
-
-    <!-- Login/Logud-knap til højre -->
-    <div class="nav-auth">
-      <button class="btn btn-outline-primary" @onclick="ToggleLogin">
-        @(_currentUser is null ? "Log ind" : "Log ud")
-      </button>
-    </div>
-  </div>
+    <!-- Mobilmenu dropdown -->
+    @if (isMobileMenuOpen)
+    {
+        <div style="margin-top: 1rem; display: flex; flex-direction: column; gap: 1rem;">
+            @if (_currentUser is not null)
+            {
+                <NavLink href="bøder" @onclick="ToggleMobileMenu" style="padding: 0.8rem; border: 1px solid #ddd; border-radius: 8px; text-align: center; color: #26417b; text-decoration: none;">Bøder</NavLink>
+            }
+            <NavLink href="highlights" @onclick="ToggleMobileMenu" style="padding: 0.8rem; border: 1px solid #ddd; border-radius: 8px; text-align: center; color: #26417b; text-decoration: none;">Highlights</NavLink>
+            <NavLink href="medlemmer" @onclick="ToggleMobileMenu" style="padding: 0.8rem; border: 1px solid #ddd; border-radius: 8px; text-align: center; color: #26417b; text-decoration: none;">Medlemmer</NavLink>
+            <NavLink href="regler" @onclick="ToggleMobileMenu" style="padding: 0.8rem; border: 1px solid #ddd; border-radius: 8px; text-align: center; color: #26417b; text-decoration: none;">Regler</NavLink>
+            <NavLink href="skema" @onclick="ToggleMobileMenu" style="padding: 0.8rem; border: 1px solid #ddd; border-radius: 8px; text-align: center; color: #26417b; text-decoration: none;">Skema</NavLink>
+        </div>
+    }
 </nav>
 
 @code {
     private LoginComponent? _loginComponent;
     private User? _currentUser;
+    private bool isMobileMenuOpen = false;
 
     protected override async Task OnInitializedAsync()
     {
-        // Prøv at hent evt. eksisterende session
         _currentUser = await AuthService.GetCurrentUser();
     }
 
     private async Task HandleLogin()
     {
-        // Bliver kaldt fra LoginComponent efter succesfuld login
         _currentUser = await AuthService.GetCurrentUser();
         StateHasChanged();
     }
@@ -56,15 +122,18 @@
     {
         if (_currentUser is null)
         {
-            // Vis modal hvis ikke logget ind
             _loginComponent?.Show();
         }
         else
         {
-            // Log ud
             await AuthService.Logout();
             _currentUser = null;
             NavigationManager.NavigateTo("/");
         }
+    }
+
+    private void ToggleMobileMenu()
+    {
+        isMobileMenuOpen = !isMobileMenuOpen;
     }
 }
