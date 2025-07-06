@@ -5,26 +5,30 @@
 
 @if (showModal)
 {
-    <div style="border: 1px solid gray; background: white; padding: 20px; margin-top: 20px;">
-        <h3>@(FineToEdit is null ? "Opret ny bøde" : "Rediger bøde")</h3>
+    <div class="modal-backdrop">
+        <div class="modal-container">
+            <h3 class="modal-title">@(FineToEdit is null ? "Opret ny bøde" : "Rediger bøde")</h3>
 
-        @if (FineToEdit is null)
-        {
-            <select @bind="SelectedUserId">
-                <option value="0">-- Vælg bruger --</option>
-                @foreach (var user in Users)
-                {
-                    <option value="@user.Id">@user.NickName</option>
-                }
-            </select>
-        }
+            @if (FineToEdit is null)
+            {
+                <select @bind="SelectedUserId" class="modal-input">
+                    <option value="0">-- Vælg bruger --</option>
+                    @foreach (var user in Users)
+                    {
+                        <option value="@user.Id">@user.NickName</option>
+                    }
+                </select>
+            }
 
-        <input type="number" @bind="Amount" placeholder="Beløb" />
-        <input type="text" @bind="Comment" placeholder="Kommentar" />
+            <input type="number" @bind="Amount" placeholder="Beløb" class="modal-input" />
+            <input type="text" @bind="Comment" placeholder="Kommentar" class="modal-input" />
 
-        <div>
-            <button @onclick="Submit">@(FineToEdit is null ? "Tilføj bøde" : "Gem ændringer")</button>
-            <button @onclick="Close">Annuller</button>
+            <div class="modal-actions">
+                <button class="modal-btn primary" @onclick="Submit">
+                    @(FineToEdit is null ? "Tilføj bøde" : "Gem ændringer")
+                </button>
+                <button class="modal-btn cancel" @onclick="Close">Annuller</button>
+            </div>
         </div>
     </div>
 }

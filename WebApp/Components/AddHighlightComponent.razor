@@ -6,29 +6,32 @@
 
 @if (showModal)
 {
-    <div style="border: 1px solid gray; background: white; padding: 20px; margin-top: 20px;">
-        <h3>@(HighlightToEdit is null ? "Opret nyt highlight" : "Rediger highlight")</h3>
+    <div class="modal-backdrop">
+        <div class="modal-container">
+            <h3 class="modal-title">@(HighlightToEdit is null ? "Opret nyt highlight" : "Rediger highlight")</h3>
 
-        <input @bind="Title" placeholder="Titel" />
-        <br />
-        <textarea @bind="Description" placeholder="Beskrivelse"></textarea>
-        <br />
-        <InputFile OnChange="HandleImageUpload" accept="image/*" />
-        <br />
-        @if (!string.IsNullOrEmpty(PreviewUrl))
-        {
-            <img src="@PreviewUrl" alt="Preview" width="200" />
-        }
+            <input @bind="Title" placeholder="Titel" class="modal-input" />
 
-        <div>
-            <br />
-            <label>
+            <textarea @bind="Description" placeholder="Beskrivelse" class="modal-textarea"></textarea>
+
+            <InputFile OnChange="HandleImageUpload" accept="image/*" class="modal-input-file" />
+
+            @if (!string.IsNullOrEmpty(PreviewUrl))
+            {
+                <img src="@PreviewUrl" alt="Preview" class="modal-image-preview" />
+            }
+
+            <label class="modal-checkbox">
                 <input type="checkbox" @bind="IsPrivate" />
                 Gør privat (kun synlig for medlemmer)
             </label>
-            <br />
-            <button @onclick="CreateHighlight">@(HighlightToEdit is null ? "Opret highlight" : "Gem ændringer")</button>
-            <button @onclick="Close">Annuller</button>
+
+            <div class="modal-actions">
+                <button class="modal-btn primary" @onclick="CreateHighlight">
+                    @(HighlightToEdit is null ? "Opret highlight" : "Gem ændringer")
+                </button>
+                <button class="modal-btn cancel" @onclick="Close">Annuller</button>
+            </div>
         </div>
     </div>
 }
