@@ -2,3 +2,33 @@
     transition: opacity 0.6s ease-in-out;
     opacity: 1;
 }
+
+/* 1) Holder billederne indenfor */
+.slideshow {
+    overflow: hidden;
+    width: 100%;
+    margin: 2rem 0;
+}
+
+/* 2) Den langstrakte række af billeder */
+.slideshow-track {
+    display: flex;
+    animation: slide-left 30s linear infinite;
+}
+
+/* 3) Hvert billede som firkant */
+.slideshow-image {
+    flex-shrink: 0;
+    width: 350px;           /* Ny bredde */
+    height: 350px;          /* Ny højde */
+    object-fit: cover;
+    border-radius: 0.7rem;  /* Blødt afrundede hjørner */
+    margin-right: 3rem;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* 4) Animation: flyt hele rækken -50% (fordi vi duplikerer) */
+@keyframes slide-left {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+}

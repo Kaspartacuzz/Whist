@@ -32,15 +32,27 @@
 
     </div>
 
-    <!-- Diasshow -->
-    @if (CurrentImage is not null)
+    <!-- Diasshow som uendeligt, glidende billedevogn -->
+    @if (ImageUrls?.Any() ?? false)
     {
-        <img src="@CurrentImage" class="img-fluid rounded-circle shadow mt-5 @fadeClass"
-             style="max-width: 300px; width: 100%; height: auto;" />
+        <div class="slideshow">
+            <div class="slideshow-track">
+                @* Første runde *@
+                @foreach (var url in ImageUrls)
+                {
+                    <img src="@url" class="slideshow-image" />
+                }
+                @* Duplicate for seamless loop *@
+                @foreach (var url in ImageUrls)
+                {
+                    <img src="@url" class="slideshow-image" />
+                }
+            </div>
+        </div>
     }
     else
     {
-        <p>Ingen billeder endnu...</p>
+        <p>Ingen billeder endnu…</p>
     }
 
 </div>
@@ -64,7 +76,7 @@
             .ToList();
 
         ImageUrls.AddRange(highlights
-            .Where(h => !string.IsNullOrEmpty(h.ImageUrl))
+            .Where(h => !string.IsNullOrEmpty(h.ImageUrl) && !h.IsPrivate)
             .Select(h => h.ImageUrl!));
 
         timer = new System.Timers.Timer(3000); // Skift hvert 3. sekund
