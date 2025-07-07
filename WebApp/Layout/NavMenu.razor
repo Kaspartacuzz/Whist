@@ -7,10 +7,10 @@
 <LoginComponent @ref="_loginComponent" OnLoginSuccess="HandleLogin" />
 
 <nav style="background-color: #fff; padding: 1rem 2rem; box-shadow: 0 2px 8px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100; font-family: Poppins, sans-serif; width: 100vw;">
-    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;">
+    <div style="display: flex; align-items: center; justify-content: center; flex-wrap: wrap; position: relative;">
         
         <!-- Logo -->
-        <div style="font-size: 1.8rem; font-weight: 700; margin-right: 1rem;">
+        <div style="position: absolute; left: 2rem; font-size: 1.8rem; font-weight: 700;">
             <NavLink href="" style="text-decoration: none; color: #1a1a1a;">Whist Holdet</NavLink>
         </div>
 
@@ -26,7 +26,7 @@
             @if (_currentUser is not null)
             {
                 <li>
-                    <NavLink href="bøder" style="display: inline-block; padding: 0.5rem 1rem; font-size: 0.60rem; font-weight: 400; color: #26417b; background-color: #fff; border: 1px solid #e0e0e0; border-radius: 8px; text-decoration: none;"
+                    <NavLink href="bøder" style="display: inline-block; padding: 0.5rem 1rem; font-size: 0.80rem; font-weight: 400; color: #26417b; background-color: #fff; border: 1px solid #e0e0e0; border-radius: 8px; text-decoration: none;"
                              onmouseover="this.style.backgroundColor='#f2f6fd'" 
                              onmouseout="this.style.backgroundColor='#fff'">
                         Bøder
@@ -34,28 +34,28 @@
                 </li>
             }
             <li>
-                <NavLink href="highlights" style="display: inline-block; padding: 0.5rem 1rem; font-size: 0.60rem; font-weight: 400; color: #26417b; background-color: #fff; border: 1px solid #e0e0e0; border-radius: 8px; text-decoration: none;"
+                <NavLink href="highlights" style="display: inline-block; padding: 0.5rem 1rem; font-size: 0.80rem; font-weight: 400; color: #26417b; background-color: #fff; border: 1px solid #e0e0e0; border-radius: 8px; text-decoration: none;"
                          onmouseover="this.style.backgroundColor='#f2f6fd'" 
                          onmouseout="this.style.backgroundColor='#fff'">
                     Highlights
                 </NavLink>
             </li>
             <li>
-                <NavLink href="medlemmer" style="display: inline-block; padding: 0.5rem 1rem; font-size: 0.60rem; font-weight: 400; color: #26417b; background-color: #fff; border: 1px solid #e0e0e0; border-radius: 8px; text-decoration: none;"
+                <NavLink href="medlemmer" style="display: inline-block; padding: 0.5rem 1rem; font-size: 0.80rem; font-weight: 400; color: #26417b; background-color: #fff; border: 1px solid #e0e0e0; border-radius: 8px; text-decoration: none;"
                          onmouseover="this.style.backgroundColor='#f2f6fd'" 
                          onmouseout="this.style.backgroundColor='#fff'">
                     Medlemmer
                 </NavLink>
             </li>
             <li>
-                <NavLink href="regler" style="display: inline-block; padding: 0.5rem 1rem; font-size: 0.60rem; font-weight: 400; color: #26417b; background-color: #fff; border: 1px solid #e0e0e0; border-radius: 8px; text-decoration: none;"
+                <NavLink href="regler" style="display: inline-block; padding: 0.5rem 1rem; font-size: 0.80rem; font-weight: 400; color: #26417b; background-color: #fff; border: 1px solid #e0e0e0; border-radius: 8px; text-decoration: none;"
                          onmouseover="this.style.backgroundColor='#f2f6fd'" 
                          onmouseout="this.style.backgroundColor='#fff'">
                     Regler
                 </NavLink>
             </li>
             <li>
-                <NavLink href="skema" style="display: inline-block; padding: 0.5rem 1rem; font-size: 0.60rem; font-weight: 400; color: #26417b; background-color: #fff; border: 1px solid #e0e0e0; border-radius: 8px; text-decoration: none;"
+                <NavLink href="skema" style="display: inline-block; padding: 0.5rem 1rem; font-size: 0.80rem; font-weight: 400; color: #26417b; background-color: #fff; border: 1px solid #e0e0e0; border-radius: 8px; text-decoration: none;"
                          onmouseover="this.style.backgroundColor='#f2f6fd'" 
                          onmouseout="this.style.backgroundColor='#fff'">
                     Skema
@@ -64,7 +64,7 @@
         </ul>
 
         <!-- Login/Logud knap -->
-        <div style="margin-left: auto;">
+        <div style="position: absolute; right: 2rem;">
             @if (_currentUser is null)
             {
                 <button @onclick="ToggleLogin"

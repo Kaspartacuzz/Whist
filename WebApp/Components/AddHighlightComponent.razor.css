@@ -85,7 +85,7 @@
 }
 
 .modal-btn.primary {
-    background-color: #5b3cc4;
+    background-color: #6366F1;
     color: white;
 }
 
@@ -112,7 +112,7 @@
 /* Lilla "Vælg billede" knap */
 .custom-file-label {
     display: inline-block;
-    background-color: #5b3cc4;
+    background-color: #6366F1;
     color: white;
     padding: 0.6rem 1rem;
     border-radius: 8px;
