@@ -8,18 +8,22 @@
 
 <nav style="background-color: #fff; padding: 1rem 2rem; box-shadow: 0 2px 8px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100; font-family: Poppins, sans-serif; width: 100vw;">
     <div style="display: flex; align-items: center; justify-content: center; flex-wrap: wrap; position: relative;">
-        
-        <!-- Logo -->
-        <div style="position: absolute; left: 2rem; font-size: 1.8rem; font-weight: 700;">
-            <NavLink href="" style="text-decoration: none; color: #1a1a1a;">Whist Holdet</NavLink>
-        </div>
 
-        <!-- Mobilmenu ikon -->
-        <button @onclick="ToggleMobileMenu"
-                class="mobile-toggle"
-                style="background: none; border: none; font-size: 1.8rem; display: none; cursor: pointer;">
-            ☰
-        </button>
+        <div style="position: relative; height: 3.5rem; background-color: white; display: flex; align-items: center; justify-content: space-between; padding-left: 2rem; padding-right: 1rem;">
+            <!-- Logo -->
+            <div style="font-size: 1.8rem; font-weight: 700;">
+                <NavLink href="" style="text-decoration: none; color: #1a1a1a;">Whist Holdet</NavLink>
+            </div>
+
+            <!-- Burger-menu ikon -->
+            <button @onclick="ToggleMobileMenu"
+                    class="mobile-toggle"
+                    style="background: none; border: none; font-size: 1.8rem; cursor: pointer; padding: 0.3rem 0.6rem;"
+                    onmouseover="this.style.opacity='0.6'" 
+                    onmouseout="this.style.opacity='1'">
+                ☰
+            </button>
+        </div>
 
         <!-- Desktop links -->
         <ul class="main-links" style="display: flex; gap: 1.5rem; flex-wrap: wrap; justify-content: center; flex-grow: 1; list-style: none; margin: 0; padding: 0;">
@@ -63,8 +67,8 @@
             </li>
         </ul>
 
-        <!-- Login/Logud knap -->
-        <div style="position: absolute; right: 2rem;">
+        <!-- Login/Logud knap (kun desktop) -->
+        <div class="desktop-auth-button" style="position: absolute; right: 2rem; display: none;">
             @if (_currentUser is null)
             {
                 <button @onclick="ToggleLogin"
@@ -98,6 +102,28 @@
             <NavLink href="medlemmer" @onclick="ToggleMobileMenu" style="padding: 0.8rem; border: 1px solid #ddd; border-radius: 8px; text-align: center; color: #26417b; text-decoration: none;">Medlemmer</NavLink>
             <NavLink href="regler" @onclick="ToggleMobileMenu" style="padding: 0.8rem; border: 1px solid #ddd; border-radius: 8px; text-align: center; color: #26417b; text-decoration: none;">Regler</NavLink>
             <NavLink href="skema" @onclick="ToggleMobileMenu" style="padding: 0.8rem; border: 1px solid #ddd; border-radius: 8px; text-align: center; color: #26417b; text-decoration: none;">Skema</NavLink>
+            
+            <!-- Login/Logud knap (kun mobil) -->
+            <div style="margin-top: 2rem; text-align: center;">
+                @if (_currentUser is null)
+                {
+                    <button @onclick="ToggleLogin"
+                            style="font-size: 0.60rem; font-weight: 400; padding: 0.5rem 0.7rem; border-radius: 8px; border: 1px solid #2a9d8f; background-color: white; color: #2a9d8f; cursor: pointer;"
+                            onmouseover="this.style.backgroundColor='#2a9d8f'; this.style.color='white'"
+                            onmouseout="this.style.backgroundColor='white'; this.style.color='#2a9d8f'">
+                        Log ind
+                    </button>
+                }
+                else
+                {
+                    <button @onclick="ToggleLogin"
+                            style="font-size: 0.60rem; font-weight: 400; padding: 0.5rem 0.7rem; border-radius: 8px; border: 1px solid #cc3b3b; background-color: white; color: #cc3b3b; cursor: pointer;"
+                            onmouseover="this.style.backgroundColor='#cc3b3b'; this.style.color='white'"
+                            onmouseout="this.style.backgroundColor='white'; this.style.color='#cc3b3b'">
+                        Log ud
+                    </button>
+                }
+            </div>
         </div>
     }
 </nav>
@@ -136,4 +162,5 @@
     {
         isMobileMenuOpen = !isMobileMenuOpen;
     }
+
 }

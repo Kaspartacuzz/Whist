@@ -1,19 +1,19 @@
-@media (max-width: 768px) {
-    .mobile-toggle {
+@media (min-width: 768px) {
+    .desktop-auth-button {
         display: block !important;
     }
 
-    .main-links {
+    .mobile-toggle {
         display: none !important;
     }
 }
 
-@media (min-width: 769px) {
-    .mobile-toggle {
+@media (max-width: 767px) {
+    .desktop-auth-button {
         display: none !important;
     }
 
-    .main-links {
-        display: flex !important;
+    .mobile-toggle {
+        display: block !important;
     }
 }
