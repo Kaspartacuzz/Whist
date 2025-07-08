@@ -1,0 +1,97 @@
+/* Fjern default margin/padding */
+body, html {
+    margin: 0;
+    padding: 0;
+}
+
+/* Wrapper der trækker siden ud af layoutets begrænsning */
+.full-bleed {
+    position: relative;
+    width: 100vw;
+    margin-left: calc(-50vw + 50%);
+}
+
+/* Sektioner */
+.section {
+    display: flex;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+}
+
+.section.light {
+    background-color: #f3f3f3;
+}
+
+.section.dark {
+    background-color: #e0e0e0;
+}
+
+/* Indhold */
+.content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 0 4rem;
+    box-sizing: border-box;
+}
+
+.content.left-text {
+    align-items: flex-start;
+    text-align: left;
+}
+
+.content.right-text {
+    align-items: flex-start;
+    text-align: left;
+}
+
+.content.narrow {
+    max-width: 800px;
+}
+
+/* Billeder */
+.image {
+    flex: 1;
+    background-size: cover;
+    background-position: center;
+}
+
+/* Billedets position */
+.left-image {
+    order: 0;
+}
+
+.right-image {
+    order: 1;
+}
+
+/* Bullet liste i “Værdier” */
+ul {
+    list-style-type: disc;
+    padding-left: 1.5rem;
+    margin-top: 0.5rem;
+}
+
+/* Mobilvisning */
+@media (max-width: 768px) {
+    .section {
+        flex-direction: column;
+        height: auto;
+    }
+
+    .content, .image {
+        order: unset;
+        align-items: flex-start !important;
+        text-align: left !important;
+        height: auto;
+        padding: 2rem;
+    }
+
+    .image {
+        height: 40vh;
+    }
+}

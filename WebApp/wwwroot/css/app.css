@@ -1,6 +1,9 @@
 html, body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     background-color: #f7f7f7 !important;
+    height: 100%;
+    margin: 0;
+    padding: 0;
 }
 
 h1:focus {
@@ -102,3 +105,30 @@ a, .btn-link {
 code {
     color: #c02d76;
 }
+
+html, body {
+    height: 100%;
+    margin: 0;
+}
+
+/* 2) Body som flex-container: lodret flow */
+body {
+    display: flex;
+    flex-direction: column;
+}
+
+/* 3) Main-container fylder det ledige rum */
+.main-container {
+    flex: 1 0 auto;
+}
+
+/* 4) Footer må ikke vokse, så den bliver i bunden */
+footer.app-footer {
+    flex-shrink: 0;
+}
+
+
+
+
+
+

@@ -1,0 +1,36 @@
+/* Footer-s CSS-isolation */
+
+/* Selve bunden */
+footer.app-footer {
+    color: #000000;                   /* Sort tekst */
+    background: #FFFFFF;
+    border-top: 1px solid var(--muted);
+    padding: 2rem 1rem;
+}
+
+/* Links-sektionen */
+footer.app-footer .footer-links {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin: 1rem 0 0.5rem 0;          /* Let top og bundmargin */
+}
+
+/* Link-style */
+footer.app-footer .footer-links a {
+    color: #000000;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 1.25rem;
+    transition: color 0.2s;
+}
+footer.app-footer .footer-links a:hover {
+    color: #444444;
+}
+
+/* Copyright-tekst */
+footer.app-footer .footer-copy {
+    text-align: center;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}

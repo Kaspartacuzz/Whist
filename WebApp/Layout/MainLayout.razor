@@ -1,7 +1,28 @@
 ﻿@inherits LayoutComponentBase
+@using WebApp.Components
 
 <NavMenu />
 
-<div class="main-container">
+<div class="@MainContainerClass">
     @Body
 </div>
+
+<FooterComponent></FooterComponent>
+
+@code {
+    private string MainContainerClass = "main-container";
+
+    [Inject] private NavigationManager NavigationManager { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        if (NavigationManager.Uri.Contains("/om_os"))
+        {
+            MainContainerClass = "main-container no-padding";
+        }
+        else
+        {
+            MainContainerClass = "main-container";
+        }
+    }
+}

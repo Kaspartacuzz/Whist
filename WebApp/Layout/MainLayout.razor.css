@@ -4,4 +4,23 @@
     margin: 2rem auto;
     padding: 2rem;
     background-color: transparent;
+    min-height: 100vh;              /* Gør containeren lige så høj som skærmen */
+    display: flex;
+    flex-direction: column;
+}
+
+.main-container.no-padding {
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: 100% !important;
+}
+
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+.app-footer {
+    margin-top: auto;               /* Skubber footeren ned i bunden */
 }
