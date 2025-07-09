@@ -13,7 +13,8 @@
 /* 2) Den langstrakte række af billeder */
 .slideshow-track {
     display: flex;
-    animation: slide-left 30s linear infinite;
+    width: max-content; /* Gør hele rækken fleksibel */
+    animation: slide-left 20s linear infinite;
 }
 
 /* 3) Hvert billede som firkant */
