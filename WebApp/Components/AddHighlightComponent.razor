@@ -99,7 +99,7 @@
             HighlightToEdit.Title = Title;
             HighlightToEdit.Description = Description;
             HighlightToEdit.ImageUrl = PreviewUrl ?? HighlightToEdit.ImageUrl;
-            IsPrivate = IsPrivate;
+            HighlightToEdit.IsPrivate = IsPrivate;
 
             await HighlightService.Update(HighlightToEdit);
         }

@@ -58,7 +58,14 @@
             }
 
             <div class="highlight-body">
-                <h3 class="title">@h.Title</h3>
+                <div class="highlight-title-row">
+                    <h3 class="title">@h.Title</h3>
+
+                    @if (h.IsPrivate)
+                    {
+                        <span class="highlight-private-label">Privat</span>
+                    }
+                </div>
                 <p class="description">@h.Description</p>
 
                 <div class="highlight-footer">

@@ -11,6 +11,8 @@
 }
 
 .modal-container {
+    max-height: 90vh;            
+    overflow-y: auto;
     background-color: #fff;
     padding: 2rem;
     border-radius: 12px;
@@ -40,6 +42,7 @@
 
 .modal-textarea {
     height: 100px;
+    min-height: 100px;
 }
 
 .modal-input:focus,
@@ -56,6 +59,8 @@
 
 .modal-image-preview {
     max-width: 100%;
+    max-height: 300px;       /* Justerbar efter behov */
+    object-fit: contain;
     border-radius: 8px;
     margin-top: 0.5rem;
     box-shadow: 0 2px 6px rgba(0,0,0,0.08);

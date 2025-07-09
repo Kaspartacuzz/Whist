@@ -238,3 +238,32 @@
     word-break: break-word;
     white-space: normal;
 }
+
+.highlight-private-label {
+    font-size: 0.75rem;
+    color: #9ca3af; /* grå tekst */
+    font-style: italic;
+    margin-bottom: 0.25rem;
+    display: block;
+}
+
+.highlight-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.highlight-title-row h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: bold;
+}
+
+.highlight-private-label {
+    font-size: 0.8rem;
+    color: #9ca3af;
+    font-style: italic;
+    white-space: nowrap;
+}
+
