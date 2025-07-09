@@ -10,9 +10,9 @@
         <div class="modal-container">
             <h3 class="modal-title">@(HighlightToEdit is null ? "Opret nyt highlight" : "Rediger highlight")</h3>
 
-            <input @bind="Title" placeholder="Titel" class="modal-input" />
+            <input @bind="Title" placeholder="Titel" class="modal-input" maxlength="80"/>
 
-            <textarea @bind="Description" placeholder="Beskrivelse" class="modal-textarea"></textarea>
+            <textarea @bind="Description" placeholder="Beskrivelse" class="modal-textarea" maxlength="400"></textarea>
 
             <label for="file-upload" class="custom-file-label">📷 Vedhæft billede</label>
             <div class="file-input-wrapper">

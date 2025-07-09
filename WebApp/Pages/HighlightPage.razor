@@ -41,42 +41,28 @@
     </div>
 </div>
 
-<!-- 📜 Liste af highlights -->
-<div class="highlight-list">
+<div class="highlight-grid">
     @foreach (var h in FilteredHighlights)
     {
         if (h.IsPrivate && CurrentUser is null)
         {
             continue;
         }
-        var user = Users.FirstOrDefault(u => u.Id == h.UserId);
 
         <div class="highlight-card">
-            <div class="card-image">
-                @if (!string.IsNullOrEmpty(h.ImageUrl))
-                {
+            @if (!string.IsNullOrEmpty(h.ImageUrl))
+            {
+                <div class="highlight-image">
                     <img src="@h.ImageUrl" alt="Highlight billede" />
-                }
-                else
-                {
-                    <div class="image-placeholder">Intet billede</div>
-                }
-            </div>
-
-            <div class="card-content">
-                <div class="content-header">
-                    <h3>@h.Title</h3>
-                    <span class="card-date">
-                        @h.Date.ToString("d. MMMM yyyy", 
-                            System.Globalization.CultureInfo.GetCultureInfo("da-DK"))
-                    </span>
                 </div>
+            }
 
+            <div class="highlight-body">
+                <h3 class="title">@h.Title</h3>
                 <p class="description">@h.Description</p>
 
-                <div class="content-footer">
-                    <div class="author">
-                    </div>
+                <div class="highlight-footer">
+                    <span class="card-date">@h.Date.ToString("d. MMMM yyyy", System.Globalization.CultureInfo.GetCultureInfo("da-DK"))</span>
 
                     @if (CurrentUser is not null)
                     {
