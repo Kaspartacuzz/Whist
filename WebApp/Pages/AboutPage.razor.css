@@ -84,6 +84,7 @@ ul {
     }
 
     .content, .image {
+        order: 1;
         order: unset;
         align-items: flex-start !important;
         text-align: left !important;
@@ -92,6 +93,10 @@ ul {
     }
 
     .image {
-        height: 40vh;
+        height: auto;
+        min-height: 250px;
+        order: 2;
     }
 }
+
+

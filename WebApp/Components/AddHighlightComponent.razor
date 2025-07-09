@@ -19,9 +19,9 @@
                 <InputFile id="file-upload" OnChange="HandleImageUpload" accept="image/*" />
             </div>
 
-            @if (!string.IsNullOrEmpty(PreviewUrl))
+            @if (!string.IsNullOrEmpty(ImagePreview))
             {
-                <img src="@PreviewUrl" alt="Preview" class="modal-image-preview" />
+                <img src="@ImagePreview" alt="Preview" class="modal-image-preview" />
             }
 
             <label class="modal-checkbox">
@@ -44,8 +44,9 @@
     private string Title = "";
     private string Description = "";
     private IBrowserFile? UploadedImage;
-    private string? PreviewUrl;
+    private string? ImagePreview;
     private bool IsPrivate = false;
+    private string? UploadErrorMessage = null;
 
     [Parameter] public EventCallback OnHighlightAdded { get; set; }
     [Parameter] public Highlight? HighlightToEdit { get; set; }
@@ -57,14 +58,14 @@
         {
             Title = HighlightToEdit.Title;
             Description = HighlightToEdit.Description;
-            PreviewUrl = HighlightToEdit.ImageUrl;
+            ImagePreview = HighlightToEdit.ImageUrl;
         }
         else
         {
             Title = "";
             Description = "";
             UploadedImage = null;
-            PreviewUrl = null;
+            ImagePreview = null;
         }
 
         showModal = true;
@@ -77,15 +78,27 @@
         Title = "";
         Description = "";
         UploadedImage = null;
-        PreviewUrl = null;
+        ImagePreview = null;
     }
 
     private async Task HandleImageUpload(InputFileChangeEventArgs e)
     {
         UploadedImage = e.File;
         var buffer = new byte[UploadedImage.Size];
-        await UploadedImage.OpenReadStream().ReadAsync(buffer);
-        PreviewUrl = $"data:{UploadedImage.ContentType};base64,{Convert.ToBase64String(buffer)}";
+        try
+        {
+            using var stream = UploadedImage.OpenReadStream(maxAllowedSize: 10_000_000); // 10 MB
+            await stream.ReadAsync(buffer);
+            ImagePreview = $"data:{UploadedImage.ContentType};base64,{Convert.ToBase64String(buffer)}";
+        }
+        catch (Exception ex)
+        {
+            ImagePreview = null;
+            UploadErrorMessage = "Billedet kunne ikke læses. Prøv et andet format eller en mindre fil.";
+            Console.WriteLine("Fejl ved billedupload: " + ex.Message);
+        }
+
+        ImagePreview = $"data:{UploadedImage.ContentType};base64,{Convert.ToBase64String(buffer)}";
     }
 
     private async Task CreateHighlight()
@@ -98,7 +111,7 @@
             // Redigér eksisterende highlight
             HighlightToEdit.Title = Title;
             HighlightToEdit.Description = Description;
-            HighlightToEdit.ImageUrl = PreviewUrl ?? HighlightToEdit.ImageUrl;
+            HighlightToEdit.ImageUrl = ImagePreview ?? HighlightToEdit.ImageUrl;
             HighlightToEdit.IsPrivate = IsPrivate;
 
             await HighlightService.Update(HighlightToEdit);
@@ -111,7 +124,7 @@
                 Title = Title,
                 Description = Description,
                 UserId = user.Id,
-                ImageUrl = PreviewUrl ?? "",
+                ImageUrl = ImagePreview ?? "",
                 Date = DateTime.Now,
                 IsPrivate = IsPrivate
             };

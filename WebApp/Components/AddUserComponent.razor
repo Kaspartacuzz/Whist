@@ -49,6 +49,7 @@
     private string? ImagePreview;
     private User? UserToEdit = null;
     private string ImageUrl = "";
+    private string? UploadErrorMessage = null;
 
     [Parameter] public EventCallback OnUserAdded { get; set; }
 
@@ -98,7 +99,19 @@
     {
         UploadedImage = e.File;
         var buffer = new byte[UploadedImage.Size];
-        await UploadedImage.OpenReadStream().ReadAsync(buffer);
+        try
+        {
+            using var stream = UploadedImage.OpenReadStream(maxAllowedSize: 10_000_000); // 10 MB
+            await stream.ReadAsync(buffer);
+            ImagePreview = $"data:{UploadedImage.ContentType};base64,{Convert.ToBase64String(buffer)}";
+        }
+        catch (Exception ex)
+        {
+            ImagePreview = null;
+            UploadErrorMessage = "Billedet kunne ikke læses. Prøv et andet format eller en mindre fil.";
+            Console.WriteLine("Fejl ved billedupload: " + ex.Message);
+        }
+
         ImagePreview = $"data:{UploadedImage.ContentType};base64,{Convert.ToBase64String(buffer)}";
     }
     
