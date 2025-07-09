@@ -1,19 +1,32 @@
-@media (min-width: 768px) {
-    .desktop-auth-button {
+@media (max-width: 768px) {
+    .mobile-toggle {
         display: block !important;
     }
 
-    .mobile-toggle {
+    .main-links {
         display: none !important;
     }
-}
 
-@media (max-width: 767px) {
     .desktop-auth-button {
         display: none !important;
     }
 
+    .nav-top-wrapper {
+        padding-top: 1.5rem;
+        padding-bottom: 1.5rem;
+    }
+}
+
+@media (min-width: 769px) {
     .mobile-toggle {
+        display: none !important;
+    }
+
+    .main-links {
+        display: flex !important;
+    }
+
+    .desktop-auth-button {
         display: block !important;
     }
 }

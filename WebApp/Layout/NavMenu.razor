@@ -8,19 +8,16 @@
 
 <nav style="background-color: #fff; padding: 1rem 2rem; box-shadow: 0 2px 8px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100; font-family: Poppins, sans-serif; width: 100vw;">
     <div style="display: flex; align-items: center; justify-content: center; flex-wrap: wrap; position: relative;">
-
-        <div style="position: relative; height: 3.5rem; background-color: white; display: flex; align-items: center; justify-content: space-between; padding-left: 2rem; padding-right: 1rem;">
+        <div class="nav-top-wrapper">
             <!-- Logo -->
-            <div style="font-size: 1.8rem; font-weight: 700;">
-                <NavLink href="" style="text-decoration: none; color: #1a1a1a;">Whist Holdet</NavLink>
+            <div class="logo" style="position: absolute; left: 2rem; top: 50%; transform: translateY(-50%); font-size: 1.8rem; font-weight: 700;">
+                <NavLink href="" style="text-decoration: none; color: #1a1a1a; white-space: nowrap;">Whist Holdet</NavLink>
             </div>
 
-            <!-- Burger-menu ikon -->
+            <!-- Mobilmenu ikon -->
             <button @onclick="ToggleMobileMenu"
                     class="mobile-toggle"
-                    style="background: none; border: none; font-size: 1.8rem; cursor: pointer; padding: 0.3rem 0.6rem;"
-                    onmouseover="this.style.opacity='0.6'" 
-                    onmouseout="this.style.opacity='1'">
+                    style="background: none; border: none; font-size: 1.8rem; display: none; cursor: pointer; position: absolute; right: 2rem; top: 50%; transform: translateY(-50%);">
                 ☰
             </button>
         </div>
@@ -67,8 +64,8 @@
             </li>
         </ul>
 
-        <!-- Login/Logud knap (kun desktop) -->
-        <div class="desktop-auth-button" style="position: absolute; right: 2rem; display: none;">
+        <!-- Login/Logud knap -->
+        <div class="desktop-auth-button" style="position: absolute; right: 2rem;">
             @if (_currentUser is null)
             {
                 <button @onclick="ToggleLogin"
@@ -96,14 +93,13 @@
         <div style="margin-top: 1rem; display: flex; flex-direction: column; gap: 1rem;">
             @if (_currentUser is not null)
             {
-                <NavLink href="bøder" @onclick="ToggleMobileMenu" style="padding: 0.8rem; border: 1px solid #ddd; border-radius: 8px; text-align: center; color: #26417b; text-decoration: none;">Bøder</NavLink>
+                <NavLink href="bøder" @onclick="ToggleMobileMenu" style="margin-top: 2rem; padding: 0.8rem; border: 1px solid #ddd; border-radius: 8px; text-align: center; color: #26417b; text-decoration: none;">Bøder</NavLink>
             }
             <NavLink href="highlights" @onclick="ToggleMobileMenu" style="padding: 0.8rem; border: 1px solid #ddd; border-radius: 8px; text-align: center; color: #26417b; text-decoration: none;">Highlights</NavLink>
             <NavLink href="medlemmer" @onclick="ToggleMobileMenu" style="padding: 0.8rem; border: 1px solid #ddd; border-radius: 8px; text-align: center; color: #26417b; text-decoration: none;">Medlemmer</NavLink>
             <NavLink href="regler" @onclick="ToggleMobileMenu" style="padding: 0.8rem; border: 1px solid #ddd; border-radius: 8px; text-align: center; color: #26417b; text-decoration: none;">Regler</NavLink>
             <NavLink href="skema" @onclick="ToggleMobileMenu" style="padding: 0.8rem; border: 1px solid #ddd; border-radius: 8px; text-align: center; color: #26417b; text-decoration: none;">Skema</NavLink>
-            
-            <!-- Login/Logud knap (kun mobil) -->
+            <!-- Login/Logud knap -->
             <div style="margin-top: 2rem; text-align: center;">
                 @if (_currentUser is null)
                 {
@@ -162,5 +158,4 @@
     {
         isMobileMenuOpen = !isMobileMenuOpen;
     }
-
 }
