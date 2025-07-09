@@ -156,6 +156,7 @@
     padding: 1rem;
     border-radius: 12px;
     box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+    max-width: 100%;
 }
 
 .fine-table table {
@@ -183,21 +184,29 @@
 .fine-table th:nth-child(1),
 .fine-table td:nth-child(1) {
     width: 20%;
+    word-wrap: break-word;
+    white-space: normal;
 }
 
 .fine-table th:nth-child(2),
 .fine-table td:nth-child(2) {
     width: 20%;
+    word-wrap: break-word;
+    white-space: normal;
 }
 
 .fine-table th:nth-child(3),
 .fine-table td:nth-child(3) {
     width: 20%;
+    word-wrap: break-word;
+    white-space: normal;
 }
 
 .fine-table th:nth-child(4),
 .fine-table td:nth-child(4) {
     width: 30%;
+    word-wrap: break-word;
+    white-space: normal;
 }
 
 .fine-table th:nth-child(5),
