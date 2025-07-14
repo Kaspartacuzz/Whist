@@ -12,7 +12,7 @@ public class RuleRepositoryMongoDB : IRuleRepository
     {
         var client = new MongoClient(config["MongoDbSettings:ConnectionString"]);
         var db = client.GetDatabase(config["MongoDbSettings:DatabaseName"]);
-        _rules = db.GetCollection<Rule>("Rules");
+        _rules = db.GetCollection<Rule>("rules");
     }
 
     public async Task<List<Rule>> GetAll() =>
