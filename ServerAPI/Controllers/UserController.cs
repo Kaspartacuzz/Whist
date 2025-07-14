@@ -10,11 +10,15 @@ public class UserController : ControllerBase
 {
     // Dependency Injection: vi får et IUserRepository-objekt udefra
     // og gemmer det i en privat variabel, så vi kan bruge det i controllerens metoder
-    private IUserRepository _userRepository;
-    public UserController(IUserRepository userRepository)
+    private readonly IUserRepository _userRepository;
+    private readonly IWebHostEnvironment _env;
+
+    public UserController(IUserRepository userRepository, IWebHostEnvironment env)
     {
         _userRepository = userRepository;
+        _env = env;
     }
+
     
     [HttpGet]
     // Returnerer en liste med brugere hentet fra Userrepository
@@ -38,10 +42,27 @@ public class UserController : ControllerBase
     }
     
     [HttpDelete("{id}")]
-    // Sletter en bruger baseret på det angivne ID
     public void Delete(int id)
     {
-        _userRepository.Delete(id); // Kalder Userrepositoryets Delete-metode
+        var user = _userRepository.GetById(id);
+    
+        if (user is not null && !string.IsNullOrEmpty(user.ImageUrl))
+        {
+            try
+            {
+                var relativePath = user.ImageUrl.Replace($"{Request.Scheme}://{Request.Host}", "");
+                var fullPath = Path.Combine(_env.WebRootPath, relativePath.TrimStart('/'));
+
+                if (System.IO.File.Exists(fullPath))
+                    System.IO.File.Delete(fullPath);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"⚠️ Kunne ikke slette profilbillede: {ex.Message}");
+            }
+        }
+
+        _userRepository.Delete(id);
     }
 
     [HttpPut("{id}")]

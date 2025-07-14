@@ -6,6 +6,7 @@ using WebApp.Service;
 using WebApp.Service.AuthServices;
 using WebApp.Service.FineServices;
 using WebApp.Service.HighlightServices;
+using WebApp.Service.UploadServices;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 
@@ -18,6 +19,8 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IFineService, FineServiceMock>();
 builder.Services.AddScoped<IHighlightService, HighlightService>();
+builder.Services.AddScoped<IUploadService, UploadService>();
+
 
 
 

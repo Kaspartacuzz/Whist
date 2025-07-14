@@ -1,6 +1,8 @@
 @using Core
 @using Microsoft.AspNetCore.Components.Forms
+
 @inject Service.IUserService UserService
+@inject Service.UploadServices.IUploadService UploadService
 
 @if (showModal)
 {
@@ -98,21 +100,24 @@
     private async Task HandleImageUpload(InputFileChangeEventArgs e)
     {
         UploadedImage = e.File;
-        var buffer = new byte[UploadedImage.Size];
+        UploadErrorMessage = null;
+
         try
         {
-            using var stream = UploadedImage.OpenReadStream(maxAllowedSize: 10_000_000); // 10 MB
-            await stream.ReadAsync(buffer);
-            ImagePreview = $"data:{UploadedImage.ContentType};base64,{Convert.ToBase64String(buffer)}";
+            var resultUrl = await UploadService.UploadImageAsync(UploadedImage);
+            if (!string.IsNullOrEmpty(resultUrl))
+            {
+                ImagePreview = resultUrl;
+            }
+            else
+            {
+                UploadErrorMessage = "Upload mislykkedes. Prøv igen.";
+            }
         }
         catch (Exception ex)
         {
-            ImagePreview = null;
-            UploadErrorMessage = "Billedet kunne ikke læses. Prøv et andet format eller en mindre fil.";
-            Console.WriteLine("Fejl ved billedupload: " + ex.Message);
+            UploadErrorMessage = "Fejl under upload: " + ex.Message;
         }
-
-        ImagePreview = $"data:{UploadedImage.ContentType};base64,{Convert.ToBase64String(buffer)}";
     }
     
     private async Task CreateUser()

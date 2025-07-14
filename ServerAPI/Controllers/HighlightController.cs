@@ -9,10 +9,12 @@ namespace ServerAPI.Controllers;
 public class HighlightController : ControllerBase
 {
     private readonly IHighlightRepository _repository;
+    private readonly IWebHostEnvironment _env;
 
-    public HighlightController(IHighlightRepository repository)
+    public HighlightController(IHighlightRepository repository, IWebHostEnvironment env)
     {
         _repository = repository;
+        _env = env;
     }
 
     [HttpGet]
@@ -41,6 +43,25 @@ public class HighlightController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {
+        var highlight = await _repository.GetById(id);
+
+        if (highlight is not null && !string.IsNullOrEmpty(highlight.ImageUrl))
+        {
+            try
+            {
+                // Fjern domæne fra URL, fx "http://localhost:5176/uploads/2025.07.14/abc.jpg"
+                var relativePath = highlight.ImageUrl.Replace($"{Request.Scheme}://{Request.Host}", "");
+                var fullPath = Path.Combine(_env.WebRootPath, relativePath.TrimStart('/'));
+
+                if (System.IO.File.Exists(fullPath))
+                    System.IO.File.Delete(fullPath);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"⚠️ Kunne ikke slette billede: {ex.Message}");
+            }
+        }
+
         await _repository.Delete(id);
         return NoContent();
     }
