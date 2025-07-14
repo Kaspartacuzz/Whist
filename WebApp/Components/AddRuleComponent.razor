@@ -1,0 +1,69 @@
+@using Core
+@inject Service.RuleServices.IRuleService RuleService
+
+@if (showModal)
+{
+    <div class="modal-backdrop">
+        <div class="modal-container">
+            <h3 class="modal-title">@(RuleToEdit is null ? "Opret ny regel" : "Rediger regel")</h3>
+            
+            <input id="ruleText"
+                   class="modal-input"
+                   placeholder="Skriv reglen her..."
+                   @bind="RuleText" />
+
+            <div class="modal-actions">
+                <button class="modal-btn primary" @onclick="SaveRule">
+                    @(RuleToEdit is null ? "Opret regel" : "Gem ændringer")
+                </button>
+                <button class="modal-btn cancel" @onclick="Close">Annuller</button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private bool showModal = false;
+    private string RuleText = string.Empty;
+
+    [Parameter] public Rule? RuleToEdit { get; set; }
+    [Parameter] public EventCallback OnRuleSaved { get; set; }
+
+    public void Show(Rule? rule = null)
+    {
+        RuleToEdit = rule;
+        RuleText = rule?.Text ?? string.Empty;
+        showModal = true;
+        StateHasChanged();
+    }
+
+    private void Close()
+    {
+        showModal = false;
+        RuleText = string.Empty;
+        RuleToEdit = null;
+    }
+
+    private async Task SaveRule()
+    {
+        if (string.IsNullOrWhiteSpace(RuleText))
+            return;
+
+        if (RuleToEdit is not null)
+        {
+            RuleToEdit.Text = RuleText;
+            await RuleService.Update(RuleToEdit);
+        }
+        else
+        {
+            var newRule = new Rule
+            {
+                Text = RuleText
+            };
+            await RuleService.Add(newRule);
+        }
+
+        await OnRuleSaved.InvokeAsync();
+        Close();
+    }
+}

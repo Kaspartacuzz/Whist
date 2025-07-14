@@ -1,3 +1,31 @@
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.btn-add {
+    background-color: #6366F1;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.btn-add:hover {
+    background-color: #4829a5;
+}
+
+.rules-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
 .rules-list.clean {
     display: flex;
     flex-direction: column;
@@ -8,9 +36,16 @@
 
 .rule-line {
     display: flex;
+    justify-content: space-between;
+    align-items: center;
+    line-height: 1.6;
+    padding-right: 1rem;
+}
+
+.rule-left {
+    display: flex;
     align-items: flex-start;
     gap: 0.75rem;
-    line-height: 1.6;
 }
 
 .rule-badge {
@@ -33,3 +68,32 @@
     color: #333;
     max-width: 100%;
 }
+
+.icon-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.3rem;
+    border-radius: 6px;
+    transition: background-color 0.2s ease;
+    font-size: 1.1rem;
+}
+
+.icon-button:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.3rem;
+}
+
+.icon-button.blue {
+    color: #4a4ae6;
+}
+
+.icon-button.red {
+    color: #e53935;
+}
+

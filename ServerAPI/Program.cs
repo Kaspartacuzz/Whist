@@ -1,6 +1,7 @@
 using ServerAPI.Repositories;
 using ServerAPI.Repositories.Fines;
 using ServerAPI.Repositories.Highlights;
+using ServerAPI.Repositories.Rules;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,6 +13,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddSingleton<IUserRepository, UserRepositoryMongoDB>();
 builder.Services.AddSingleton<IFineRepository, FineRepositoryMongoDB>();
 builder.Services.AddSingleton<IHighlightRepository, HighlightRepositoryMongoDB>();
+builder.Services.AddSingleton<IRuleRepository, RuleRepositoryMongoDB>();
 
 builder.Services.AddCors(options =>
 {

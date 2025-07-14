@@ -1,54 +1,104 @@
 @page "/regler"
+@using Core
+@using WebApp.Components
+@using WebApp.Service.RuleServices
+@inject IRuleService RuleService
 
-<h2>Spilleregler for Whist</h2>
-
-<div class="rules-list clean">
-    @foreach (var rule in rules.Select((text, index) => new { text, index }))
-    {
-        <div class="rule-line">
-            <div class="rule-badge">@($"{rule.index + 1}")</div>
-            <div class="rule-text">@rule.text</div>
-        </div>
-    }
+<div class="page-header">
+    <h2>Regler</h2>
+    <div class="rules-actions">
+        <button class="btn-add" @onclick="OpenAddModal">+ Opret regel</button>
+        <button class="btn-add" @onclick="ToggleEditMode">
+            @(editMode ? "Afslut redigering" : "Rediger regler")
+        </button>
+    </div>
 </div>
 
+<AddRuleComponent @ref="addRuleComponent" OnRuleSaved="LoadRules" />
+<ConfirmDeleteComponent @ref="confirmDeleteComponent"
+                        OnConfirm="DeleteConfirmed"
+                        OnCancel="CancelDelete"
+                        Message="Er du sikker på at du vil slette denne regel?" />
+
+
+@if (Rules.Count == 0)
+{
+    <p>Ingen regler endnu...</p>
+}
+else
+{
+    <div class="rules-list clean">
+        @foreach (var rule in Rules.OrderBy(r => r.Id))
+        {
+            <div class="rule-line">
+                <div class="rule-left">
+                    <div class="rule-badge">@rule.Id</div>
+                    <div class="rule-text">@rule.Text</div>
+                </div>
+
+                @if (editMode)
+                {
+                    <div class="actions">
+                        <button class="icon-button blue" title="Redigér" @onclick="() => EditRule(rule)">✏️</button>
+                        <button class="icon-button red" title="Slet" @onclick="() => ConfirmDelete(rule)">🗑️</button>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+}
+
+
 @code {
-    private List<string> rules = new()
+    private List<Rule> Rules = new();
+    private AddRuleComponent? addRuleComponent;
+    private bool editMode = false;
+    private ConfirmDeleteComponent? confirmDeleteComponent;
+    private Rule? RuleToDelete;
+
+    protected override async Task OnInitializedAsync()
     {
-        "Værten fører regnskab.",
-        "Der spilles med 52 kort + 3 joker.",
-        "Spilleren som sidder efter værten, giver kort i første spil. I efterfølgende spil skiftes spillerne efter tur til at give kort. Turen går med uret rundt.",
-        "Ved 4 deltagere spiller alle med. Ved 5 spillere sidder kortgiveren over.",
-        "Hver spiller skal have 13 kort, og der skal 3 kort i katten. Kortgiveren bestemmer selv, på hvilken måde kortene skal fordeles.",
-        "Der skal tages af eller bankes, inden der gives kort. Det gøres af personen, som sidder bagved kortgiveren.",
-        "Der meldes tilbage – ikke rundt. Det betyder, at 2 spillere melder færdig (til den ene har meldt pas) inden meldingen går videre til næste person.",
-        "Der kan meldes 7, 8, 9, 10, 11, 12 eller 13 (almindelige, vip, gode, halve), sol, ren sol, bordlægger, super bordlægger og pas.",
-        "Meldingen almindelige betyder frit valg af trumf. I almindelige må man godt melde klør som trumf.",
-        "Meldingen vip betyder, at bytterne bestemmer trumfen. Kortene vendes ét ad gangen. Hvis man vender en joker, må man tage det forrige vendte kort som trumf. Hvis der er 3 jokere i bytterne, spilles der uden trumf. Vip slår almindelige.",
-        "Meldingen gode betyder, at klør er trumf. Gode slår vip.",
-        "Meldingen halve betyder, at den som har makkeresset vælger trumf. Trumfen må ikke have samme kulør som makkeresset. Spilleren med makkeresset bytter kort. Halve slår gode.",
-        "Meldingen sol betyder, at man vælter på 2. stik. Sol kan slås af meldingen 9 vip eller højere.",
-        "Meldingen ren sol betyder, at man vælter på 1. stik. Ren sol kan slås af meldingen 10 vip eller højere.",
-        "Meldingen bordlægger betyder, at man vælter på 1. stik. Der spilles én runde, hvorefter den der meldte bordlægger lægger sine kort på bordet. Bordlægger kan slås af 11 vip eller højere.",
-        "Meldingen super bordlægger betyder, at man vælter på 1. stik. Alle spillere lægger deres kort på bordet inden 1. udspil. De spillere, som skal vælte super bordlæggeren, må tale sammen. Super bordlægger kan slås af 12 vip eller højere.",
-        "Hvis alle melder pas, gives der om.",
-        "Man må gå med i sol, ren sol, bordlægger og super bordlægger. Den der melder først, må bytte først. De øvrige må bytte derefter.",
-        "Man melder trumf og makkeress før der byttes.",
-        "Hvis man melder til et es, som ligger i bytterne, er man makker med sig selv (selvmakker). Hvis man i halve melder til es i bytterne, skal man selv melde trumf.",
-        "Der må ikke meldes til esset, som er trumf.",
-        "Hvis man har alle 4 esser, skal man melde til en konge. Der skal også meldes til konge, hvis man har de 3 esser, som ikke er trumf.",
-        "Esset er laveste kort i sol, ren sol, bordlægger og super bordlægger. I alle andre spil er det højeste kort.",
-        "Man bytter alt eller intet. Der skal byttes i meldingen vip.",
-        "Jokeren er sikkert stik, når den spilles ud.",
-        "Makkeresset skal falde første gang kuløren spilles. Det er tilladt at trumfe det es, der er meldt til.",
-        "Personen efter kortgiveren spiller ud. Alt må spilles ud i første runde undtagen joker.",
-        "Der spilles efter følgende pointgivning. Inden spillet starter, aftales det, hvad hvert enkelt point koster.",
-        "Ved afbud får man automatisk en bøde på 500 kr.",
-        "Hvis 1, 2, 3 og 4 i samme kulør bliver spillet i samme runde, skal alle hurtigt lægge hånden på kortene. Den sidste, der gør det, får en stjerne i bøde.",
-        "Hvis man laver en fejl under blanding, så kortene må blandes om, gives en stjerne i bøde til den, der blandede.",
-        "Noget med gule og røde kort???",
-        "For sent bøde???",
-        "Værten fra tidligere Whist aften skal medbringe maleri med nyt element på maleriet.",
-        "Værten fra tidligere Whist aften skal medbringe Whist bogen eller modtages bøde på 50 kroner."
-    };
+        await LoadRules();
+    }
+
+    private async Task LoadRules()
+    {
+        Rules = await RuleService.GetAll();
+    }
+
+    private void OpenAddModal()
+    {
+        addRuleComponent?.Show();
+    }
+    
+    private void ToggleEditMode()
+    {
+        editMode = !editMode;
+    }
+
+    private void EditRule(Rule rule)
+    {
+        addRuleComponent?.Show(rule);
+    }
+
+    private void ConfirmDelete(Rule rule)
+    {
+        RuleToDelete = rule;
+        confirmDeleteComponent?.Show();
+    }
+
+    private async Task DeleteConfirmed()
+    {
+        if (RuleToDelete is not null)
+        {
+            await RuleService.Delete(RuleToDelete.Id);
+            RuleToDelete = null;
+            await LoadRules();
+        }
+    }
+
+    private void CancelDelete()
+    {
+        RuleToDelete = null;
+    }
 }
