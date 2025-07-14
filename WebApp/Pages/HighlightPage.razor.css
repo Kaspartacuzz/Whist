@@ -202,6 +202,7 @@
 }
 
 .highlight-image {
+    position: relative;
     width: 100%;
     height: 200px;
     overflow: hidden;
@@ -265,5 +266,63 @@
     color: #9ca3af;
     font-style: italic;
     white-space: nowrap;
+}
+
+/* Udvid ikon */
+.expand-button {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    background-color: rgba(255, 255, 255, 0.85);
+    border: none;
+    border-radius: 9999px;
+    font-size: 1.2rem;
+    padding: 0.3rem 0.5rem;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+}
+.expand-button:hover {
+    background-color: white;
+}
+
+/* Modal overlay */
+.image-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+/* Modal indhold */
+.image-modal-content {
+    position: relative;
+    max-width: 90vw;
+    max-height: 90vh;
+    background-color: #fff;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 0 10px rgba(0,0,0,0.2);
+}
+.image-modal-content img {
+    max-width: 100%;
+    max-height: 80vh;
+    display: block;
+    margin: auto;
+}
+
+/* Luk knap */
+.close-button {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: #333;
+    cursor: pointer;
 }
 

@@ -54,6 +54,9 @@
             {
                 <div class="highlight-image">
                     <img src="@h.ImageUrl" alt="Highlight billede" />
+                    <button class="expand-button" title="Se i stor størrelse" @onclick="() => OpenImageModal(h.ImageUrl)">
+                        ⛶
+                    </button>
                 </div>
             }
 
@@ -89,6 +92,16 @@
                         OnCancel="CancelDelete"
                         Message="Er du sikker på at du vil slette dette highlight?" />
 
+@if (ExpandedImageUrl is not null)
+{
+    <div class="image-modal-backdrop" @onclick="CloseImageModal">
+        <div class="image-modal-content" @onclick:stopPropagation>
+            <button class="close-button" @onclick="CloseImageModal">✖</button>
+            <img src="@ExpandedImageUrl" alt="Udvidet billede" />
+        </div>
+    </div>
+}
+
 
 @code {
     private List<Highlight> Highlights = new();
@@ -97,6 +110,7 @@
     private DateTime? filterFrom = null;
     private DateTime? filterTo = null;
     private User? CurrentUser;
+    private string? ExpandedImageUrl;
 
     private AddHighlightComponent? addComponent;
 
@@ -155,5 +169,15 @@
     private async Task EditHighlight(Highlight h)
     {
         addComponent?.Show(h);
+    }
+    
+    private void OpenImageModal(string url)
+    {
+        ExpandedImageUrl = url;
+    }
+
+    private void CloseImageModal()
+    {
+        ExpandedImageUrl = null;
     }
 }
