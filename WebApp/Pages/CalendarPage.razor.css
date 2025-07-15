@@ -80,3 +80,30 @@
     border: 2px solid #6366F1;
     background-color: #eef2ff;
 }
+
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+}
+
+.calendar-controls {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin: 0 auto; /* centrerer midterste element hvis muligt */
+}
+
+.calendar-filters {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+}
+
+.calendar-filter {
+    display: flex;
+    flex-direction: column;
+}
+

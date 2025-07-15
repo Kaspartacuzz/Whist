@@ -8,30 +8,33 @@
 <h2>Kalender</h2>
 
 <div class="calendar-controls">
-    <label>År:
-        <select @bind="CurrentYear">
-            @foreach (var year in YearRange)
-            {
-                <option value="@year">@year</option>
-            }
-        </select>
-    </label>
+        <button @onclick="PreviousMonth">←</button>
+        <strong>@CurrentMonthName @CurrentYear</strong>
+        <button @onclick="NextMonth">→</button>
+        </div>
 
-    <label>Måned:
-        <select @bind="CurrentMonth">
-            @for (int m = 1; m <= 12; m++)
-            {
-                <option value="@m">@CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(m)</option>
-            }
-        </select>
-    </label>
-</div>
+<div class="calendar-filters">
+    <div class="calendar-filter">
+            <label><strong>Vælg år:</strong></label>
+            <select @bind="CurrentYear">
+                @foreach (var year in YearRange)
+                {
+                    <option value="@year">@year</option>
+                }
+            </select>
+        </div>
 
-<div class="calendar-controls">
-    <button @onclick="PreviousMonth">←</button>
-    <strong>@CurrentMonthName @CurrentYear</strong>
-    <button @onclick="NextMonth">→</button>
-</div>
+        <div class="calendar-filter">
+            <label><strong>Vælg måned:</strong></label>
+            <select @bind="CurrentMonth">
+                @for (int m = 1; m <= 12; m++)
+                {
+                    <option value="@m">@CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(m)</option>
+                }
+            </select>
+        </div>
+    </div>
+
 
 <div class="calendar-grid">
     @foreach (var day in DayHeaders)
