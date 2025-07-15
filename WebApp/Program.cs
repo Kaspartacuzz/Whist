@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using WebApp;
 using WebApp.Service;
 using WebApp.Service.AuthServices;
+using WebApp.Service.CalendarServices;
 using WebApp.Service.FineServices;
 using WebApp.Service.HighlightServices;
 using WebApp.Service.RuleServices;
@@ -22,9 +23,6 @@ builder.Services.AddScoped<IFineService, FineServiceMock>();
 builder.Services.AddScoped<IHighlightService, HighlightService>();
 builder.Services.AddScoped<IUploadService, UploadService>();
 builder.Services.AddScoped<IRuleService, RuleService>();
-
-
-
-
+builder.Services.AddScoped<ICalendarService, CalendarService>();
 
 await builder.Build().RunAsync();

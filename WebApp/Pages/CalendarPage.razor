@@ -1,0 +1,238 @@
+@page "/kalender"
+@using System.Globalization
+@using Core
+@inject IJSRuntime JS
+@inject Service.CalendarServices.ICalendarService CalendarService
+
+<h2>Kalender</h2>
+
+<div class="calendar-controls">
+    <label>År:
+        <select @bind="CurrentYear">
+            @foreach (var year in YearRange)
+            {
+                <option value="@year">@year</option>
+            }
+        </select>
+    </label>
+
+    <label>Måned:
+        <select @bind="CurrentMonth">
+            @for (int m = 1; m <= 12; m++)
+            {
+                <option value="@m">@CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(m)</option>
+            }
+        </select>
+    </label>
+</div>
+
+<div class="calendar-controls">
+    <button @onclick="PreviousMonth">←</button>
+    <strong>@CurrentMonthName @CurrentYear</strong>
+    <button @onclick="NextMonth">→</button>
+</div>
+
+<div class="calendar-grid">
+    @foreach (var day in DayHeaders)
+    {
+        <div class="day-header">@day</div>
+    }
+
+    @for (int i = 0; i < LeadingEmptyDays; i++)
+    {
+        <div class="day-cell empty"></div>
+    }
+
+    @for (int day = 1; day <= DaysInMonth; day++)
+    {
+        var date = new DateTime(CurrentYear, CurrentMonth, day);
+        var isToday = date.Date == DateTime.Today;
+        var cellClass = isToday ? "day-cell today" : "day-cell";
+
+        <div class="@cellClass" @onclick="@(() => SelectDate(date))">
+            <div class="day-number">@day</div>
+            @if (EventDates.TryGetValue(date.Date, out var note))
+            {
+                <div class="event-note">@note</div>
+            }
+        </div>
+    }
+</div>
+
+@if (SelectedDate.HasValue)
+{
+    <div class="note-entry">
+        <h4>@SelectedDate.Value.ToShortDateString()</h4>
+
+        <textarea @bind="NewNote" placeholder="Tilføj note" rows="3"></textarea>
+
+        <div class="note-buttons">
+            <button class="btn-save" @onclick="SaveNote">Gem</button>
+
+            @if (EventDates.ContainsKey(SelectedDate.Value.Date))
+            {
+                <button class="btn-delete" @onclick="DeleteNote">Slet</button>
+            }
+
+            <button class="btn-cancel" @onclick="CancelEdit">Annuller</button>
+        </div>
+    </div>
+}
+
+@if (EventDates.Any(e => e.Key >= DateTime.Today))
+{
+    <h3>📅 Kommende begivenheder</h3>
+    <ul>
+        @foreach (var evt in EventDates
+                      .Where(e => e.Key >= DateTime.Today)
+                      .OrderBy(e => e.Key))
+        {
+            <li><strong>@evt.Key.ToShortDateString()</strong>: @evt.Value</li>
+        }
+    </ul>
+}
+else
+{
+    <p>Ingen kommende begivenheder.</p>
+}
+
+@if (EventDates.Any(e => e.Key < DateTime.Today))
+{
+    <h3>🕘 Tidligere begivenheder</h3>
+    <ul>
+        @foreach (var evt in EventDates
+                      .Where(e => e.Key < DateTime.Today)
+                      .OrderByDescending(e => e.Key))
+        {
+            <li><strong>@evt.Key.ToShortDateString()</strong>: @evt.Value</li>
+        }
+    </ul>
+}
+else
+{
+    <p>Ingen tidligere begivenheder.</p>
+}
+
+@code {
+    private DateTime? SelectedDate;
+    private string NewNote = "";
+    private Dictionary<DateTime, string> EventDates = new();
+
+    private int currentYear = DateTime.Today.Year;
+    private int currentMonth = DateTime.Today.Month;
+
+    private int CurrentYear
+    {
+        get => currentYear;
+        set
+        {
+            if (currentYear != value)
+            {
+                currentYear = value;
+                _ = LoadEvents();
+            }
+        }
+    }
+
+    private int CurrentMonth
+    {
+        get => currentMonth;
+        set
+        {
+            if (currentMonth != value)
+            {
+                currentMonth = value;
+                _ = LoadEvents();
+            }
+        }
+    }
+
+    private int DaysInMonth => DateTime.DaysInMonth(CurrentYear, CurrentMonth);
+    private int LeadingEmptyDays => ((int)new DateTime(CurrentYear, CurrentMonth, 1).DayOfWeek + 6) % 7;
+
+    private string CurrentMonthName => CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(CurrentMonth);
+    private string[] DayHeaders => new[] { "Man", "Tir", "Ons", "Tor", "Fre", "Lør", "Søn" };
+    private List<int> YearRange = Enumerable.Range(DateTime.Today.Year - 5, 56).ToList();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadEvents();
+    }
+
+    private async Task LoadEvents()
+    {
+        var allEvents = await CalendarService.GetAll();
+        EventDates = allEvents.ToDictionary(e => e.Date.Date, e => e.Note);
+        StateHasChanged();
+    }
+
+    private void SelectDate(DateTime date)
+    {
+        SelectedDate = date;
+        NewNote = EventDates.TryGetValue(date.Date, out var note) ? note : "";
+    }
+
+    private async Task SaveNote()
+    {
+        if (SelectedDate.HasValue)
+        {
+            var calendar = new Core.Calendar
+            {
+                Date = SelectedDate.Value.Date,
+                Note = NewNote
+            };
+
+            await CalendarService.Save(calendar);
+            EventDates[calendar.Date] = calendar.Note;
+
+            NewNote = "";
+            SelectedDate = null;
+        }
+    }
+
+    private async Task DeleteNote()
+    {
+        if (SelectedDate.HasValue)
+        {
+            await CalendarService.Delete(SelectedDate.Value.Date);
+            EventDates.Remove(SelectedDate.Value.Date);
+
+            SelectedDate = null;
+            NewNote = "";
+        }
+    }
+
+    private void CancelEdit()
+    {
+        SelectedDate = null;
+        NewNote = "";
+    }
+
+    private async Task PreviousMonth()
+    {
+        if (CurrentMonth == 1)
+        {
+            CurrentMonth = 12;
+            CurrentYear--;
+        }
+        else
+        {
+            CurrentMonth--;
+        }
+        await LoadEvents();
+    }
+
+    private async Task NextMonth()
+    {
+        if (CurrentMonth == 12)
+        {
+            CurrentMonth = 1;
+            CurrentYear++;
+        }
+        else
+        {
+            CurrentMonth++;
+        }
+        await LoadEvents();
+    }
+}

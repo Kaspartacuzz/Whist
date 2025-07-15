@@ -1,4 +1,5 @@
 using ServerAPI.Repositories;
+using ServerAPI.Repositories.Calendars;
 using ServerAPI.Repositories.Fines;
 using ServerAPI.Repositories.Highlights;
 using ServerAPI.Repositories.Rules;
@@ -14,6 +15,8 @@ builder.Services.AddSingleton<IUserRepository, UserRepositoryMongoDB>();
 builder.Services.AddSingleton<IFineRepository, FineRepositoryMongoDB>();
 builder.Services.AddSingleton<IHighlightRepository, HighlightRepositoryMongoDB>();
 builder.Services.AddSingleton<IRuleRepository, RuleRepositoryMongoDB>();
+builder.Services.AddScoped<ICalendarRepository, CalendarRepositoryMongoDB>();
+
 
 builder.Services.AddCors(options =>
 {

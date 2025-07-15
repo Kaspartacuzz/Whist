@@ -62,6 +62,13 @@
                     Skema
                 </NavLink>
             </li>
+            <li>
+                <NavLink href="kalender" style="display: inline-block; padding: 0.5rem 1rem; font-size: 0.80rem; font-weight: 400; color: #26417b; background-color: #fff; border: 1px solid #e0e0e0; border-radius: 8px; text-decoration: none;"
+                         onmouseover="this.style.backgroundColor='#f2f6fd'" 
+                         onmouseout="this.style.backgroundColor='#fff'">
+                    Kalender
+                </NavLink>
+            </li>
         </ul>
 
         <!-- Login/Logud knap -->
@@ -99,6 +106,7 @@
             <NavLink href="medlemmer" @onclick="ToggleMobileMenu" style="padding: 0.8rem; border: 1px solid #ddd; border-radius: 8px; text-align: center; color: #26417b; text-decoration: none;">Medlemmer</NavLink>
             <NavLink href="regler" @onclick="ToggleMobileMenu" style="padding: 0.8rem; border: 1px solid #ddd; border-radius: 8px; text-align: center; color: #26417b; text-decoration: none;">Regler</NavLink>
             <NavLink href="skema" @onclick="ToggleMobileMenu" style="padding: 0.8rem; border: 1px solid #ddd; border-radius: 8px; text-align: center; color: #26417b; text-decoration: none;">Skema</NavLink>
+            <NavLink href="kalender" @onclick="ToggleMobileMenu" style="padding: 0.8rem; border: 1px solid #ddd; border-radius: 8px; text-align: center; color: #26417b; text-decoration: none;">Kalender</NavLink>
             <!-- Login/Logud knap -->
             <div style="margin-top: 2rem; text-align: center;">
                 @if (_currentUser is null)
