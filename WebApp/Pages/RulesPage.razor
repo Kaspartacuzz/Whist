@@ -3,15 +3,20 @@
 @using WebApp.Components
 @using WebApp.Service.RuleServices
 @inject IRuleService RuleService
+@inject Service.AuthServices.IAuthService AuthService
 
 <div class="page-header">
     <h2>Regler</h2>
-    <div class="rules-actions">
-        <button class="btn-add" @onclick="OpenAddModal">+ Opret regel</button>
-        <button class="btn-add" @onclick="ToggleEditMode">
-            @(editMode ? "Afslut redigering" : "Rediger regler")
-        </button>
-    </div>
+    @if (CurrentUser is not null)
+    {
+        <div class="rules-actions">
+            <button class="btn-add" @onclick="OpenAddModal">+ Opret regel</button>
+            <button class="btn-add" @onclick="ToggleEditMode">
+                @(editMode ? "Afslut redigering" : "Rediger regler")
+            </button>
+        </div>
+    }
+    
 </div>
 
 <AddRuleComponent @ref="addRuleComponent" OnRuleSaved="LoadRules" />
@@ -55,9 +60,11 @@ else
     private bool editMode = false;
     private ConfirmDeleteComponent? confirmDeleteComponent;
     private Rule? RuleToDelete;
+    private User? CurrentUser;
 
     protected override async Task OnInitializedAsync()
     {
+        CurrentUser = await AuthService.GetCurrentUser();
         await LoadRules();
     }
 
