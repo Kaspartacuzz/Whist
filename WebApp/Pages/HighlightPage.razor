@@ -72,7 +72,10 @@
                 <p class="description">@h.Description</p>
 
                 <div class="highlight-footer">
-                    <span class="card-date">@h.Date.ToString("d. MMMM yyyy", System.Globalization.CultureInfo.GetCultureInfo("da-DK"))</span>
+                    <span class="card-date">@(
+                                            TimeZoneInfo.ConvertTimeFromUtc(h.Date, TimeZoneInfo.FindSystemTimeZoneById("Europe/Copenhagen"))
+                                                .ToString("d. MMMM yyyy", new System.Globalization.CultureInfo("da-DK")))
+                        </span>
 
                     @if (CurrentUser is not null)
                     {

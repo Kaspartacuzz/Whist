@@ -128,7 +128,7 @@
                 Description = Description,
                 UserId = user.Id,
                 ImageUrl = ImagePreview ?? "",
-                Date = DateTime.Now,
+                Date = DateTime.UtcNow,
                 IsPrivate = IsPrivate
             };
 
