@@ -1,5 +1,6 @@
 @using WebApp.Service.AuthServices
 @inject IAuthService AuthService
+@inject NavigationManager Navigation
 
 @if (show)
 {
@@ -48,6 +49,7 @@
         var success = await AuthService.Login(email, password);
         if (success)
         {
+            Navigation.NavigateTo("/");
             await OnLoginSuccess.InvokeAsync();
             Hide();
         }
