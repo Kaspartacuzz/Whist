@@ -1,6 +1,8 @@
 @page "/kalender"
 @using System.Globalization
 @using Core
+@using WebApp.Components
+
 @inject IJSRuntime JS
 @inject Service.CalendarServices.ICalendarService CalendarService
 @inject Service.AuthServices.IAuthService AuthService
@@ -8,14 +10,16 @@
 <h2>Kalender</h2>
 
 <div class="calendar-controls">
-        <button @onclick="PreviousMonth">←</button>
-        <strong>@CurrentMonthName @CurrentYear</strong>
-        <button @onclick="NextMonth">→</button>
-        </div>
+    <button class="btn-add" @onclick="PreviousMonth">←</button>
+    <div class="calendar-current">@CurrentMonthName @CurrentYear</div>
+    <button class="btn-add" @onclick="NextMonth">→</button>
+</div>
 
-<div class="calendar-filters">
-    <div class="calendar-filter">
-            <label><strong>Vælg år:</strong></label>
+<div class="calendar-filters-styled">
+    <div class="filter-item dropdown">
+        <label class="filter-label">Vælg år:</label>
+        <div class="filter-select-wrapper">
+            <span class="icon-calendar">📅</span>
             <select @bind="CurrentYear">
                 @foreach (var year in YearRange)
                 {
@@ -23,9 +27,12 @@
                 }
             </select>
         </div>
+    </div>
 
-        <div class="calendar-filter">
-            <label><strong>Vælg måned:</strong></label>
+    <div class="filter-item dropdown">
+        <label class="filter-label">Vælg måned:</label>
+        <div class="filter-select-wrapper">
+            <span class="icon-calendar">📅</span>
             <select @bind="CurrentMonth">
                 @for (int m = 1; m <= 12; m++)
                 {
@@ -34,7 +41,7 @@
             </select>
         </div>
     </div>
-
+</div>
 
 <div class="calendar-grid">
     @foreach (var day in DayHeaders)
@@ -63,70 +70,133 @@
     }
 </div>
 
-@if (SelectedDate.HasValue && CurrentUser is not null)
+@if (ShowNoteModal && SelectedDate.HasValue && CurrentUser is not null)
 {
-    <div class="note-entry">
-        <h4>@SelectedDate.Value.ToShortDateString()</h4>
+    <div class="modal-backdrop">
+        <div class="modal-container">
+            <h3 class="modal-title">
+                @SelectedDate.Value.ToString("d. MMMM yyyy", new CultureInfo("da-DK"))
+            </h3>
+            
+            <textarea id="noteText"
+                      class="modal-input"
+                      rows="4"
+                      @bind="NewNote"
+                      placeholder="Skriv note eller begivenhed her..."></textarea>
 
-        <textarea @bind="NewNote" placeholder="Tilføj note" rows="3"></textarea>
+            <div class="modal-actions">
+                <button class="modal-btn primary" @onclick="SaveNote">
+                    @(EventDates.ContainsKey(SelectedDate.Value.Date) ? "Gem ændringer" : "Tilføj til kalender")
+                </button>
 
-        <div class="note-buttons">
-            <button class="btn-save" @onclick="SaveNote">Gem</button>
+                @if (EventDates.ContainsKey(SelectedDate.Value.Date))
+                {
+                    <button class="modal-btn danger" @onclick="() => RequestDelete(SelectedDate.Value)">Slet</button>
+                }
 
-            @if (EventDates.ContainsKey(SelectedDate.Value.Date))
-            {
-                <button class="btn-delete" @onclick="DeleteNote">Slet</button>
-            }
-
-            <button class="btn-cancel" @onclick="CancelEdit">Annuller</button>
+                <button class="modal-btn cancel" @onclick="CloseModal">Annuller</button>
+            </div>
         </div>
     </div>
 }
 
-@if (EventDates.Any(e => e.Key >= DateTime.Today))
+@if (PastEvents.Any() || UpcomingEvents.Any())
 {
-    <h3>📅 Kommende begivenheder</h3>
-    <ul>
-        @foreach (var evt in EventDates
-                      .Where(e => e.Key >= DateTime.Today)
-                      .OrderBy(e => e.Key))
-        {
-            <li><strong>@evt.Key.ToShortDateString()</strong>: @evt.Value</li>
-        }
-    </ul>
-}
-else
-{
-    <h3>📅 Kommende begivenheder</h3>
-    <p>Ingen kommende begivenheder.</p>
+    <div class="event-tables-wrapper">
+        <!-- Tidligere begivenheder -->
+        <div class="fine-table">
+            <h3>🕘 Tidligere begivenheder</h3>
+            @if (PastEvents.Any())
+            {
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Dato</th>
+                            <th>Note</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var evt in PastEvents)
+                        {
+                            <tr>
+                                <td>@evt.Key.ToString("dd.MM.yyyy")</td>
+                                <td>@evt.Value</td>
+                                <td>
+                                    <button class="icon-button blue" @onclick="() => EditEvent(evt.Key)">✏️</button>
+                                    <button class="icon-button red" @onclick="() => RequestDelete(evt.Key)">🗑️</button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <p>Ingen tidligere begivenheder.</p>
+            }
+        </div>
+
+        <!-- Kommende begivenheder -->
+        <div class="fine-table">
+            <h3>📅 Kommende begivenheder</h3>
+            @if (UpcomingEvents.Any())
+            {
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Dato</th>
+                            <th>Note</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var evt in UpcomingEvents)
+                        {
+                            <tr>
+                                <td>@evt.Key.ToString("dd.MM.yyyy")</td>
+                                <td>@evt.Value</td>
+                                <td>
+                                    <button class="icon-button blue" @onclick="() => EditEvent(evt.Key)">✏️</button>
+                                    <button class="icon-button red" @onclick="() => RequestDelete(evt.Key)">🗑️</button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <p>Ingen kommende begivenheder.</p>
+            }
+        </div>
+    </div>
 }
 
-@if (EventDates.Any(e => e.Key < DateTime.Today))
-{
-    <h3>🕘 Tidligere begivenheder</h3>
-    <ul>
-        @foreach (var evt in EventDates
-                      .Where(e => e.Key < DateTime.Today)
-                      .OrderByDescending(e => e.Key))
-        {
-            <li><strong>@evt.Key.ToShortDateString()</strong>: @evt.Value</li>
-        }
-    </ul>
-}
-else
-{
-    <h3>🕘 Tidligere begivenheder</h3>
-    <p>Ingen tidligere begivenheder.</p>
-}
+<!-- Bekræft sletning komponent -->
+<ConfirmDeleteComponent @ref="confirmComponent"
+                        OnConfirm="DeleteConfirmed"
+                        OnCancel="CancelDelete"
+                        Message="Er du sikker på at du vil slette denne begivenhed?" />
 
 @code {
     private DateTime? SelectedDate;
+    private DateTime dateToDelete;
     private string NewNote = "";
+    private bool ShowNoteModal = false;
+
     private Dictionary<DateTime, string> EventDates = new();
+    private ConfirmDeleteComponent? confirmComponent;
 
     private int currentYear = DateTime.Today.Year;
     private int currentMonth = DateTime.Today.Month;
     private User? CurrentUser;
+
+    private IEnumerable<KeyValuePair<DateTime, string>> UpcomingEvents =>
+        EventDates.Where(e => e.Key >= DateTime.Today).OrderBy(e => e.Key);
+
+    private IEnumerable<KeyValuePair<DateTime, string>> PastEvents =>
+        EventDates.Where(e => e.Key < DateTime.Today).OrderByDescending(e => e.Key);
 
     private int CurrentYear
     {
@@ -156,7 +226,6 @@ else
 
     private int DaysInMonth => DateTime.DaysInMonth(CurrentYear, CurrentMonth);
     private int LeadingEmptyDays => ((int)new DateTime(CurrentYear, CurrentMonth, 1).DayOfWeek + 6) % 7;
-
     private string CurrentMonthName => CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(CurrentMonth);
     private string[] DayHeaders => new[] { "Man", "Tir", "Ons", "Tor", "Fre", "Lør", "Søn" };
     private List<int> YearRange = Enumerable.Range(DateTime.Today.Year - 5, 56).ToList();
@@ -176,8 +245,12 @@ else
 
     private void SelectDate(DateTime date)
     {
+        if (CurrentUser is null)
+            return;
+
         SelectedDate = date;
         NewNote = EventDates.TryGetValue(date.Date, out var note) ? note : "";
+        ShowNoteModal = true;
     }
 
     private async Task SaveNote()
@@ -195,25 +268,15 @@ else
 
             NewNote = "";
             SelectedDate = null;
+            ShowNoteModal = false;
         }
     }
 
-    private async Task DeleteNote()
-    {
-        if (SelectedDate.HasValue)
-        {
-            await CalendarService.Delete(SelectedDate.Value.Date);
-            EventDates.Remove(SelectedDate.Value.Date);
-
-            SelectedDate = null;
-            NewNote = "";
-        }
-    }
-
-    private void CancelEdit()
+    private void CloseModal()
     {
         SelectedDate = null;
         NewNote = "";
+        ShowNoteModal = false;
     }
 
     private async Task PreviousMonth()
@@ -242,5 +305,36 @@ else
             CurrentMonth++;
         }
         await LoadEvents();
+    }
+
+    private void EditEvent(DateTime date)
+    {
+        SelectDate(date);
+    }
+
+    private void RequestDelete(DateTime date)
+    {
+        dateToDelete = date;
+        confirmComponent?.Show();
+    }
+
+    private async Task DeleteConfirmed()
+    {
+        await CalendarService.Delete(dateToDelete);
+        EventDates.Remove(dateToDelete);
+
+        if (SelectedDate == dateToDelete)
+        {
+            SelectedDate = null;
+            NewNote = "";
+            ShowNoteModal = false;
+        }
+
+        StateHasChanged();
+    }
+
+    private void CancelDelete()
+    {
+        dateToDelete = default;
     }
 }
