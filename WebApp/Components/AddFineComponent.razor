@@ -21,9 +21,14 @@
             }
 
             <label for="amount" class="modal-label">Beløb</label>
-            <input id="amount" type="number" class="modal-input" @bind="Amount" />
-            <input type="text" @bind="Comment" placeholder="Kommentar" class="modal-input" />
+            <input id="amount" type="number" class="modal-input" @bind="Amount" min="0" max="500"/>
+            <input type="text" @bind="Comment" placeholder="Kommentar" class="modal-input" maxlength="400"/>
 
+            @if (!string.IsNullOrWhiteSpace(ValidationErrorMessage))
+            {
+                <div style="color: red; font-size: 0.9rem;">@ValidationErrorMessage</div>
+            }
+            
             <div class="modal-actions">
                 <button class="modal-btn primary" @onclick="Submit">
                     @(FineToEdit is null ? "Tilføj bøde" : "Gem ændringer")
@@ -40,12 +45,14 @@
     private decimal Amount = 0;
     private string Comment = "";
     private Fine? FineToEdit = null;
+    private string ValidationErrorMessage = null;
 
     [Parameter] public EventCallback OnFineAdded { get; set; }
     [Parameter] public List<User> Users { get; set; } = new();
 
     public async Task Show(Fine? fine = null)
     {
+        ValidationErrorMessage = null;
         FineToEdit = fine;
         await LoadUsers();
 
@@ -77,8 +84,24 @@
 
     private async Task Submit()
     {
-        if (SelectedUserId <= 0 || Amount <= 0)
+        // Manuelle tjek
+        if (SelectedUserId <= 0)
+        {
+            ValidationErrorMessage = "Bruger er påkrævet.";
             return;
+        }
+        
+        if (Amount <= 0)
+        {
+            ValidationErrorMessage = "Beløbet må ikke være 0.";
+            return;
+        }
+        
+        if (Amount > 500)
+        {
+            ValidationErrorMessage = "Beløbet må maks være på 500 kr.";
+            return;
+        }
 
         if (FineToEdit is not null)
         {

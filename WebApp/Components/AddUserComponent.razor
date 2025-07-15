@@ -1,3 +1,4 @@
+@using System.ComponentModel.DataAnnotations
 @using Core
 @using Microsoft.AspNetCore.Components.Forms
 
@@ -10,13 +11,13 @@
         <div class="modal-container">
             <h3 class="modal-title">@(UserToEdit is null ? "Opret ny bruger" : "Rediger bruger")</h3>
 
-            <input @bind="Name" placeholder="Fulde navn" class="modal-input" />
-            <input @bind="NickName" placeholder="Kaldenavn" class="modal-input" />
-            <input @bind="Email" placeholder="Email" class="modal-input" />
-            <input @bind="Password" placeholder="Kodeord" type="password" class="modal-input" />
-            <input @bind="PhoneNumber" placeholder="Telefonnummer" class="modal-input" />
-            <textarea @bind="Description" placeholder="Beskrivelse" class="modal-textarea"></textarea>
-            <input @bind="FunFact" placeholder="Fun fact" class="modal-input" />
+            <input @bind="Name" placeholder="Fulde navn" class="modal-input" maxlength="40"/>
+            <input @bind="NickName" placeholder="Kaldenavn" class="modal-input" maxlength="30"/>
+            <input @bind="Email" placeholder="Email" class="modal-input" maxlength="100" type="email"/>
+            <input @bind="Password" placeholder="Kodeord" type="password" class="modal-input" maxlength="100"/>
+            <input @bind="PhoneNumber" placeholder="Telefonnummer" class="modal-input" maxlength="8" type="tel"/>
+            <textarea @bind="Description" placeholder="Beskrivelse" class="modal-textarea" minlength="8" maxlength="500"></textarea>
+            <input @bind="FunFact" placeholder="Fun fact" class="modal-input" maxlength="200"/>
 
             <label for="file-upload" class="custom-file-label">📷 Vedhæft billede</label>
             <div class="file-input-wrapper">
@@ -26,6 +27,11 @@
             @if (!string.IsNullOrEmpty(ImagePreview))
             {
                 <img src="@ImagePreview" alt="Preview" class="modal-image-preview" />
+            }
+            
+            @if (!string.IsNullOrWhiteSpace(ValidationErrorMessage))
+            {
+                <div style="color: red; font-size: 0.9rem;">@ValidationErrorMessage</div>
             }
 
             <div class="modal-actions">
@@ -52,11 +58,14 @@
     private User? UserToEdit = null;
     private string ImageUrl = "";
     private string? UploadErrorMessage = null;
+    private string? ValidationErrorMessage = null;
 
     [Parameter] public EventCallback OnUserAdded { get; set; }
 
     public Task Show(User? userToEdit = null)
     {
+        ValidationErrorMessage = null;
+
         UserToEdit = userToEdit;
 
         if (userToEdit is not null)
@@ -122,6 +131,51 @@
     
     private async Task CreateUser()
     {
+        ValidationErrorMessage = null;
+
+        // Manuelle tjek
+        if (string.IsNullOrWhiteSpace(Name) || Name.Length > 40)
+        {
+            ValidationErrorMessage = "Navn er påkrævet.";
+            return;
+        }
+        
+        if (string.IsNullOrWhiteSpace(NickName))
+        {
+            ValidationErrorMessage = "Kaldenavn er påkrævet.";
+            return;
+        }
+        
+        if (Name.Length > 40)
+        {
+            ValidationErrorMessage = "Navn navnet må højst være 40 tegn.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(Email) || !new EmailAddressAttribute().IsValid(Email))
+        {
+            ValidationErrorMessage = "Ugyldig eller tom emailadresse.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(Password) || Password.Length < 6)
+        {
+            ValidationErrorMessage = "Kodeord er påkrævet og skal være mindst 6 tegn.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(PhoneNumber))
+        {
+            ValidationErrorMessage = "Telefonnummer skal udfyldes.";
+            return;
+        }
+        else if (!new PhoneAttribute().IsValid(PhoneNumber) || PhoneNumber.Length < 8 || PhoneNumber.Length > 8)
+        {
+            ValidationErrorMessage = "Ugyldigt telefonnummer.";
+            return;
+        }
+
+        
         if (UserToEdit is not null)
         {
             // Rediger eksisterende bruger

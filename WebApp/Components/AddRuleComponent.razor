@@ -10,8 +10,14 @@
             <input id="ruleText"
                    class="modal-input"
                    placeholder="Skriv reglen her..."
-                   @bind="RuleText" />
+                   @bind="RuleText" 
+                   maxlength="500"/>
 
+            @if (!string.IsNullOrWhiteSpace(ValidationErrorMessage))
+            {
+                <div style="color: red; font-size: 0.9rem;">@ValidationErrorMessage</div>
+            }
+            
             <div class="modal-actions">
                 <button class="modal-btn primary" @onclick="SaveRule">
                     @(RuleToEdit is null ? "Opret regel" : "Gem ændringer")
@@ -25,12 +31,14 @@
 @code {
     private bool showModal = false;
     private string RuleText = string.Empty;
+    private string ValidationErrorMessage = null;
 
     [Parameter] public Rule? RuleToEdit { get; set; }
     [Parameter] public EventCallback OnRuleSaved { get; set; }
 
     public void Show(Rule? rule = null)
     {
+        ValidationErrorMessage = null;
         RuleToEdit = rule;
         RuleText = rule?.Text ?? string.Empty;
         showModal = true;
@@ -46,8 +54,12 @@
 
     private async Task SaveRule()
     {
-        if (string.IsNullOrWhiteSpace(RuleText))
+        // Manuelle tjek
+        if (string.IsNullOrWhiteSpace(RuleText) || RuleText.Length > 500)
+        {
+            ValidationErrorMessage = "Regel er påkrævet.";
             return;
+        }
 
         if (RuleToEdit is not null)
         {

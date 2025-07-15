@@ -28,6 +28,11 @@
                 <input type="checkbox" @bind="IsPrivate" />
                 Gør privat (kun synlig for medlemmer)
             </label>
+            
+            @if (!string.IsNullOrWhiteSpace(ValidationErrorMessage))
+            {
+                <div style="color: red; font-size: 0.9rem;">@ValidationErrorMessage</div>
+            }
 
             <div class="modal-actions">
                 <button class="modal-btn primary" @onclick="CreateHighlight">
@@ -47,6 +52,7 @@
     private string? ImagePreview;
     private bool IsPrivate = false;
     private string? UploadErrorMessage = null;
+    private string? ValidationErrorMessage = null;
 
     [Parameter] public EventCallback OnHighlightAdded { get; set; }
     [Parameter] public Highlight? HighlightToEdit { get; set; }
@@ -54,6 +60,8 @@
     public void Show(Highlight? highlight = null)
     {
         HighlightToEdit = highlight;
+        ValidationErrorMessage = null;
+        
         if (HighlightToEdit is not null)
         {
             Title = HighlightToEdit.Title;
@@ -107,7 +115,19 @@
     private async Task CreateHighlight()
     {
         var user = await AuthService.GetCurrentUser();
-        if (user is null) return;
+        
+        // Manuelle tjek
+        if (string.IsNullOrWhiteSpace(Title) || Title.Length > 80)
+        {
+            ValidationErrorMessage = "Titel er påkrævet.";
+            return;
+        }
+        
+        if (string.IsNullOrWhiteSpace(Description) || Title.Length > 400)
+        {
+            ValidationErrorMessage = "Beskrivelse er påkrævet.";
+            return;
+        }
 
         if (HighlightToEdit is not null)
         {
