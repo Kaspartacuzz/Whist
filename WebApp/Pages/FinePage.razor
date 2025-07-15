@@ -98,8 +98,11 @@
                     <td>@fine.Amount kr</td>
                     <td>@fine.Comment</td>
                     <td>
-                        <button class="icon-button blue" @onclick="() => EditFine(fine)">✏️</button>
-                        <button class="icon-button red" @onclick="() => ConfirmDelete(fine)">🗑️</button>
+                        @if (fine.UserId != CurrentUser?.Id)
+                        {
+                            <button class="icon-button blue" @onclick="() => EditFine(fine)">✏️</button>
+                            <button class="icon-button red" @onclick="() => ConfirmDelete(fine)">🗑️</button>
+                        }
                     </td>
                 </tr>
             }
