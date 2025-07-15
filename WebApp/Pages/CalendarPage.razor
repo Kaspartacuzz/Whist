@@ -3,6 +3,7 @@
 @using Core
 @inject IJSRuntime JS
 @inject Service.CalendarServices.ICalendarService CalendarService
+@inject Service.AuthServices.IAuthService AuthService
 
 <h2>Kalender</h2>
 
@@ -49,7 +50,7 @@
         var isToday = date.Date == DateTime.Today;
         var cellClass = isToday ? "day-cell today" : "day-cell";
 
-        <div class="@cellClass" @onclick="@(() => SelectDate(date))">
+        <div class="@cellClass" @onclick="@(CurrentUser is not null ? (() => SelectDate(date)) : null)">
             <div class="day-number">@day</div>
             @if (EventDates.TryGetValue(date.Date, out var note))
             {
@@ -59,7 +60,7 @@
     }
 </div>
 
-@if (SelectedDate.HasValue)
+@if (SelectedDate.HasValue && CurrentUser is not null)
 {
     <div class="note-entry">
         <h4>@SelectedDate.Value.ToShortDateString()</h4>
@@ -93,6 +94,7 @@
 }
 else
 {
+    <h3>📅 Kommende begivenheder</h3>
     <p>Ingen kommende begivenheder.</p>
 }
 
@@ -110,6 +112,7 @@ else
 }
 else
 {
+    <h3>🕘 Tidligere begivenheder</h3>
     <p>Ingen tidligere begivenheder.</p>
 }
 
@@ -120,6 +123,7 @@ else
 
     private int currentYear = DateTime.Today.Year;
     private int currentMonth = DateTime.Today.Month;
+    private User? CurrentUser;
 
     private int CurrentYear
     {
@@ -156,6 +160,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        CurrentUser = await AuthService.GetCurrentUser();
         await LoadEvents();
     }
 
