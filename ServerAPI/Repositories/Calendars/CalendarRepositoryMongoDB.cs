@@ -26,6 +26,26 @@ public class CalendarRepositoryMongoDB : ICalendarRepository
 
     public async Task AddOrUpdate(Calendar calendarEvent)
     {
+        // Find eksisterende event for samme dato
+        var existingEvent = await _calendar.Find(c => c.Date == calendarEvent.Date).FirstOrDefaultAsync();
+
+        if (existingEvent != null)
+        {
+            // Behold eksisterende Id
+            calendarEvent.Id = existingEvent.Id;
+        }
+        else
+        {
+            // Find højeste eksisterende Id
+            var highest = await _calendar
+                .Find(_ => true)
+                .SortByDescending(c => c.Id)
+                .Limit(1)
+                .FirstOrDefaultAsync();
+
+            calendarEvent.Id = highest != null ? highest.Id + 1 : 1;
+        }
+        
         await _calendar.ReplaceOneAsync(
             filter: c => c.Date == calendarEvent.Date,
             replacement: calendarEvent,
