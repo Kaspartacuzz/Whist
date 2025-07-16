@@ -110,26 +110,34 @@
             {
                 <table>
                     <thead>
-                        <tr>
-                            <th>Dato</th>
-                            <th>Note</th>
-                            <th></th>
-                        </tr>
+                    <tr>
+                        <th>Dato</th>
+                        <th>Note</th>
+                        <th></th>
+                    </tr>
                     </thead>
                     <tbody>
-                        @foreach (var evt in PastEvents)
-                        {
-                            <tr>
-                                <td>@evt.Key.ToString("dd.MM.yyyy")</td>
-                                <td>@evt.Value</td>
-                                <td>
-                                    <button class="icon-button blue" @onclick="() => EditEvent(evt.Key)">✏️</button>
-                                    <button class="icon-button red" @onclick="() => RequestDelete(evt.Key)">🗑️</button>
-                                </td>
-                            </tr>
-                        }
+                    @foreach (var evt in PastEvents)
+                    {
+                        <tr>
+                            <td>@evt.Key.ToString("dd.MM.yyyy")</td>
+                            <td>@evt.Value</td>
+                            <td>
+                                <button class="icon-button blue" @onclick="() => EditEvent(evt.Key)">✏️</button>
+                                <button class="icon-button red" @onclick="() => RequestDelete(evt.Key)">🗑️</button>
+                            </td>
+                        </tr>
+                    }
                     </tbody>
                 </table>
+                @if (EventDates.Count(e => e.Key < DateTime.Today) > 3)
+                {
+                    <div style="text-align: right; margin-top: 0.5rem;">
+                        <button class="btn-more" @onclick="ToggleShowAllPastEvents">
+                            @(ShowAllPastEvents ? "Vis færre" : "Vis alle")
+                        </button>
+                    </div>
+                }
             }
             else
             {
@@ -144,24 +152,24 @@
             {
                 <table>
                     <thead>
-                        <tr>
-                            <th>Dato</th>
-                            <th>Note</th>
-                            <th></th>
-                        </tr>
+                    <tr>
+                        <th>Dato</th>
+                        <th>Note</th>
+                        <th></th>
+                    </tr>
                     </thead>
                     <tbody>
-                        @foreach (var evt in UpcomingEvents)
-                        {
-                            <tr>
-                                <td>@evt.Key.ToString("dd.MM.yyyy")</td>
-                                <td>@evt.Value</td>
-                                <td>
-                                    <button class="icon-button blue" @onclick="() => EditEvent(evt.Key)">✏️</button>
-                                    <button class="icon-button red" @onclick="() => RequestDelete(evt.Key)">🗑️</button>
-                                </td>
-                            </tr>
-                        }
+                    @foreach (var evt in UpcomingEvents)
+                    {
+                        <tr>
+                            <td>@evt.Key.ToString("dd.MM.yyyy")</td>
+                            <td>@evt.Value</td>
+                            <td>
+                                <button class="icon-button blue" @onclick="() => EditEvent(evt.Key)">✏️</button>
+                                <button class="icon-button red" @onclick="() => RequestDelete(evt.Key)">🗑️</button>
+                            </td>
+                        </tr>
+                    }
                     </tbody>
                 </table>
             }
@@ -192,12 +200,15 @@
     private int currentYear = DateTime.Today.Year;
     private int currentMonth = DateTime.Today.Month;
     private User? CurrentUser;
+    private bool ShowAllPastEvents = false;
 
     private IEnumerable<KeyValuePair<DateTime, string>> UpcomingEvents =>
         EventDates.Where(e => e.Key >= DateTime.Today).OrderBy(e => e.Key);
 
     private IEnumerable<KeyValuePair<DateTime, string>> PastEvents =>
-        EventDates.Where(e => e.Key < DateTime.Today).OrderByDescending(e => e.Key);
+        ShowAllPastEvents
+            ? EventDates.Where(e => e.Key < DateTime.Today).OrderByDescending(e => e.Key)
+            : EventDates.Where(e => e.Key < DateTime.Today).OrderByDescending(e => e.Key).Take(3);
 
     private int CurrentYear
     {
@@ -345,5 +356,10 @@
     private void CancelDelete()
     {
         dateToDelete = default;
+    }
+    
+    private void ToggleShowAllPastEvents()
+    {
+        ShowAllPastEvents = !ShowAllPastEvents;
     }
 }
