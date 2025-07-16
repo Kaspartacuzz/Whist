@@ -11,5 +11,4 @@ public class Fine
     [MaxLength(400)] public string Comment { get; set; } = "";   // Valgfri kommentar til bøden
     public DateTime Date { get; set; }          // Hvornår bøden blev givet
     public bool IsPaid { get; set; } = false;   // Om bøden er betalt
-    public string FineType { get; set; } = "Almindelig"; // "Almindelig" eller "Stjerne"
 }

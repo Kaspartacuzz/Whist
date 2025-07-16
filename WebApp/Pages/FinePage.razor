@@ -26,6 +26,15 @@
         var unpaid = total - paid;
 
         <div class="user-card">
+            <div class="star-button-wrapper">
+                <button class="star-button" @onclick="() => AddStarFine(user.Id)">
+                    ⭐
+                    @if (GetStarCount(user.Id) > 0)
+                    {
+                        <span class="star-count">@GetStarCount(user.Id)</span>
+                    }
+                </button>
+            </div>
             <div class="user-header">@user.NickName</div>
             <div class="user-info">
                 <span>I alt:</span><span class="amount">@total kr</span>
@@ -75,6 +84,15 @@
         <span class="icon-money">💰</span>
         <input type="number" placeholder="Max beløb" @bind-value="filterMaxAmount" @bind-value:event="oninput" />
     </div>
+    
+    <div class="filter-item dropdown">
+        <label>Status:</label>
+        <select class="filter-select" @bind="filterPaidStatus">
+            <option value="">Alle</option>
+            <option value="true">✅ Betalt</option>
+            <option value="false">❌ Ikke betalt</option>
+        </select>
+    </div>
 </div>
 
 <!-- Tabel -->
@@ -85,7 +103,9 @@
                 <th>Dato</th>
                 <th>Navn</th>
                 <th>Beløb</th>
+                <th>Betalt</th>
                 <th>Kommentar</th>
+                <th></th>
             </tr>
         </thead>
         <tbody>
@@ -96,6 +116,7 @@
                     <td>@fine.Date.ToShortDateString()</td>
                     <td>@user?.NickName</td>
                     <td>@fine.Amount kr</td>
+                    <td>@(fine.IsPaid ? "✅" : "❌")</td>
                     <td>@fine.Comment</td>
                     <td>
                         @if (fine.UserId != CurrentUser?.Id)
@@ -125,30 +146,37 @@
     private AddFineComponent? addFineComponent;
     private ConfirmDeleteComponent? confirmComponent;
     private Fine? FineToDelete = null;
+    private Dictionary<int, int> StarFineCounts = new(); // BrugerId → antal stjerner
     
     //Filtreringer
     private DateTime? filterFromDate = null;
     private DateTime? filterToDate = null;
     private decimal? filterMinAmount = null;
     private decimal? filterMaxAmount = null;
+    private string? filterPaidStatus = null; // "true", "false", eller null (alle)
     
     private decimal TotalAmount => Fines.Sum(f => f.Amount);
     private decimal TotalUnpaid => Fines.Where(f => !f.IsPaid).Sum(f => f.Amount);
 
     private IEnumerable<Fine> FilteredFines => Fines
         .Where(f =>
-            // Søgefelt (navn eller kommentar)
+            // Søgefelt
             (string.IsNullOrWhiteSpace(searchTerm) ||
              Users.FirstOrDefault(u => u.Id == f.UserId)?.NickName?.ToLower().Contains(searchTerm.ToLower()) == true ||
              f.Comment.ToLower().Contains(searchTerm.ToLower()))
 
-            // Dato filter
+            // Datoer
             && (!filterFromDate.HasValue || f.Date.Date >= filterFromDate.Value.Date)
             && (!filterToDate.HasValue || f.Date.Date <= filterToDate.Value.Date)
 
-            // Beløb filter
+            // Beløb
             && (!filterMinAmount.HasValue || f.Amount >= filterMinAmount.Value)
             && (!filterMaxAmount.HasValue || f.Amount <= filterMaxAmount.Value)
+
+            // Betalt-status
+            && (string.IsNullOrEmpty(filterPaidStatus) ||
+                (filterPaidStatus == "true" && f.IsPaid) ||
+                (filterPaidStatus == "false" && !f.IsPaid))
         )
         .OrderByDescending(f => f.Date);
 
@@ -231,6 +259,26 @@
     
         if (addFineComponent is not null)
             await addFineComponent.Show(fine);
+    }
+    
+    private async Task AddStarFine(int userId)
+    {
+        var fine = new Fine
+        {
+            UserId = userId,
+            Amount = 5,
+            Comment = "Stjerne",
+            Date = DateTime.Now,
+            IsPaid = false
+        };
+
+        await FineService.Add(fine);
+        await ReloadFines();
+    }
+
+    private int GetStarCount(int userId)
+    {
+        return Fines.Count(f => f.UserId == userId && f.Comment == "Stjerne" && !f.IsPaid);
     }
 }
 

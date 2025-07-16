@@ -14,7 +14,6 @@ public class FineRepositoryMock : IFineRepository
             Comment = "Tabte kortene på gulvet",
             Date = DateTime.Now.AddDays(-3),
             IsPaid = false,
-            FineType = "Almindelig"
         },
         new Fine
         {
@@ -24,7 +23,6 @@ public class FineRepositoryMock : IFineRepository
             Comment = "Mødte for sent op",
             Date = DateTime.Now.AddDays(-2),
             IsPaid = true,
-            FineType = "Almindelig"
         }
     };
 
@@ -53,7 +51,6 @@ public class FineRepositoryMock : IFineRepository
             existing.Amount = fine.Amount;
             existing.Comment = fine.Comment;
             existing.IsPaid = fine.IsPaid;
-            existing.FineType = fine.FineType;
         }
     }
 
