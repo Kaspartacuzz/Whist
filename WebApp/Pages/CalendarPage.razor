@@ -172,6 +172,14 @@
                     }
                     </tbody>
                 </table>
+                @if (EventDates.Count(e => e.Key >= DateTime.Today) > 3)
+                {
+                    <div style="text-align: right; margin-top: 0.5rem;">
+                        <button class="btn-more" @onclick="ToggleShowAllUpcomingEvents">
+                            @(ShowAllUpcomingEvents ? "Vis færre" : "Vis alle")
+                        </button>
+                    </div>
+                }
             }
             else
             {
@@ -201,9 +209,12 @@
     private int currentMonth = DateTime.Today.Month;
     private User? CurrentUser;
     private bool ShowAllPastEvents = false;
+    private bool ShowAllUpcomingEvents = false;
 
     private IEnumerable<KeyValuePair<DateTime, string>> UpcomingEvents =>
-        EventDates.Where(e => e.Key >= DateTime.Today).OrderBy(e => e.Key);
+        ShowAllUpcomingEvents
+            ? EventDates.Where(e => e.Key >= DateTime.Today).OrderBy(e => e.Key)
+            : EventDates.Where(e => e.Key >= DateTime.Today).OrderBy(e => e.Key).Take(3);
 
     private IEnumerable<KeyValuePair<DateTime, string>> PastEvents =>
         ShowAllPastEvents
@@ -361,5 +372,10 @@
     private void ToggleShowAllPastEvents()
     {
         ShowAllPastEvents = !ShowAllPastEvents;
+    }
+    
+    private void ToggleShowAllUpcomingEvents()
+    {
+        ShowAllUpcomingEvents = !ShowAllUpcomingEvents;
     }
 }
