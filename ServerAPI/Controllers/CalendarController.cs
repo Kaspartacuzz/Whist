@@ -27,14 +27,10 @@ public class CalendarController : ControllerBase
         return Ok();
     }
 
-    [HttpDelete("{date}")]
-    public async Task<IActionResult> Delete(string date)
+    [HttpDelete("{id:int}")]
+    public async Task<IActionResult> Delete(int id)
     {
-        if (DateTime.TryParse(date, out var parsedDate))
-        {
-            await _repo.DeleteByDate(parsedDate);
-            return Ok();
-        }
-        return BadRequest("Ugyldigt datoformat.");
+        await _repo.Delete(id);
+        return Ok();
     }
 }

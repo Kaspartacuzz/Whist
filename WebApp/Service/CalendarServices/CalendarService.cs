@@ -22,9 +22,8 @@ public class CalendarService : ICalendarService
         await _http.PostAsJsonAsync("api/calendar", calendar);
     }
 
-    public async Task Delete(DateTime date)
+    public async Task Delete(int id)
     {
-        var formattedDate = date.ToString("yyyy-MM-dd");
-        await _http.DeleteAsync($"api/calendar/{formattedDate}");
+        await _http.DeleteAsync($"api/calendar/{id}");
     }
 }

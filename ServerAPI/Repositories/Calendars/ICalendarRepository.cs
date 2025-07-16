@@ -7,5 +7,5 @@ public interface ICalendarRepository
     Task<List<Calendar>> GetAll();
     Task<Calendar?> GetByDate(DateTime date);
     Task AddOrUpdate(Calendar evt);
-    Task DeleteByDate(DateTime date);
+    Task Delete(int id);
 }

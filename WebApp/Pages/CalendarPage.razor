@@ -184,6 +184,7 @@
     private DateTime dateToDelete;
     private string NewNote = "";
     private bool ShowNoteModal = false;
+    private int idToDelete; // ← nyt felt til sletning med ID
 
     private Dictionary<DateTime, string> EventDates = new();
     private ConfirmDeleteComponent? confirmComponent;
@@ -229,6 +230,7 @@
     private string CurrentMonthName => CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(CurrentMonth);
     private string[] DayHeaders => new[] { "Man", "Tir", "Ons", "Tor", "Fre", "Lør", "Søn" };
     private List<int> YearRange = Enumerable.Range(DateTime.Today.Year - 5, 56).ToList();
+    private List<Core.Calendar> AllEvents = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -239,7 +241,8 @@
     private async Task LoadEvents()
     {
         var allEvents = await CalendarService.GetAll();
-        EventDates = allEvents.ToDictionary(e => e.Date.Date, e => e.Note);
+        AllEvents = allEvents;
+        EventDates = AllEvents.ToDictionary(e => e.Date.Date, e => e.Note);
         StateHasChanged();
     }
 
@@ -314,13 +317,19 @@
 
     private void RequestDelete(DateTime date)
     {
-        dateToDelete = date;
-        confirmComponent?.Show();
+        // Find det matchende kalender-event (du skal gemme en liste over events)
+        var calendar = AllEvents.FirstOrDefault(e => e.Date.Date == date.Date);
+        if (calendar != null)
+        {
+            idToDelete = calendar.Id;
+            dateToDelete = calendar.Date;
+            confirmComponent?.Show();
+        }
     }
 
     private async Task DeleteConfirmed()
     {
-        await CalendarService.Delete(dateToDelete);
+        await CalendarService.Delete(idToDelete);
         EventDates.Remove(dateToDelete);
 
         if (SelectedDate == dateToDelete)
@@ -330,7 +339,7 @@
             ShowNoteModal = false;
         }
 
-        StateHasChanged();
+        await LoadEvents(); // ← vigtigt at hente data igen
     }
 
     private void CancelDelete()
