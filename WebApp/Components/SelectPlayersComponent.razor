@@ -1,0 +1,88 @@
+@using Core
+
+@if (true)
+{
+    <div class="modal-backdrop">
+        <div class="modal-container">
+            <h3 class="modal-title">Tildel @PointValue point</h3>
+
+            <div class="modal-section">
+                <label class="modal-label">Vindere (2 spillere):</label>
+                @foreach (var player in Players)
+                {
+                    <div>
+                        <input type="checkbox" @bind="player.IsWinner" />
+                        @player.Nickname
+                    </div>
+                }
+            </div>
+
+            <div class="modal-section">
+                <label class="modal-label">Tabere (2 spillere):</label>
+                @foreach (var player in Players)
+                {
+                    <div>
+                        <input type="checkbox" @bind="player.IsLoser" />
+                        @player.Nickname
+                    </div>
+                }
+            </div>
+
+            @if (!string.IsNullOrEmpty(ErrorMessage))
+            {
+                <div style="color: red; font-size: 0.9rem;">@ErrorMessage</div>
+            }
+
+            <div class="modal-actions">
+                <button class="modal-btn primary" @onclick="Confirm">Bekræft</button>
+                <button class="modal-btn cancel" @onclick="Close">Annuller</button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public int PointValue { get; set; }
+    [Parameter] public List<SelectPlayersComponent.SelectableUser> Players { get; set; } = new();
+    [Parameter] public EventCallback<(List<SelectableUser> winners, List<SelectableUser> losers)> OnConfirm { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+
+    private string ErrorMessage = "";
+
+    private async Task Confirm()
+    {
+        var winners = Players.Where(p => p.IsWinner).ToList();
+        var losers = Players.Where(p => p.IsLoser).ToList();
+
+        if (winners.Count != 2 || losers.Count != 2)
+        {
+            ErrorMessage = "Vælg præcis 2 vindere og 2 tabere.";
+            return;
+        }
+
+        await OnConfirm.InvokeAsync((winners, losers));
+    }
+
+    public class User
+    {
+        public int Id { get; set; }
+        public string Nickname { get; set; } = "";
+        public bool IsWinner { get; set; }
+        public bool IsLoser { get; set; }
+    }
+    
+    private async Task Close()
+    {
+        await OnCancel.InvokeAsync();
+    }
+    
+    public class SelectableUser
+    {
+        public int Id { get; set; }
+        public string Nickname { get; set; } = "";
+        public bool IsWinner { get; set; }
+        public bool IsLoser { get; set; }
+    }
+}
+
+

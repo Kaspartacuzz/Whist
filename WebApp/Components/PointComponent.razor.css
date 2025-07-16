@@ -1,0 +1,127 @@
+table {
+    border-collapse: collapse;
+    font-size: 14px;
+    text-align: center;
+    width: 100%;
+}
+
+th,
+td {
+    width: 36px;
+    height: 32px;
+    padding: 4px;
+    font-weight: bold;
+    border: 3px solid black;
+    text-align: center;
+}
+
+/*Header farver*/
+.cell-red{
+    background-color: red;
+}
+
+.cell-yellow{
+    background-color: yellow;
+}
+
+.cell-green{
+    background-color: green;
+}
+
+
+.cell-empty {
+    background-color: slategrey;
+    color: transparent;
+    cursor: default;
+}
+
+/* Intensitetsniveauer */
+/* Farver med alpha-kanal */
+.cell-red.low {
+    background-color: rgba(244, 161, 161, 0.4);
+}
+.cell-red.medium {
+    background-color: rgba(244, 161, 161, 0.6);
+}
+.cell-red.high {
+    background-color: rgba(244, 161, 161, 0.8);
+}
+.cell-red.very-high {
+    background-color: rgba(244, 161, 161, 1);
+}
+
+/* Gul */
+.cell-yellow.low {
+    background-color: rgba(255, 230, 0, 0.4);
+}
+.cell-yellow.medium {
+    background-color: rgba(255, 230, 0, 0.6);
+}
+.cell-yellow.high {
+    background-color: rgba(255, 230, 0, 0.8);
+}
+.cell-yellow.very-high {
+    background-color: rgba(255, 230, 0, 1);
+}
+
+/* Grøn */
+.cell-green.low {
+    background-color: rgba(160, 240, 208, 0.4);
+}
+.cell-green.medium {
+    background-color: rgba(160, 240, 208, 0.6);
+}
+.cell-green.high {
+    background-color: rgba(160, 240, 208, 0.8);
+}
+.cell-green.very-high {
+    background-color: rgba(160, 240, 208, 1);
+}
+
+
+
+/*th farve*/
+/* Blå baggrund til meldings-kolonne */
+th.cell-blue.low {
+    background-color: rgba(204, 224, 247, 0.4);  /* lysest */
+}
+
+th.cell-blue.medium {
+    background-color: rgba(204, 224, 247, 0.6);
+}
+
+th.cell-blue.high {
+    background-color: rgba(204, 224, 247, 0.8);
+}
+
+th.cell-blue.very-high {
+    background-color: rgba(204, 224, 247, 1);    /* fuld styrke */
+}
+
+
+/*Oversigt*/
+.point-overview {
+    margin-top: 2rem;
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 1rem;
+}
+
+.point-overview th,
+.point-overview td {
+    border: 1px solid #ccc;
+    padding: 8px;
+    text-align: left;
+}
+
+
+/* Hover */
+td:not(.cell-empty):hover {
+    outline: 2px solid black;
+    cursor: pointer;
+    filter: brightness(1.1);
+    transition: all 0.15s ease-in-out;
+}
+
+
+

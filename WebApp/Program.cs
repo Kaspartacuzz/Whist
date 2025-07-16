@@ -7,6 +7,7 @@ using WebApp.Service.AuthServices;
 using WebApp.Service.CalendarServices;
 using WebApp.Service.FineServices;
 using WebApp.Service.HighlightServices;
+using WebApp.Service.PointServices;
 using WebApp.Service.RuleServices;
 using WebApp.Service.UploadServices;
 
@@ -24,5 +25,6 @@ builder.Services.AddScoped<IHighlightService, HighlightService>();
 builder.Services.AddScoped<IUploadService, UploadService>();
 builder.Services.AddScoped<IRuleService, RuleService>();
 builder.Services.AddScoped<ICalendarService, CalendarService>();
+builder.Services.AddScoped<IPointService, PointService>();
 
 await builder.Build().RunAsync();

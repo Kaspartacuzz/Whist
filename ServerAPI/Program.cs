@@ -2,6 +2,7 @@ using ServerAPI.Repositories;
 using ServerAPI.Repositories.Calendars;
 using ServerAPI.Repositories.Fines;
 using ServerAPI.Repositories.Highlights;
+using ServerAPI.Repositories.Points;
 using ServerAPI.Repositories.Rules;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -16,6 +17,8 @@ builder.Services.AddSingleton<IFineRepository, FineRepositoryMongoDB>();
 builder.Services.AddSingleton<IHighlightRepository, HighlightRepositoryMongoDB>();
 builder.Services.AddSingleton<IRuleRepository, RuleRepositoryMongoDB>();
 builder.Services.AddScoped<ICalendarRepository, CalendarRepositoryMongoDB>();
+builder.Services.AddSingleton<IPointRepository, PointRepositoryMongoDB>();
+
 
 
 builder.Services.AddCors(options =>
