@@ -59,41 +59,46 @@
 </div>
 
 <!-- Filtrering -->
-<div class="filter-box">
-    <div class="filter-item search">
-        <span class="icon-search">🔍</span>
-        <input placeholder="Søg i bøder..." @bind-value="searchTerm" @bind-value:event="oninput" />
+<div class="filter-box-wrapper">
+    <div class="filter-row">
+        <div class="filter-item search">
+            <span class="icon-search">🔍</span>
+            <input placeholder="Søg i bøder..." @bind-value="searchTerm" @bind-value:event="oninput" />
+        </div>
+
+        <div class="filter-item date">
+            <span class="icon-calendar">📅</span>
+            <input type="date" @bind-value="filterFromDate" @bind-value:event="oninput" />
+        </div>
+
+        <div class="filter-item date">
+            <span class="icon-calendar">📅</span>
+            <input type="date" @bind-value="filterToDate" @bind-value:event="oninput" />
+        </div>
     </div>
 
-    <div class="filter-item date">
-        <span class="icon-calendar">📅</span>
-        <input type="date" @bind-value="filterFromDate" @bind-value:event="oninput" />
-    </div>
+    <div class="filter-row">
+        <div class="filter-item amount">
+            <span class="icon-money">💰</span>
+            <input type="number" placeholder="Min beløb" @bind-value="filterMinAmount" @bind-value:event="oninput" />
+        </div>
 
-    <div class="filter-item date">
-        <span class="icon-calendar">📅</span>
-        <input type="date" @bind-value="filterToDate" @bind-value:event="oninput" />
-    </div>
+        <div class="filter-item amount">
+            <span class="icon-money">💰</span>
+            <input type="number" placeholder="Max beløb" @bind-value="filterMaxAmount" @bind-value:event="oninput" />
+        </div>
 
-    <div class="filter-item amount">
-        <span class="icon-money">💰</span>
-        <input type="number" placeholder="Min beløb" @bind-value="filterMinAmount" @bind-value:event="oninput" />
-    </div>
-
-    <div class="filter-item amount">
-        <span class="icon-money">💰</span>
-        <input type="number" placeholder="Max beløb" @bind-value="filterMaxAmount" @bind-value:event="oninput" />
-    </div>
-    
-    <div class="filter-item dropdown">
-        <label>Status:</label>
-        <select class="filter-select" @bind="filterPaidStatus">
-            <option value="">Alle</option>
-            <option value="true">✅ Betalt</option>
-            <option value="false">❌ Ikke betalt</option>
-        </select>
+        <div class="filter-item dropdown">
+            <label>Status:</label>
+            <select class="filter-select" @bind="filterPaidStatus">
+                <option value="">Alle</option>
+                <option value="true">✅ Betalt</option>
+                <option value="false">❌ Ikke betalt</option>
+            </select>
+        </div>
     </div>
 </div>
+
 
 <!-- Tabel -->
 <div class="fine-table">
