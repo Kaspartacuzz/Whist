@@ -113,7 +113,10 @@
                     <tr>
                         <th>Dato</th>
                         <th>Note</th>
-                        <th></th>
+                        @if (CurrentUser is not null)
+                        {
+                            <th></th>
+                        }
                     </tr>
                     </thead>
                     <tbody>
@@ -123,8 +126,11 @@
                             <td>@evt.Key.ToString("dd.MM.yyyy")</td>
                             <td>@evt.Value</td>
                             <td>
-                                <button class="icon-button blue" @onclick="() => EditEvent(evt.Key)">✏️</button>
-                                <button class="icon-button red" @onclick="() => RequestDelete(evt.Key)">🗑️</button>
+                                @if (CurrentUser is not null)
+                                {
+                                    <button class="icon-button blue" @onclick="() => EditEvent(evt.Key)">✏️</button>
+                                    <button class="icon-button red" @onclick="() => RequestDelete(evt.Key)">🗑️</button>
+                                }
                             </td>
                         </tr>
                     }
@@ -155,7 +161,10 @@
                     <tr>
                         <th>Dato</th>
                         <th>Note</th>
-                        <th></th>
+                        @if (CurrentUser is not null)
+                        {
+                            <th></th>
+                        }
                     </tr>
                     </thead>
                     <tbody>
@@ -165,8 +174,11 @@
                             <td>@evt.Key.ToString("dd.MM.yyyy")</td>
                             <td>@evt.Value</td>
                             <td>
-                                <button class="icon-button blue" @onclick="() => EditEvent(evt.Key)">✏️</button>
-                                <button class="icon-button red" @onclick="() => RequestDelete(evt.Key)">🗑️</button>
+                                @if (CurrentUser is not null)
+                                {
+                                    <button class="icon-button blue" @onclick="() => EditEvent(evt.Key)">✏️</button>
+                                    <button class="icon-button red" @onclick="() => RequestDelete(evt.Key)">🗑️</button>
+                                }
                             </td>
                         </tr>
                     }
@@ -280,21 +292,21 @@
 
     private async Task SaveNote()
     {
-        if (SelectedDate.HasValue)
+        if (CurrentUser is null || !SelectedDate.HasValue)
+            return;
+
+        var calendar = new Core.Calendar
         {
-            var calendar = new Core.Calendar
-            {
-                Date = SelectedDate.Value.Date,
-                Note = NewNote
-            };
+            Date = SelectedDate.Value.Date,
+            Note = NewNote
+        };
 
             await CalendarService.Save(calendar);
             await LoadEvents();
 
-            NewNote = "";
-            SelectedDate = null;
-            ShowNoteModal = false;
-        }
+        NewNote = "";
+        SelectedDate = null;
+        ShowNoteModal = false;
     }
 
     private void CloseModal()
@@ -339,6 +351,9 @@
 
     private void RequestDelete(DateTime date)
     {
+        if (CurrentUser is null)
+            return;
+
         // Find det matchende kalender-event (du skal gemme en liste over events)
         var calendar = AllEvents.FirstOrDefault(e => e.Date.Date == date.Date);
         if (calendar != null)
@@ -351,6 +366,9 @@
 
     private async Task DeleteConfirmed()
     {
+        if (CurrentUser is null)
+            return;
+
         await CalendarService.Delete(idToDelete);
         EventDates.Remove(dateToDelete);
 
