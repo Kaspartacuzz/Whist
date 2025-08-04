@@ -289,7 +289,7 @@
             };
 
             await CalendarService.Save(calendar);
-            EventDates[calendar.Date] = calendar.Note;
+            await LoadEvents();
 
             NewNote = "";
             SelectedDate = null;
