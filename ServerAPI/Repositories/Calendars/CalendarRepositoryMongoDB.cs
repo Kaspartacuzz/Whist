@@ -26,20 +26,27 @@ public class CalendarRepositoryMongoDB : ICalendarRepository
 
     public async Task AddOrUpdate(Calendar calendarEvent)
     {
-        // Sikrer at datoen ikke har tid og er i UTC
+        // Ensure date stored as UTC date-only
         calendarEvent.Date = DateTime.SpecifyKind(calendarEvent.Date.Date, DateTimeKind.Utc);
 
-        // Find højeste eksisterende Id i kollektionen
-        var highest = await _calendar
-            .Find(_ => true)
-            .SortByDescending(c => c.Id)
-            .Limit(1)
-            .FirstOrDefaultAsync();
+        // Check for existing event on this date
+        var existing = await GetByDate(calendarEvent.Date);
+        if (existing != null)
+        {
+            calendarEvent.Id = existing.Id;
+            await _calendar.ReplaceOneAsync(c => c.Id == existing.Id, calendarEvent);
+        }
+        else
+        {
+            var highest = await _calendar
+                .Find(_ => true)
+                .SortByDescending(c => c.Id)
+                .Limit(1)
+                .FirstOrDefaultAsync();
 
-        calendarEvent.Id = highest != null ? highest.Id + 1 : 1;
-
-        // Indsæt ny begivenhed
-        await _calendar.InsertOneAsync(calendarEvent);
+            calendarEvent.Id = highest != null ? highest.Id + 1 : 1;
+            await _calendar.InsertOneAsync(calendarEvent);
+        }
     }
 
     public async Task Delete(int id)

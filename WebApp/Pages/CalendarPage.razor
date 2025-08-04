@@ -264,7 +264,9 @@
     {
         var allEvents = await CalendarService.GetAll();
         AllEvents = allEvents;
-        EventDates = AllEvents.ToDictionary(e => e.Date.Date, e => e.Note);
+        EventDates = allEvents
+            .GroupBy(e => e.Date.ToLocalTime().Date)
+            .ToDictionary(g => g.Key, g => g.First().Note);
         StateHasChanged();
     }
 
