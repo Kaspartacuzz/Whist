@@ -1,16 +1,23 @@
 using Core;
 using Microsoft.AspNetCore.Mvc;
 using ServerAPI.Repositories.Calendars;
+using System.Net;
+using System.Net.Mail;
+using ServerAPI.Repositories;
 
 [ApiController]
 [Route("api/[controller]")]
 public class CalendarController : ControllerBase
 {
     private readonly ICalendarRepository _repo;
+    private readonly IUserRepository _users;
+    private readonly IConfiguration _config;
 
-    public CalendarController(ICalendarRepository repo)
+    public CalendarController(ICalendarRepository repo, IUserRepository users, IConfiguration config)
     {
         _repo = repo;
+        _users = users;
+        _config = config;
     }
 
     [HttpGet]

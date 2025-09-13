@@ -8,4 +8,6 @@ public interface ICalendarRepository
     Task<Calendar?> GetByDate(DateTime date);
     Task AddOrUpdate(Calendar evt);
     Task Delete(int id);
+    Task<List<Calendar>> FindByExactOffsetDays(int offsetDays);
+    Task MarkReminderSent(int calendarId);
 }

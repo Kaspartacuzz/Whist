@@ -53,4 +53,28 @@ public class CalendarRepositoryMongoDB : ICalendarRepository
     {
         await _calendar.DeleteOneAsync(c => c.Id == id);
     }
+
+    public async Task<List<Calendar>> FindByExactOffsetDays(int offsetDays)
+    {
+        // Europe/Copenhagen (Windows-id = "Central Europe Standard Time")
+        var tz = TimeZoneInfo.FindSystemTimeZoneById("Central Europe Standard Time");
+        var todayLocal = TimeZoneInfo.ConvertTime(DateTime.UtcNow, tz).Date;
+        var targetLocalDate = todayLocal.AddDays(offsetDays);
+
+        // Vi gemmer datoer som "hele dage" (utc-dato uden tid)
+        var targetUtcDate = DateTime.SpecifyKind(targetLocalDate, DateTimeKind.Utc);
+
+        var filter = Builders<Calendar>.Filter.And(
+            Builders<Calendar>.Filter.Eq(x => x.Date, targetUtcDate),
+            Builders<Calendar>.Filter.Eq(x => x.ReminderSent, false)
+        );
+
+        return await _calendar.Find(filter).ToListAsync();
+    }
+
+    public async Task MarkReminderSent(int calendarId)
+    {
+        var update = Builders<Calendar>.Update.Set(x => x.ReminderSent, true);
+        await _calendar.UpdateOneAsync(c => c.Id == calendarId, update);
+    }
 }

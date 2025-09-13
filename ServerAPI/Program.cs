@@ -4,6 +4,7 @@ using ServerAPI.Repositories.Fines;
 using ServerAPI.Repositories.Highlights;
 using ServerAPI.Repositories.Points;
 using ServerAPI.Repositories.Rules;
+using ServerAPI.Workers;  
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,10 +17,11 @@ builder.Services.AddSingleton<IUserRepository, UserRepositoryMongoDB>();
 builder.Services.AddSingleton<IFineRepository, FineRepositoryMongoDB>();
 builder.Services.AddSingleton<IHighlightRepository, HighlightRepositoryMongoDB>();
 builder.Services.AddSingleton<IRuleRepository, RuleRepositoryMongoDB>();
-builder.Services.AddScoped<ICalendarRepository, CalendarRepositoryMongoDB>();
+builder.Services.AddSingleton<ICalendarRepository, CalendarRepositoryMongoDB>();
 builder.Services.AddSingleton<IPointRepository, PointRepositoryMongoDB>();
 
-
+builder.Services.AddAuthorization();
+builder.Services.AddHostedService<MailReminderWorker>();
 
 builder.Services.AddCors(options =>
 {
@@ -44,6 +46,7 @@ app.UseStaticFiles();
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.UseCors();
