@@ -172,6 +172,7 @@ h2 {
 .about-section p {
     width: 100%;
     max-width: 100%;
+    padding: 1rem 1rem;
     overflow: hidden;
     word-wrap: break-word;
     white-space: normal;

@@ -113,7 +113,10 @@
                     <tr>
                         <th>Dato</th>
                         <th>Note</th>
-                        <th></th>
+                        @if (CurrentUser is not null)
+                        {
+                            <th></th>
+                        }
                     </tr>
                     </thead>
                     <tbody>
@@ -122,10 +125,13 @@
                         <tr>
                             <td>@evt.Key.ToString("dd.MM.yyyy")</td>
                             <td>@evt.Value</td>
-                            <td>
-                                <button class="icon-button blue" @onclick="() => EditEvent(evt.Key)">✏️</button>
-                                <button class="icon-button red" @onclick="() => RequestDelete(evt.Key)">🗑️</button>
-                            </td>
+                            @if (CurrentUser is not null)
+                            {
+                                <td>
+                                    <button class="icon-button blue" @onclick="() => EditEvent(evt.Key)">✏️</button>
+                                    <button class="icon-button red" @onclick="() => RequestDelete(evt.Key)">🗑️</button>
+                                </td>
+                            }
                         </tr>
                     }
                     </tbody>
@@ -155,7 +161,10 @@
                     <tr>
                         <th>Dato</th>
                         <th>Note</th>
-                        <th></th>
+                        @if (CurrentUser is not null)
+                        {
+                            <th></th>
+                        }
                     </tr>
                     </thead>
                     <tbody>
@@ -164,10 +173,13 @@
                         <tr>
                             <td>@evt.Key.ToString("dd.MM.yyyy")</td>
                             <td>@evt.Value</td>
-                            <td>
-                                <button class="icon-button blue" @onclick="() => EditEvent(evt.Key)">✏️</button>
-                                <button class="icon-button red" @onclick="() => RequestDelete(evt.Key)">🗑️</button>
-                            </td>
+                            @if (CurrentUser is not null)
+                            {
+                                <td>
+                                    <button class="icon-button blue" @onclick="() => EditEvent(evt.Key)">✏️</button>
+                                    <button class="icon-button red" @onclick="() => RequestDelete(evt.Key)">🗑️</button>
+                                </td>
+                            }
                         </tr>
                     }
                     </tbody>

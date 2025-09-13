@@ -317,12 +317,12 @@
 /* Luk knap */
 .close-button {
     position: absolute;
+    color: red;
     top: 0.5rem;
     right: 0.5rem;
     background: none;
     border: none;
     font-size: 1.5rem;
-    color: #333;
     cursor: pointer;
 }
 
