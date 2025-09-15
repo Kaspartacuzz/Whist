@@ -16,23 +16,45 @@
             </h3>
 
             <div class="modal-section">
-                <label class="modal-label">@(IsSunMode ? "Vinder (1 spiller)" : "Vinderhold (2 spillere)"):</label>
+                <label class="modal-label">@(IsSunMode ? "Vinder (1 spiller)" : "Vindere"):</label>
                 @foreach (var player in Players)
                 {
                     <div>
-                        <input type="checkbox" checked="@player.IsWinner" @onchange="() => ToggleWinner(player)" />
+                        <input type="checkbox"
+                               checked="@player.IsWinner"
+                               @onchange="() => ToggleWinner(player)" />
                         @player.Nickname
+                    </div>
+                }
+                @if (!IsSunMode)
+                {
+                    <div>
+                        <input type="checkbox"
+                               checked="@IsSelfmakkerWinner"
+                               @onchange="ToggleSelfmakkerAsWinner" />
+                        Selvmakker
                     </div>
                 }
             </div>
 
             <div class="modal-section">
-                <label class="modal-label">@(IsSunMode ? "Tabere (3 spillere)" : "Taberhold (2 spillere)"):</label>
+                <label class="modal-label">@(IsSunMode ? "Tabere (3 spillere)" : "Tabere"):</label>
                 @foreach (var player in Players)
                 {
                     <div>
-                        <input type="checkbox" @bind="player.IsLoser" />
+                        <input type="checkbox"
+                               checked="@player.IsLoser"
+                               @onchange="() => ToggleLoser(player)" />
                         @player.Nickname
+                    </div>
+                }
+                @if (!IsSunMode)
+                {
+                    <div>
+                        <input type="checkbox"
+                               checked="@IsSelfmakkerLoser"
+                               @onchange="ToggleSelfmakkerAsLoser" />
+                        Selvmakker
                     </div>
                 }
             </div>
@@ -52,27 +74,50 @@
 
 @code {
     [Parameter] public int PointValue { get; set; }
-
     [Parameter] public List<SelectableUser> Players { get; set; } = new();
-
     [Parameter] public EventCallback<(List<SelectableUser> winners, List<SelectableUser> losers)> OnConfirm { get; set; }
-
     [Parameter] public EventCallback OnCancel { get; set; }
-
     [Parameter] public bool IsSunMode { get; set; } = false;
 
     private string ErrorMessage = "";
+
+    private bool IsSelfmakkerWinner = false;
+    private bool IsSelfmakkerLoser = false;
+
+    public class SelectableUser
+    {
+        public int Id { get; set; }
+        public string Nickname { get; set; } = "";
+        public bool IsWinner { get; set; }
+        public bool IsLoser { get; set; }
+    }
 
     private async Task Confirm()
     {
         var winners = Players.Where(p => p.IsWinner).ToList();
         var losers = Players.Where(p => p.IsLoser).ToList();
 
-        if ((IsSunMode && (winners.Count != 1 || losers.Count != 3)) ||
-            (!IsSunMode && (winners.Count != 2 || losers.Count != 2)))
+        if (IsSunMode)
         {
-            ErrorMessage = IsSunMode ? "Vælg 1 vinder og 3 tabere." : "Vælg præcis 2 vindere og 2 tabere.";
-            return;
+            if (!(winners.Count == 1 && losers.Count == 3) &&
+                !(winners.Count == 3 && losers.Count == 1))
+            {
+                ErrorMessage = "Vælg enten 1 vinder og 3 tabere, eller 1 taber og 3 vindere.";
+                return;
+            }
+        }
+        else
+        {
+            int totalWinners = winners.Count + (IsSelfmakkerWinner ? 1 : 0);
+            int totalLosers = losers.Count + (IsSelfmakkerLoser ? 1 : 0);
+
+            if (!((totalWinners == 2 && totalLosers == 2) ||
+                  (totalWinners == 1 && IsSelfmakkerWinner && totalLosers == 3) ||
+                  (totalLosers == 1 && IsSelfmakkerLoser && totalWinners == 3)))
+            {
+                ErrorMessage = "Vælg korrekt kombination af vindere og tabere.";
+                return;
+            }
         }
 
         await OnConfirm.InvokeAsync((winners, losers));
@@ -83,34 +128,118 @@
         await OnCancel.InvokeAsync();
     }
 
-    public class SelectableUser
-    {
-        public int Id { get; set; }
-        public string Nickname { get; set; } = "";
-        public bool IsWinner { get; set; }
-        public bool IsLoser { get; set; }
-    }
-    
     private void ToggleWinner(SelectableUser selected)
     {
-        if (selected.IsWinner)
+        if (IsSunMode)
         {
-            // Fjern vinderstatus og nulstil alle tabere
-            selected.IsWinner = false;
             foreach (var p in Players)
-                p.IsLoser = false;
-        }
-        else
-        {
-            // Sæt valgt spiller som vinder
-            foreach (var p in Players)
+            {
                 p.IsWinner = false;
+                p.IsLoser = false;
+            }
 
             selected.IsWinner = true;
 
-            // Sæt alle andre som tabere
             foreach (var p in Players.Where(p => p != selected))
                 p.IsLoser = true;
+        }
+        else
+        {
+            selected.IsWinner = !selected.IsWinner;
+            IsSelfmakkerWinner = false; // reset selvmakker ved manuel valg
+
+            var winners = Players.Where(p => p.IsWinner).ToList();
+
+            if (winners.Count == 2)
+            {
+                foreach (var p in Players)
+                    p.IsLoser = !p.IsWinner;
+                IsSelfmakkerLoser = false;
+            }
+            else
+            {
+                foreach (var p in Players)
+                    p.IsLoser = false;
+            }
+        }
+    }
+
+    private void ToggleLoser(SelectableUser selected)
+    {
+        selected.IsLoser = !selected.IsLoser;
+        IsSelfmakkerLoser = false; // reset selvmakker ved manuel valg
+
+        if (!IsSunMode)
+        {
+            var losers = Players.Where(p => p.IsLoser).ToList();
+
+            if (losers.Count == 2)
+            {
+                foreach (var p in Players)
+                    p.IsWinner = !p.IsLoser;
+                IsSelfmakkerWinner = false;
+            }
+            else
+            {
+                foreach (var p in Players)
+                    p.IsWinner = false;
+            }
+        }
+        else
+        {
+            // i sol-mode: 1 taber → resten vindere
+            if (Players.Count(p => p.IsLoser) == 1)
+            {
+                foreach (var p in Players)
+                    p.IsWinner = !p.IsLoser;
+            }
+        }
+    }
+
+    private void ToggleSelfmakkerAsWinner()
+    {
+        IsSelfmakkerWinner = !IsSelfmakkerWinner;
+        IsSelfmakkerLoser = false;
+
+        if (IsSelfmakkerWinner)
+        {
+            // Find én anden valgt vinder
+            var selected = Players.FirstOrDefault(p => p.IsWinner);
+            if (selected != null)
+            {
+                foreach (var p in Players)
+                {
+                    p.IsLoser = p != selected;
+                }
+            }
+        }
+        else
+        {
+            foreach (var p in Players)
+                p.IsLoser = false;
+        }
+    }
+
+    private void ToggleSelfmakkerAsLoser()
+    {
+        IsSelfmakkerLoser = !IsSelfmakkerLoser;
+        IsSelfmakkerWinner = false;
+
+        if (IsSelfmakkerLoser)
+        {
+            var selected = Players.FirstOrDefault(p => p.IsLoser);
+            if (selected != null)
+            {
+                foreach (var p in Players)
+                {
+                    p.IsWinner = p != selected;
+                }
+            }
+        }
+        else
+        {
+            foreach (var p in Players)
+                p.IsWinner = false;
         }
     }
 }
