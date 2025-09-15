@@ -4,21 +4,30 @@
 {
     <div class="modal-backdrop">
         <div class="modal-container">
-            <h3 class="modal-title">Tildel @PointValue point</h3>
+            <h3 class="modal-title">
+                @if (IsSunMode)
+                {
+                    <span>Sol-melding: @PointValue point</span>
+                }
+                else
+                {
+                    <span>Tildel @PointValue point</span>
+                }
+            </h3>
 
             <div class="modal-section">
-                <label class="modal-label">Vindere (2 spillere):</label>
+                <label class="modal-label">@(IsSunMode ? "Vinder (1 spiller)" : "Vinderhold (2 spillere)"):</label>
                 @foreach (var player in Players)
                 {
                     <div>
-                        <input type="checkbox" @bind="player.IsWinner" />
+                        <input type="checkbox" checked="@player.IsWinner" @onchange="() => ToggleWinner(player)" />
                         @player.Nickname
                     </div>
                 }
             </div>
 
             <div class="modal-section">
-                <label class="modal-label">Tabere (2 spillere):</label>
+                <label class="modal-label">@(IsSunMode ? "Tabere (3 spillere)" : "Taberhold (2 spillere)"):</label>
                 @foreach (var player in Players)
                 {
                     <div>
@@ -43,9 +52,14 @@
 
 @code {
     [Parameter] public int PointValue { get; set; }
-    [Parameter] public List<SelectPlayersComponent.SelectableUser> Players { get; set; } = new();
+
+    [Parameter] public List<SelectableUser> Players { get; set; } = new();
+
     [Parameter] public EventCallback<(List<SelectableUser> winners, List<SelectableUser> losers)> OnConfirm { get; set; }
+
     [Parameter] public EventCallback OnCancel { get; set; }
+
+    [Parameter] public bool IsSunMode { get; set; } = false;
 
     private string ErrorMessage = "";
 
@@ -54,28 +68,21 @@
         var winners = Players.Where(p => p.IsWinner).ToList();
         var losers = Players.Where(p => p.IsLoser).ToList();
 
-        if (winners.Count != 2 || losers.Count != 2)
+        if ((IsSunMode && (winners.Count != 1 || losers.Count != 3)) ||
+            (!IsSunMode && (winners.Count != 2 || losers.Count != 2)))
         {
-            ErrorMessage = "Vælg præcis 2 vindere og 2 tabere.";
+            ErrorMessage = IsSunMode ? "Vælg 1 vinder og 3 tabere." : "Vælg præcis 2 vindere og 2 tabere.";
             return;
         }
 
         await OnConfirm.InvokeAsync((winners, losers));
     }
 
-    public class User
-    {
-        public int Id { get; set; }
-        public string Nickname { get; set; } = "";
-        public bool IsWinner { get; set; }
-        public bool IsLoser { get; set; }
-    }
-    
     private async Task Close()
     {
         await OnCancel.InvokeAsync();
     }
-    
+
     public class SelectableUser
     {
         public int Id { get; set; }
@@ -83,6 +90,27 @@
         public bool IsWinner { get; set; }
         public bool IsLoser { get; set; }
     }
+    
+    private void ToggleWinner(SelectableUser selected)
+    {
+        if (selected.IsWinner)
+        {
+            // Fjern vinderstatus og nulstil alle tabere
+            selected.IsWinner = false;
+            foreach (var p in Players)
+                p.IsLoser = false;
+        }
+        else
+        {
+            // Sæt valgt spiller som vinder
+            foreach (var p in Players)
+                p.IsWinner = false;
+
+            selected.IsWinner = true;
+
+            // Sæt alle andre som tabere
+            foreach (var p in Players.Where(p => p != selected))
+                p.IsLoser = true;
+        }
+    }
 }
-
-

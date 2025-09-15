@@ -1,0 +1,44 @@
+/* Grundlæggende tabelopsætning */
+.point-table {
+    border-collapse: collapse;
+    font-size: 14px;
+    text-align: center;
+    width: 100%;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); /* shadow under hele tabel */
+    margin-top: 1rem;
+}
+
+/* Celler og overskrifter */
+.point-table th,
+.point-table td {
+    border: 2px solid black;
+    padding: 6px 10px;
+    font-weight: bold;
+    text-align: center;
+    height: 36px;
+}
+
+/* HEADER (kraftig rød med sort tekst) */
+.point-table thead th {
+    background-color: red;
+    color: black;
+}
+
+/* DATA (rosa baggrund) */
+.point-table tbody td,
+.point-table tbody th {
+    background-color: #ffe5e5;
+    color: black;
+}
+
+/* Klikbare celler */
+.clickable {
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.clickable:hover {
+    background-color: #ffcccc; /* lidt mørkere ved hover */
+}

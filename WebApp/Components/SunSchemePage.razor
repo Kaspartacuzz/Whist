@@ -1,0 +1,105 @@
+@using Core
+@using WebApp.Service
+@using WebApp.Service.PointServices
+@inject IUserService UserService
+@inject IPointService PointService
+
+<h3>Sol-meldinger</h3>
+
+<table class="point-table">
+    <thead>
+        <tr>
+            <th class="cell-red very-high">Melding</th>
+            <th class="cell-red very-high">Point</th>
+            <th class="cell-red very-high">Slås af</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var row in SunRows)
+        {
+            <tr>
+                <td class="cell-red very-high">@row.Name</td>
+                <td class="cell-red very-high clickable" @onclick="() => OnPointClick(row.Point)">
+                    @row.Point
+                </td>
+                <td class="cell-red very-high">@row.BeatenBy</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@if (IsModalOpen)
+{
+    <SelectPlayersComponent
+        PointValue="@SelectedPoint"
+        Players="@Players"
+        IsSunMode="true"
+        OnConfirm="HandleSunSubmission"
+        OnCancel="() => IsModalOpen = false" />
+}
+
+@code {
+    private bool IsModalOpen = false;
+    private int SelectedPoint;
+    private List<SelectPlayersComponent.SelectableUser> Players = new();
+
+    private List<SunRow> SunRows = new()
+    {
+        new() { Name = "Sol", Point = 3, BeatenBy = "9 Vip" },
+        new() { Name = "Ren Sol", Point = 6, BeatenBy = "10 Vip" },
+        new() { Name = "Bordlægger", Point = 12, BeatenBy = "11 Vip" },
+        new() { Name = "Super bordlægger", Point = 24, BeatenBy = "12 Vip" }
+    };
+
+    public class SunRow
+    {
+        public string Name { get; set; }
+        public int Point { get; set; }
+        public string BeatenBy { get; set; }
+    }
+
+    private async Task OnPointClick(int point)
+    {
+        SelectedPoint = point;
+
+        var users = await UserService.GetAll();
+        Players = users.Select(u => new SelectPlayersComponent.SelectableUser
+        {
+            Id = u.Id,
+            Nickname = u.NickName
+        }).ToList();
+
+        IsModalOpen = true;
+    }
+
+    private async Task HandleSunSubmission((List<SelectPlayersComponent.SelectableUser> winners, List<SelectPlayersComponent.SelectableUser> losers) result)
+    {
+        var (winners, losers) = result;
+
+        if (winners.Count != 1 || losers.Count != 3)
+            return;
+
+        var date = DateTime.UtcNow;
+
+        // Vinder får point * 3
+        await PointService.Add(new PointEntry
+        {
+            PlayerId = winners.First().Id,
+            Points = SelectedPoint * 3,
+            Date = date
+        });
+
+        // Tabere får minus point
+        foreach (var loser in losers)
+        {
+            await PointService.Add(new PointEntry
+            {
+                PlayerId = loser.Id,
+                Points = -SelectedPoint,
+                Date = date
+            });
+        }
+
+        IsModalOpen = false;
+    }
+}
