@@ -108,12 +108,34 @@
         }
         else
         {
-            int totalWinners = winners.Count + (IsSelfmakkerWinner ? 1 : 0);
-            int totalLosers = losers.Count + (IsSelfmakkerLoser ? 1 : 0);
+            // If exactly one selfmakker side is chosen, auto-assign the remaining 3 to the opposite side.
+            // This allows the flow: pick ONE player, tick selfmakker (winner or loser), then confirm.
+            if (IsSelfmakkerWinner ^ IsSelfmakkerLoser) // exactly one of them is true
+            {
+                if (IsSelfmakkerWinner)
+                {
+                    // Expect exactly one winner (the selfmakker). If so, set all others as losers.
+                    if (winners.Count == 1 && winners.Count + losers.Count < 4)
+                    {
+                        losers = Players.Where(p => !winners.Contains(p)).ToList();
+                    }
+                }
+                else // IsSelfmakkerLoser
+                {
+                    // Expect exactly one loser (the selfmakker). If so, set all others as winners.
+                    if (losers.Count == 1 && winners.Count + losers.Count < 4)
+                    {
+                        winners = Players.Where(p => !losers.Contains(p)).ToList();
+                    }
+                }
+            }
 
-            if (!((totalWinners == 2 && totalLosers == 2) ||
-                  (totalWinners == 1 && IsSelfmakkerWinner && totalLosers == 3) ||
-                  (totalLosers == 1 && IsSelfmakkerLoser && totalWinners == 3)))
+            // Final validation for normal mode:
+            // - Standard 2v2
+            // - OR 1v3 / 3v1 (which includes the selfmakker scenarios)
+            if (!((winners.Count == 2 && losers.Count == 2) ||
+                  (winners.Count == 1 && losers.Count == 3) ||
+                  (winners.Count == 3 && losers.Count == 1)))
             {
                 ErrorMessage = "Vælg korrekt kombination af vindere og tabere.";
                 return;

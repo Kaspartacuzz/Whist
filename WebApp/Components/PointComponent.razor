@@ -174,11 +174,57 @@
         }
     }
 
-    private async Task HandlePointSubmission((List<SelectPlayersComponent.SelectableUser> winners, List<SelectPlayersComponent.SelectableUser> losers) result)
-    {
-        var (winners, losers) = result;
-        var date = DateTime.UtcNow;
+   private async Task HandlePointSubmission((List<SelectPlayersComponent.SelectableUser> winners, List<SelectPlayersComponent.SelectableUser> losers) result)
+{
+    var (winners, losers) = result;
+    var date = DateTime.UtcNow;
 
+    // Selfmakker cases first (1v3 or 3v1). 2v2 falls through to the default.
+    if (winners.Count == 1 && losers.Count == 3)
+    {
+        // Selfmakker is the single winner (+3×)
+        var self = winners[0];
+        await PointService.Add(new PointEntry
+        {
+            PlayerId = self.Id,
+            Points = SelectedPoint * 3,
+            Date = date
+        });
+
+        foreach (var loser in losers)
+        {
+            await PointService.Add(new PointEntry
+            {
+                PlayerId = loser.Id,
+                Points = -SelectedPoint,
+                Date = date
+            });
+        }
+    }
+    else if (winners.Count == 3 && losers.Count == 1)
+    {
+        // Selfmakker is the single loser (-3×)
+        var self = losers[0];
+        await PointService.Add(new PointEntry
+        {
+            PlayerId = self.Id,
+            Points = -SelectedPoint * 3,
+            Date = date
+        });
+
+        foreach (var winner in winners)
+        {
+            await PointService.Add(new PointEntry
+            {
+                PlayerId = winner.Id,
+                Points = SelectedPoint,
+                Date = date
+            });
+        }
+    }
+    else
+    {
+        // Default 2v2 (unchanged)
         foreach (var winner in winners)
         {
             await PointService.Add(new PointEntry
@@ -198,10 +244,11 @@
                 Date = date
             });
         }
-
-        await LoadPoints();
-        IsModalOpen = false;
     }
+
+    await LoadPoints();
+    IsModalOpen = false;
+}
 
     private string GetCellClass(int? value, int columnIndex, string rowLabel)
     {
