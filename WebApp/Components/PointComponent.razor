@@ -6,7 +6,7 @@
 @inject IUserService UserService
 
 
-<h3>Whist Point Skema</h3>
+<h3 class="whist-point-title">Whist Point Skema</h3>
 
 <table class="point-table">
     <thead>
@@ -39,10 +39,14 @@
     </tbody>
 </table>
 
-<div style="display: flex; gap: 2rem; align-items: flex-start;">
-    <div style="flex: 1;">
+<div class="below-tables-container">
+    <div class="sun-scheme">
+        <h4>Sol-meldinger</h4>
+        <SunSchemePage/>
+    </div>
+    <div class="point-summary">
         <h4>Pointoversigt</h4>
-        <table class="point-overview">
+        <table class="point-overview-table">
             <thead>
             <tr>
                 <th>Spiller</th>
@@ -52,17 +56,14 @@
             <tbody>
             @foreach (var kvp in PlayerTotals.OrderByDescending(p => p.Value))
             {
+                var cssClass = kvp.Value > 0 ? "positive" : kvp.Value < 0 ? "negative" : "";
                 <tr>
                     <td>@(PlayerNames.TryGetValue(kvp.Key, out var name) ? name : $"ID {kvp.Key}")</td>
-                    <td style="color:@(kvp.Value < 0 ? "red" : "green")">@kvp.Value</td>
+                    <td class="@cssClass">@kvp.Value</td>
                 </tr>
             }
             </tbody>
         </table>
-    </div>
-
-    <div style="flex: 1;">
-        <SunSchemePage />
     </div>
 </div>
 

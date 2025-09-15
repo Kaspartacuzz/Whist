@@ -98,13 +98,14 @@ th.cell-blue.very-high {
     background-color: rgba(204, 224, 247, 1);    /* fuld styrke */
 }
 
-
-/*Oversigt*/
-.point-overview {
-    margin-top: 2rem;
+.point-overview-table {
     border-collapse: collapse;
+    font-size: 14px;
+    text-align: center;
     width: 100%;
-    font-size: 1rem;
+    /* Fjern eller justér max-width */
+    margin-top: 2rem;
+    max-width: none;
 }
 
 .point-overview th,
@@ -116,11 +117,122 @@ th.cell-blue.very-high {
 
 
 /* Hover */
-td:not(.cell-empty):hover {
+.point-table td:not(.cell-empty):hover {
     outline: 2px solid black;
     cursor: pointer;
     filter: brightness(1.1);
     transition: all 0.15s ease-in-out;
+}
+
+/* Pointoversigt i samme stil som sol-meldinger */
+.point-overview-table {
+    border-collapse: collapse;
+    font-size: 14px;
+    text-align: center;
+    width: 100%;
+    max-width: 300px;
+    margin-top: 2rem;
+}
+
+.point-overview-table th,
+.point-overview-table td {
+    border: 2px solid black;
+    padding: 6px 10px;
+    font-weight: bold;
+    text-align: center;
+    height: 36px;
+    background-color: #ffe5e5;
+}
+
+.point-overview-table th {
+    background-color: red;
+    color: black;
+}
+
+/* Farver til point */
+.point-overview-table .positive {
+    color: green;
+}
+
+.point-overview-table .negative {
+    color: red;
+}
+
+.point-table {
+    border-collapse: collapse;
+    font-size: 12px; /* Mindre tekst */
+    text-align: center;
+    width: 95%; /* Lidt mindre bredde */
+    margin: 0 auto; /* Centreret */
+}
+
+.point-table th,
+.point-table td {
+    width: 32px;     /* Mindre celler */
+    height: 28px;
+    padding: 3px;
+    font-weight: bold;
+    border: 2px solid black;
+    text-align: center;
+}
+
+.below-tables-container {
+    width: 95%;
+    margin: 2rem auto 0 auto; /* Samme “95% + center” som .point-table */
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 2rem;
+}
+
+.sun-scheme,
+.point-summary {
+    flex: 1 1 50%;
+    margin-bottom: 2rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.sun-scheme h4,
+.point-summary h4 {
+    margin-top: 0;
+    margin-bottom: 0.6rem;
+    font-size: 1.4rem;
+    text-align: left; /* eller center, hvis du ønsker det */
+}
+
+.point-overview-table {
+    width: 100%;
+    margin-top: 1rem;
+    max-width: none;
+}
+
+
+/* -- Justér h3-overskriften med samme bredde/centrering -- */
+h3.whist-point-title {
+    width: 95%;         /* matcher tabellernes 95% */
+    margin: 0 auto;
+    margin-bottom: 1rem; /* lidt afstand ned til tabel */
+}
+
+/* Sørg for at tabellen ikke “bløder” ud af skærmen på mobil */
+/* - Enten ved at den kan scrolle vandret
+   - eller ved at skaleres let ned.*/
+@media (max-width: 768px) {
+    .point-table {
+        width: 100%;
+        /* Mindre tekst og celler, så det hele kan være på samme linje */
+        font-size: 10px; 
+    }
+    .below-tables-container {
+        flex-wrap: wrap; /* så de to tabeller stables, hvis de ikke kan være ved siden af hinanden */
+    }
+    .sun-scheme,
+    .point-summary {
+        flex: 1 1 100%;
+        margin-bottom: 1rem;
+        align-items: flex-start;
+    }
 }
 
 
