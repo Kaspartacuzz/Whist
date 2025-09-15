@@ -38,9 +38,14 @@
 }
 
 @code {
+    [Parameter] public EventCallback PointsChanged { get; set; }
     private bool IsModalOpen = false;
     private int SelectedPoint;
     private List<SelectPlayersComponent.SelectableUser> Players = new();
+    
+    private List<PointEntry> AllPoints = new();
+    private Dictionary<int, string> PlayerNames = new();
+    private Dictionary<int, int> PlayerTotals = new();
 
     private List<SunRow> SunRows = new()
     {
@@ -99,6 +104,9 @@
             });
         }
 
+        if (PointsChanged.HasDelegate)
+            await PointsChanged.InvokeAsync();
+        
         IsModalOpen = false;
     }
 }
