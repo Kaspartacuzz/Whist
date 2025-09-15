@@ -76,37 +76,82 @@
         IsModalOpen = true;
     }
 
-    private async Task HandleSunSubmission((List<SelectPlayersComponent.SelectableUser> winners, List<SelectPlayersComponent.SelectableUser> losers) result)
+   private async Task HandleSunSubmission((List<SelectPlayersComponent.SelectableUser> winners, List<SelectPlayersComponent.SelectableUser> losers) result)
+{
+    var (winners, losers) = result;
+    var date = DateTime.UtcNow;
+
+    if (winners.Count == 1 && losers.Count == 3)
     {
-        var (winners, losers) = result;
+        // Den ene er vinder → +3× base til solo, -base til hver af de tre
+        var solo = winners[0];
 
-        if (winners.Count != 1 || losers.Count != 3)
-            return;
-
-        var date = DateTime.UtcNow;
-
-        // Vinder får point * 3
         await PointService.Add(new PointEntry
         {
-            PlayerId = winners.First().Id,
+            PlayerId = solo.Id,
             Points = SelectedPoint * 3,
             Date = date
         });
 
-        // Tabere får minus point
-        foreach (var loser in losers)
+        foreach (var l in losers)
         {
             await PointService.Add(new PointEntry
             {
-                PlayerId = loser.Id,
+                PlayerId = l.Id,
                 Points = -SelectedPoint,
                 Date = date
             });
         }
-
-        if (PointsChanged.HasDelegate)
-            await PointsChanged.InvokeAsync();
-        
-        IsModalOpen = false;
     }
+    else if (winners.Count == 3 && losers.Count == 1)
+    {
+        // Den ene er taber → -3× base til solo, +base til hver af de tre
+        var solo = losers[0];
+
+        await PointService.Add(new PointEntry
+        {
+            PlayerId = solo.Id,
+            Points = -SelectedPoint * 3,
+            Date = date
+        });
+
+        foreach (var w in winners)
+        {
+            await PointService.Add(new PointEntry
+            {
+                PlayerId = w.Id,
+                Points = SelectedPoint,
+                Date = date
+            });
+        }
+    }
+    else
+    {
+        // Fallback (burde ikke ske i sol): almindelig fordeling
+        foreach (var w in winners)
+        {
+            await PointService.Add(new PointEntry
+            {
+                PlayerId = w.Id,
+                Points = SelectedPoint,
+                Date = date
+            });
+        }
+        foreach (var l in losers)
+        {
+            await PointService.Add(new PointEntry
+            {
+                PlayerId = l.Id,
+                Points = -SelectedPoint,
+                Date = date
+            });
+        }
+    }
+
+    // Opdatér forælderen (du har allerede koblet denne callback til LoadPoints i PointComponent)
+    if (PointsChanged.HasDelegate)
+        await PointsChanged.InvokeAsync();
+
+    IsModalOpen = false;
+}
 }
