@@ -45,7 +45,7 @@
         <div class="top-bar">
             <h4>Sol-meldinger</h4>
             </div>
-        <SunSchemePage
+        <SunSchemeComponent
             PointsChanged="LoadPoints"/>
     </div>
     <div class="point-summary">
@@ -62,12 +62,19 @@
             </tr>
             </thead>
             <tbody>
-            @foreach (var kvp in PlayerTotals.OrderByDescending(p => p.Value))
+            @foreach (var row in PlayerNames
+                          .Select(kvp => new {
+                              Id = kvp.Key,
+                              Name = kvp.Value,
+                              Total = (PlayerTotals != null && PlayerTotals.TryGetValue(kvp.Key, out var t)) ? t : 0
+                          })
+                          .OrderByDescending(x => x.Total)   // behold “flest point først”
+                          .ThenBy(x => x.Name))              // pæn stabil sortering
             {
-                var cssClass = kvp.Value > 0 ? "positive" : kvp.Value < 0 ? "negative" : "";
+                var cssClass = row.Total > 0 ? "positive" : row.Total < 0 ? "negative" : "";
                 <tr>
-                    <td>@(PlayerNames.TryGetValue(kvp.Key, out var name) ? name : $"ID {kvp.Key}")</td>
-                    <td class="@cssClass">@kvp.Value</td>
+                    <td>@row.Name</td>
+                    <td class="@cssClass">@row.Total</td>
                 </tr>
             }
             </tbody>
