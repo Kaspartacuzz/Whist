@@ -1,10 +1,11 @@
 @page "/point"
 @using Core
 @using WebApp.Service
+@using WebApp.Service.FineServices
 @using WebApp.Service.PointServices
 @inject IPointService PointService
 @inject IUserService UserService
-
+@inject IFineService FineService 
 
 <h3 class="whist-point-title">Whist Point Skema</h3>
 
@@ -41,12 +42,18 @@
 
 <div class="below-tables-container">
     <div class="sun-scheme">
-        <h4>Sol-meldinger</h4>
+        <div class="top-bar">
+            <h4>Sol-meldinger</h4>
+            </div>
         <SunSchemePage
-            PointsChanged="LoadPoints" />
+            PointsChanged="LoadPoints"/>
     </div>
     <div class="point-summary">
-        <h4>Pointoversigt</h4>
+        <div class="top-bar">
+            <h4>Pointoversigt</h4>
+            <button class="btn-add" @onclick="ResetPointsAndCreateFines"
+                    style="margin: .5rem 0; padding: .4rem .8rem;">+ Tilføj bøder</button>
+        </div>
         <table class="point-overview-table">
             <thead>
             <tr>
@@ -284,5 +291,46 @@
         if (label.Contains("Gode")) return "high";
         if (label.Contains("Halve")) return "very-high";
         return "";
+    }
+    
+    private async Task ResetPointsAndCreateFines()
+    {
+        // 1) Hent seneste totals (sikkerhed)
+        await LoadPoints();
+
+        var now = DateTime.UtcNow;
+
+        // 2) Opret bøder for dem med minus. Split i bidder af max 500 pga Fine.Amount [Range(1..500)]
+        foreach (var kv in PlayerTotals)
+        {
+            var userId = kv.Key;
+            var total  = kv.Value;
+
+            if (total < 0)
+            {
+                var amountRemaining = Math.Abs(total);
+                while (amountRemaining > 0)
+                {
+                    var chunk = Math.Min(500, amountRemaining);
+
+                    await FineService.Add(new Fine
+                    {
+                        UserId  = userId,
+                        Amount  = chunk,                    // kun positive beløb i bøder
+                        Comment = "Whist",
+                        Date    = now,
+                        IsPaid  = false
+                    });
+
+                    amountRemaining -= chunk;
+                }
+            }
+        }
+
+        // 3) Slet ALLE points i databasen
+        await PointService.DeleteAll(); // kalder api/point/all i din PointService  :contentReference[oaicite:1]{index=1}
+
+        // 4) Opdatér UI (nul totals)
+        await LoadPoints();
     }
 }

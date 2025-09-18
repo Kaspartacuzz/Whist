@@ -215,6 +215,28 @@ h3.whist-point-title {
     margin-bottom: 1rem; /* lidt afstand ned til tabel */
 }
 
+/* Tilføj bøder knap */
+.btn-add {
+    background-color: #6366F1;
+    color: white;
+    border: none;
+    border-radius: 0.5rem;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.btn-add:hover {
+    background-color: #4829a5;
+}
+
+.top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    min-height: 30px;
+    max-height: 30px;
+}
+
 /* Sørg for at tabellen ikke “bløder” ud af skærmen på mobil */
 /* - Enten ved at den kan scrolle vandret
    - eller ved at skaleres let ned.*/
