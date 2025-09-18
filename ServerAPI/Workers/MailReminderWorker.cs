@@ -100,7 +100,7 @@ public class MailReminderWorker : BackgroundService
             var subject = $"Påmindelse: Whist-holdet {dateStr}";
 
             // Plain + HTML (bedre leveringsrate)
-            var text = $"Husk, du har en begivenhed med Whist-holdet d.d. {dateStr} om 2 dage."
+            var text = $"Husk, du har en begivenhed med Whist-holdet d. {dateStr} om 2 dage."
                      + (string.IsNullOrWhiteSpace(ev.Note) ? "" : $"\n\nNote: {ev.Note}")
                      + "\n\nVi ses!\nWhist-holdet";
 
