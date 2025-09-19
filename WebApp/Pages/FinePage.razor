@@ -104,34 +104,34 @@
 <div class="fine-table">
     <table>
         <thead>
-            <tr>
-                <th>Dato</th>
-                <th>Navn</th>
-                <th>Beløb</th>
-                <th>Betalt</th>
-                <th>Kommentar</th>
-                <th></th>
-            </tr>
+        <tr>
+            <th>Dato</th>
+            <th>Navn</th>
+            <th>Beløb</th>
+            <th>Betalt</th>
+            <th>Kommentar</th>
+            <th></th>
+        </tr>
         </thead>
         <tbody>
-            @foreach (var fine in FilteredFines)
-            {
-                var user = Users.FirstOrDefault(u => u.Id == fine.UserId);
-                <tr>
-                    <td>@fine.Date.ToShortDateString()</td>
-                    <td>@user?.NickName</td>
-                    <td>@fine.Amount kr</td>
-                    <td>@(fine.IsPaid ? "✅" : "❌")</td>
-                    <td>@fine.Comment</td>
-                    <td>
-                        @if (fine.UserId != CurrentUser?.Id)
-                        {
-                            <button class="icon-button blue" @onclick="() => EditFine(fine)">✏️</button>
-                            <button class="icon-button red" @onclick="() => ConfirmDelete(fine)">🗑️</button>
-                        }
-                    </td>
-                </tr>
-            }
+        @foreach (var fine in FilteredFines)
+        {
+            var user = Users.FirstOrDefault(u => u.Id == fine.UserId);
+            <tr>
+                <td>@fine.Date.ToShortDateString()</td>
+                <td>@user?.NickName</td>
+                <td>@fine.Amount kr</td>
+                <td>@(fine.IsPaid ? "✅" : "❌")</td>
+                <td>@fine.Comment</td>
+                <td>
+                    @if (fine.UserId != CurrentUser?.Id)
+                    {
+                        <button class="icon-button blue" @onclick="() => EditFine(fine)">✏️</button>
+                        <button class="icon-button red" @onclick="() => ConfirmDelete(fine)">🗑️</button>
+                    }
+                </td>
+            </tr>
+        }
         </tbody>
     </table>
 
@@ -140,6 +140,33 @@
                             OnCancel="CancelDelete"
                             Message="Er du sikker på at du vil slette denne bøde?" />
 </div>
+
+@if (TotalPages > 1)
+{
+    <div class="pagination">
+        @if (CurrentPage > 1)
+        {
+            <button @onclick="GoPrev">◀️ Forrige</button>
+        }
+
+        @if (CurrentPage > 1)
+        {
+            <button @onclick="() => GoTo(CurrentPage - 1)">@((CurrentPage - 1))</button>
+        }
+
+        <button class="active">@CurrentPage</button>
+
+        @if (CurrentPage < TotalPages)
+        {
+            <button @onclick="() => GoTo(CurrentPage + 1)">@((CurrentPage + 1))</button>
+        }
+
+        @if (CurrentPage < TotalPages)
+        {
+            <button @onclick="GoNext">Næste ▶️</button>
+        }
+    </div>
+}
 
 <AddFineComponent @ref="addFineComponent" OnFineAdded="ReloadFines" />
 
@@ -151,7 +178,12 @@
     private AddFineComponent? addFineComponent;
     private ConfirmDeleteComponent? confirmComponent;
     private Fine? FineToDelete = null;
-    private Dictionary<int, int> StarFineCounts = new(); // BrugerId → antal stjerner
+    
+    //Sidevisning for bøder (maks 10)
+    private int CurrentPage = 1;
+    private const int PageSize = 5; // altid 10
+    private int TotalCount = 0;
+    private int TotalPages => (int)Math.Ceiling((double)TotalCount / PageSize);
     
     //Filtreringer
     private DateTime? filterFromDate = null;
@@ -193,9 +225,9 @@
 
     protected override async Task OnInitializedAsync()
     {
-        Fines = (await FineService.GetAll()).ToList();
         Users = (await UserService.GetAll()).ToList();
         CurrentUser = await AuthService.GetCurrentUser();
+        await LoadPage(1);
     }
     
     private async Task OpenAddFineModal()
@@ -204,11 +236,11 @@
             await addFineComponent.Show();
     }
 
-    private async Task ReloadFines()
+    /*private async Task ReloadFines()
     {
         Fines = (await FineService.GetAll()).ToList();
         StateHasChanged();
-    }
+    }*/
     
     private async Task PayNow()
     {
@@ -284,6 +316,29 @@
     private int GetStarCount(int userId)
     {
         return Fines.Count(f => f.UserId == userId && f.Comment == "Stjerne" && !f.IsPaid);
+    }
+    
+    private async Task LoadPage(int page)
+    {
+        CurrentPage = page < 1 ? 1 : page;
+        var result = await FineService.GetPaged(CurrentPage, PageSize);
+        Fines = result.Items.ToList();
+        TotalCount = result.TotalCount;
+        StateHasChanged();
+    }
+
+    private async Task GoPrev() { if (CurrentPage > 1) await LoadPage(CurrentPage - 1); }
+    private async Task GoNext() { if (CurrentPage < TotalPages) await LoadPage(CurrentPage + 1); }
+    private async Task GoTo(int page) { if (page >= 1 && page <= TotalPages) await LoadPage(page); }
+
+    private async Task ReloadFines()
+    {
+        // bruges efter add/edit/delete
+        if (Fines.Count == 1 && CurrentPage > 1)
+            await LoadPage(CurrentPage - 1);
+        else
+            await LoadPage(CurrentPage);
+        StateHasChanged();
     }
 }
 

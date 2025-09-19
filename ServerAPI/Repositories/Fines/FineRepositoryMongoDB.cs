@@ -62,4 +62,49 @@ public class FineRepositoryMongoDB : IFineRepository
         user.Fines = user.Fines.Where(f => f.Id != id).ToList();
         _users.ReplaceOne(u => u.Id == user.Id, user);
     }
+
+    public class FineWrapper
+    {
+        public Fine Fines { get; set; } = default!;
+    }
+
+    public PagedResult<Fine> GetPaged(int page, int pageSize, int? userId = null)
+    {
+        if (page < 1) page = 1;
+        if (pageSize < 1) pageSize = 5;
+
+        var skip = (page - 1) * pageSize;
+
+        var userFilter = userId.HasValue
+            ? Builders<User>.Filter.Eq(u => u.Id, userId.Value)
+            : Builders<User>.Filter.Empty;
+
+        // totalCount
+        int totalCount;
+        if (userId.HasValue)
+        {
+            totalCount = _users.Find(userFilter)
+                .Project(u => u.Fines.Count)
+                .FirstOrDefault();
+        }
+        else
+        {
+            totalCount = _users.Aggregate()
+                .Project(u => new { Count = u.Fines.Count })
+                .ToList()
+                .Sum(x => x.Count);
+        }
+
+        // Items (paged) via wrapper
+        var items = _users.Aggregate()
+            .Match(userFilter)
+            .Unwind<User, FineWrapper>(u => u.Fines)          // output er FineWrapper
+            .SortByDescending(fw => fw.Fines.Date)            // sorter på Fine.Date
+            .Skip(skip)
+            .Limit(pageSize)
+            .Project(fw => fw.Fines)                          // projecter kun Fine ud
+            .ToList();
+
+        return new PagedResult<Fine>(items, totalCount, page, pageSize);
+    }
 }

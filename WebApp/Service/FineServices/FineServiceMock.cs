@@ -36,4 +36,11 @@ public class FineServiceMock : IFineService
     {
         await _http.DeleteAsync($"api/fine/{id}");
     }
+    
+    public Task<PagedResult<Fine>> GetPaged(int page, int pageSize, int? userId = null)
+    {
+        var url = $"api/fine/paged?page={page}&pageSize={pageSize}";
+        if (userId.HasValue) url += $"&userId={userId.Value}";
+        return _http.GetFromJsonAsync<PagedResult<Fine>>(url)!;
+    }
 }

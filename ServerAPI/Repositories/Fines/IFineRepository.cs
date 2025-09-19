@@ -9,4 +9,5 @@ public interface IFineRepository
     void AddFine(Fine fine);      // Tilføj ny bøde
     void Update(Fine fine);       // Opdater en bøde (fx hvis betalt)
     void Delete(int id);          // Slet en bøde (valgfrit)
+    PagedResult<Fine> GetPaged(int page, int pageSize, int? userId = null);
 }

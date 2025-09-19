@@ -62,4 +62,9 @@ public class FineRepositoryMock : IFineRepository
             _fines.Remove(fine);
         }
     }
+
+    public PagedResult<Fine> GetPaged(int page, int pageSize, int? userId = null)
+    {
+        throw new NotImplementedException();
+    }
 }

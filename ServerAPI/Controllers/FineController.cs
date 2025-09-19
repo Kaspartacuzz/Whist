@@ -47,4 +47,17 @@ public class FineController : ControllerBase
         _fineRepository.Delete(id);
         return Ok();
     }
+    
+    [HttpGet("paged")]
+    public ActionResult<PagedResult<Fine>> GetPaged(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10,
+        [FromQuery] int? userId = null)
+    {
+        page = Math.Max(1, page);
+        pageSize = Math.Clamp(pageSize, 1, 100);
+
+        var result = _fineRepository.GetPaged(page, pageSize, userId);
+        return Ok(result);
+    }
 }
