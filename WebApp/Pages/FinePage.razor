@@ -217,11 +217,11 @@
             await addFineComponent.Show();
     }
 
-    /*private async Task ReloadFines()
+    private async Task ReloadAllFines()
     {
         Fines = (await FineService.GetAll()).ToList();
         StateHasChanged();
-    }*/
+    }
     
     private async Task PayNow()
     {
@@ -291,7 +291,7 @@
         };
 
         await FineService.Add(fine);
-        await ReloadFines();
+        await ReloadAllFines();
     }
 
     private int GetStarCount(int userId)
