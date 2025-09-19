@@ -40,4 +40,11 @@ public class HighlightService : IHighlightService
         var response = await _http.PutAsJsonAsync($"api/highlight/{highlight.Id}", highlight);
         response.EnsureSuccessStatusCode();
     }
+    
+    public async Task<PagedResult<Highlight>> GetPaged(int page, int pageSize = 6)
+    {
+        var url = $"api/highlight/paged?page={page}&pageSize={pageSize}";
+        return await _http.GetFromJsonAsync<PagedResult<Highlight>>(url)
+               ?? new PagedResult<Highlight>(new List<Highlight>(), 0, page, pageSize);
+    }
 }

@@ -77,4 +77,14 @@ public class HighlightController : ControllerBase
         await _repository.Update(highlight);
         return NoContent();
     }
+    
+    // HighlightController.cs
+    [HttpGet("paged")]
+    public async Task<ActionResult<PagedResult<Highlight>>> GetPaged(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 6)
+    {
+        var result = await _repository.GetPaged(page, pageSize);
+        return Ok(result);
+    }
 }

@@ -43,4 +43,9 @@ public class HighlightRepositoryMock : IHighlightRepository
         }
         return Task.CompletedTask;
     }
+
+    public Task<PagedResult<Highlight>> GetPaged(int page, int pageSize)
+    {
+        throw new NotImplementedException();
+    }
 }

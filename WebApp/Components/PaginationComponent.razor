@@ -1,0 +1,36 @@
+<div class="pagination">
+    @if (CurrentPage > 1)
+    {
+        <button type="button" @onclick="() => OnPageChanged.InvokeAsync(CurrentPage - 1)">◀️ Forrige</button>
+    }
+
+    @foreach (var pageNumber in GetPageNumbers())
+    {
+        var isActive = pageNumber == CurrentPage;
+        <button type="button"
+                class="@(isActive ? "active" : null)"
+                disabled="@isActive"
+                aria-current="@(isActive ? "page" : null)"
+                @onclick="() => OnPageChanged.InvokeAsync(pageNumber)">
+            @pageNumber
+        </button>
+    }
+
+    @if (CurrentPage < TotalPages)
+    {
+        <button type="button" @onclick="() => OnPageChanged.InvokeAsync(CurrentPage + 1)">Næste ▶️</button>
+    }
+</div>
+
+@code {
+    [Parameter] public int CurrentPage { get; set; }
+    [Parameter] public int TotalPages { get; set; }
+    [Parameter] public EventCallback<int> OnPageChanged { get; set; }
+
+    private IEnumerable<int> GetPageNumbers()
+    {
+        var start = Math.Max(1, CurrentPage - 1);
+        var end   = Math.Min(TotalPages, CurrentPage + 1);
+        return Enumerable.Range(start, end - start + 1);
+    }
+}

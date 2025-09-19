@@ -9,4 +9,5 @@ public interface IHighlightRepository
     Task<Highlight> Add(Highlight highlight);
     Task Delete(int id);
     Task Update(Highlight highlight);
+    Task<PagedResult<Highlight>> GetPaged(int page, int pageSize);
 }

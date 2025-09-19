@@ -43,6 +43,25 @@ public class HighlightRepositoryMongoDB : IHighlightRepository
         await _highlights.ReplaceOneAsync(h => h.Id == highlight.Id, highlight);
     }
 
+    // HighlightRepositoryMongoDB.cs
+    public async Task<PagedResult<Highlight>> GetPaged(int page, int pageSize)
+    {
+        if (page < 1) page = 1;
+        if (pageSize < 1) pageSize = 6;
+
+        var skip = (page - 1) * pageSize;
+
+        var totalCount = (int)await _highlights.CountDocumentsAsync(_ => true);
+
+        var items = await _highlights.Find(_ => true)
+            .SortByDescending(h => h.Date)
+            .Skip(skip)
+            .Limit(pageSize)
+            .ToListAsync();
+
+        return new PagedResult<Highlight>(items, totalCount, page, pageSize);
+    }
+
     private async Task<int> GetNextIdAsync()
     {
         var list = await _highlights.Find(_ => true).ToListAsync();

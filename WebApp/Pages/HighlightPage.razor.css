@@ -326,3 +326,25 @@
     cursor: pointer;
 }
 
+.pagination {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    margin-top: 1rem;
+}
+
+.pagination button {
+    border: 1px solid #ddd;
+    background: #fff;
+    padding: 0.35rem 0.65rem;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.pagination button.active,
+.pagination button:disabled {
+    font-weight: bold;
+    background: #f3f4f6;
+    cursor: default;
+}
+

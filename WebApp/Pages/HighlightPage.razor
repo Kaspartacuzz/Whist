@@ -105,6 +105,13 @@
     </div>
 }
 
+@if (TotalPages > 1)
+{
+    <PaginationComponent CurrentPage="CurrentPage"
+                TotalPages="TotalPages"
+                OnPageChanged="LoadPage" />
+}
+
 
 @code {
     private List<Highlight> Highlights = new();
@@ -114,6 +121,10 @@
     private DateTime? filterTo = null;
     private User? CurrentUser;
     private string? ExpandedImageUrl;
+    private int CurrentPage = 1;
+    private const int PageSize = 6; // altid 6
+    private int TotalCount = 0;
+    private int TotalPages => (int)Math.Ceiling((double)TotalCount / PageSize);
 
     private AddHighlightComponent? addComponent;
 
@@ -130,7 +141,7 @@
     protected override async Task OnInitializedAsync()
     {
         CurrentUser = await AuthService.GetCurrentUser();
-        await LoadHighlights();
+        await LoadPage(1);
     }
 
     private async Task LoadHighlights()
@@ -182,5 +193,26 @@
     private void CloseImageModal()
     {
         ExpandedImageUrl = null;
+    }
+    
+    private async Task LoadPage(int page)
+    {
+        CurrentPage = page < 1 ? 1 : page;
+        var result = await HighlightService.GetPaged(CurrentPage, PageSize);
+        Highlights = result.Items.ToList();
+        TotalCount = result.TotalCount;
+        StateHasChanged();
+    }
+
+    private async Task GoPrev() { if (CurrentPage > 1) await LoadPage(CurrentPage - 1); }
+    private async Task GoNext() { if (CurrentPage < TotalPages) await LoadPage(CurrentPage + 1); }
+    private async Task GoTo(int page) { if (page >= 1 && page <= TotalPages) await LoadPage(page); }
+
+    private async Task ReloadHighlights()
+    {
+        if (Highlights.Count == 1 && CurrentPage > 1)
+            await LoadPage(CurrentPage - 1);
+        else
+            await LoadPage(CurrentPage);
     }
 }

@@ -143,29 +143,9 @@
 
 @if (TotalPages > 1)
 {
-    <div class="pagination">
-        @if (CurrentPage > 1)
-        {
-            <button @onclick="GoPrev">◀️ Forrige</button>
-        }
-
-        @if (CurrentPage > 1)
-        {
-            <button @onclick="() => GoTo(CurrentPage - 1)">@((CurrentPage - 1))</button>
-        }
-
-        <button class="active">@CurrentPage</button>
-
-        @if (CurrentPage < TotalPages)
-        {
-            <button @onclick="() => GoTo(CurrentPage + 1)">@((CurrentPage + 1))</button>
-        }
-
-        @if (CurrentPage < TotalPages)
-        {
-            <button @onclick="GoNext">Næste ▶️</button>
-        }
-    </div>
+    <PaginationComponent CurrentPage="CurrentPage"
+                TotalPages="TotalPages"
+                OnPageChanged="LoadPage" />
 }
 
 <AddFineComponent @ref="addFineComponent" OnFineAdded="ReloadFines" />
@@ -178,6 +158,7 @@
     private AddFineComponent? addFineComponent;
     private ConfirmDeleteComponent? confirmComponent;
     private Fine? FineToDelete = null;
+    private Dictionary<int, int> StarFineCounts = new(); // BrugerId → antal stjerner
     
     //Sidevisning for bøder (maks 10)
     private int CurrentPage = 1;
