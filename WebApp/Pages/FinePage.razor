@@ -208,7 +208,7 @@
     {
         Users = (await UserService.GetAll()).ToList();
         CurrentUser = await AuthService.GetCurrentUser();
-        await LoadPage(1);
+        await ReloadAllFines();
     }
     
     private async Task OpenAddFineModal()
