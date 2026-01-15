@@ -20,7 +20,7 @@
 <div class="user-grid">
     @foreach (var user in Users)
     {
-        var userFines = Fines.Where(f => f.UserId == user.Id).ToList();
+        var userFines = AllFinesForSummary.Where(f => f.UserId == user.Id).ToList();
         var total = userFines.Sum(f => f.Amount);
         var paid = userFines.Where(f => f.IsPaid).Sum(f => f.Amount);
         var unpaid = total - paid;
@@ -160,6 +160,8 @@
     private Fine? FineToDelete = null;
     private const int PageSize = 10;
     private Dictionary<int, int> StarFineCounts = new(); // BrugerId → antal stjerner
+    private List<Fine> AllFinesForSummary = new();
+
     
     //Sidevisning for bøder (maks 10)
     private int CurrentPage = 1;
@@ -173,8 +175,8 @@
     private decimal? filterMaxAmount = null;
     private string? filterPaidStatus = null; // "true", "false", eller null (alle)
     
-    private decimal TotalAmount => Fines.Sum(f => f.Amount);
-    private decimal TotalUnpaid => Fines.Where(f => !f.IsPaid).Sum(f => f.Amount);
+    private decimal TotalAmount => AllFinesForSummary.Sum(f => f.Amount);
+    private decimal TotalUnpaid => AllFinesForSummary.Where(f => !f.IsPaid).Sum(f => f.Amount);
 
     private IEnumerable<Fine> FilteredFines => Fines
         .Where(f =>
@@ -198,16 +200,16 @@
         )
         .OrderByDescending(f => f.Date);
 
-    
     private decimal UserUnpaid =>
         CurrentUser is null
             ? 0
-            : Fines.Where(f => f.UserId == CurrentUser.Id && !f.IsPaid).Sum(f => f.Amount);
-
+            : AllFinesForSummary.Where(f => f.UserId == CurrentUser.Id && !f.IsPaid).Sum(f => f.Amount);
+   
     protected override async Task OnInitializedAsync()
     {
         Users = (await UserService.GetAll()).ToList();
         CurrentUser = await AuthService.GetCurrentUser();
+        await LoadSummary();  // <-- totals til kort
         await LoadPage(1);
     }
     
@@ -215,12 +217,6 @@
     {
         if (addFineComponent != null)
             await addFineComponent.Show();
-    }
-
-    private async Task ReloadAllFines()
-    {
-        Fines = (await FineService.GetAll()).ToList();
-        StateHasChanged();
     }
     
     private async Task PayNow()
@@ -240,11 +236,7 @@
         await JSRuntime.InvokeVoidAsync("open", mobilePayUrl, "_blank");
 
         // Marker som betalt
-        foreach (var fine in Fines.Where(f => f.UserId == CurrentUser.Id && !f.IsPaid))
-        {
-            fine.IsPaid = true;
-            await FineService.Update(fine);
-        }
+        foreach (var fine in AllFinesForSummary.Where(f => f.UserId == CurrentUser.Id && !f.IsPaid))
 
         await ReloadFines();
     }
@@ -296,7 +288,7 @@
 
     private int GetStarCount(int userId)
     {
-        return Fines.Count(f => f.UserId == userId && f.Comment == "Stjerne" && !f.IsPaid);
+        return AllFinesForSummary.Count(f => f.UserId == userId && f.Comment == "Stjerne" && !f.IsPaid);
     }
     
     private async Task LoadPage(int page)
@@ -314,12 +306,20 @@
 
     private async Task ReloadFines()
     {
-        // bruges efter add/edit/delete
+        await LoadSummary(); // <-- vigtig!
+
         if (Fines.Count == 1 && CurrentPage > 1)
             await LoadPage(CurrentPage - 1);
         else
             await LoadPage(CurrentPage);
+
         StateHasChanged();
+    }
+
+    
+    private async Task LoadSummary()
+    {
+        AllFinesForSummary = (await FineService.GetAll()).ToList();
     }
 }
 
