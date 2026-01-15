@@ -7,6 +7,7 @@
 @inject IPointService PointService
 @inject IUserService UserService
 @inject IFineService FineService 
+@inject IJSRuntime JS
 
 <h3 class="whist-point-title">Whist Point Skema</h3>
 
@@ -75,7 +76,20 @@
                 var cssClass = row.Total > 0 ? "positive" : row.Total < 0 ? "negative" : "";
                 <tr>
                     <td>@row.Name</td>
-                    <td class="@cssClass">@row.Total</td>
+                    <td class="@cssClass point-cell">
+                        <span class="point-value">@row.Total</span>
+
+                        <div class="star-button-wrapper star-in-table">
+                            <button class="star-button" type="button" @onclick="() => AddSessionStar(row.Id)">
+                                ⭐
+                                @if (GetSessionStars(row.Id) > 0)
+                                {
+                                    <span class="star-count">@GetSessionStars(row.Id)</span>
+                                }
+                            </button>
+
+                        </div>
+                    </td>
                 </tr>
             }
             </tbody>
@@ -97,10 +111,19 @@
     private List<PointEntry> AllPoints = new();
     private Dictionary<int, int> PlayerTotals = new(); // PlayerId → Total
     private Dictionary<int, string> PlayerNames = new(); // PlayerId → NickName
+    private const string SessionStarsStorageKey = "whist.sessionStars.v1";
+    private Dictionary<int, int> SessionStars = new();
     
     protected override async Task OnInitializedAsync()
     {
+        await LoadSessionStarsAsync();
         await LoadPoints();
+
+        // Sørg for at alle players findes som keys
+        foreach (var id in PlayerNames.Keys)
+            SessionStars.TryAdd(id, 0);
+
+        await SaveSessionStarsAsync();
     }
     
     private async Task LoadPoints()
@@ -117,6 +140,12 @@
                 g => g.Key,
                 g => g.Sum(p => p.Points)
             );
+        
+        foreach (var id in PlayerNames.Keys)
+        {
+            if (!SessionStars.ContainsKey(id))
+                SessionStars[id] = 0;
+        }
     }
     
     public class GridRow
@@ -334,11 +363,72 @@
                 }
             }
         }
+        
+        // 2b) Opret stjerne-bøder baseret på SessionStars (lægger sig oven i eksisterende)
+        foreach (var kv in SessionStars)
+        {
+            var userId = kv.Key;
+            var stars = kv.Value;
+
+            if (stars <= 0) continue;
+
+            for (var i = 0; i < stars; i++)
+            {
+                await FineService.Add(new Fine
+                {
+                    UserId = userId,
+                    Amount = 5,
+                    Comment = "Stjerne",
+                    Date = now,
+                    IsPaid = false
+                });
+            }
+        }
 
         // 3) Slet ALLE points i databasen
         await PointService.DeleteAll(); // kalder api/point/all i din PointService  :contentReference[oaicite:1]{index=1}
+        await ResetSessionStarsAsync();
+        
+        foreach (var id in SessionStars.Keys.ToList())
+            SessionStars[id] = 0;
 
         // 4) Opdatér UI (nul totals)
         await LoadPoints();
     }
+    
+    private async Task AddSessionStar(int userId)
+    {
+        SessionStars[userId] = SessionStars.TryGetValue(userId, out var s) ? s + 1 : 1;
+        await SaveSessionStarsAsync();
+    }
+
+    private int GetSessionStars(int userId)
+    {
+        return SessionStars.TryGetValue(userId, out var s) ? s : 0;
+    }
+
+    private async Task SaveSessionStarsAsync()
+    {
+        var json = System.Text.Json.JsonSerializer.Serialize(SessionStars);
+        await JS.InvokeVoidAsync("localStorage.setItem", SessionStarsStorageKey, json);
+    }
+
+    private async Task LoadSessionStarsAsync()
+    {
+        var json = await JS.InvokeAsync<string>("localStorage.getItem", SessionStarsStorageKey);
+
+        SessionStars = string.IsNullOrWhiteSpace(json)
+            ? new Dictionary<int, int>()
+            : System.Text.Json.JsonSerializer.Deserialize<Dictionary<int, int>>(json) ?? new();
+    }
+
+    private async Task ResetSessionStarsAsync()
+    {
+        // Behold keys (spillere), men sæt alt til 0
+        foreach (var id in SessionStars.Keys.ToList())
+            SessionStars[id] = 0;
+
+        await SaveSessionStarsAsync();
+    }
+
 }

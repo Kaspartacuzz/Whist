@@ -237,6 +237,42 @@ h3.whist-point-title {
     max-height: 30px;
 }
 
+.point-cell {
+    position: relative;
+    padding-right: 2.5rem; /* plads til stjernen */
+}
+
+.star-in-table {
+    top: 50%;
+    right: 0.5rem;
+    transform: translateY(-50%);
+}
+
+.star-button-wrapper {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+}
+
+.star-button {
+    position: relative;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+}
+
+.star-count {
+    position: absolute;
+    top: -0.5rem;
+    right: -0.6rem;
+    background-color: #6366F1; /* fx blå/lilla */
+    color: white;
+    border-radius: 50%;
+    font-size: 0.7rem;
+    padding: 0.2rem 0.45rem;
+}
+
 /* Sørg for at tabellen ikke “bløder” ud af skærmen på mobil */
 /* - Enten ved at den kan scrolle vandret
    - eller ved at skaleres let ned.*/
