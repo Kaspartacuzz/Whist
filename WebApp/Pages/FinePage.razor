@@ -158,11 +158,11 @@
     private AddFineComponent? addFineComponent;
     private ConfirmDeleteComponent? confirmComponent;
     private Fine? FineToDelete = null;
+    private const int PageSize = 10;
     private Dictionary<int, int> StarFineCounts = new(); // BrugerId → antal stjerner
     
     //Sidevisning for bøder (maks 10)
     private int CurrentPage = 1;
-    private const int PageSize = 5; // altid 10
     private int TotalCount = 0;
     private int TotalPages => (int)Math.Ceiling((double)TotalCount / PageSize);
     
@@ -208,7 +208,7 @@
     {
         Users = (await UserService.GetAll()).ToList();
         CurrentUser = await AuthService.GetCurrentUser();
-        await ReloadAllFines();
+        await LoadPage(1);
     }
     
     private async Task OpenAddFineModal()
@@ -291,7 +291,7 @@
         };
 
         await FineService.Add(fine);
-        await ReloadAllFines();
+        await LoadPage(1);
     }
 
     private int GetStarCount(int userId)

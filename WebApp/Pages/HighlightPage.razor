@@ -17,7 +17,7 @@
     }
 </div>
 
-<AddHighlightComponent @ref="addComponent" OnHighlightAdded="LoadHighlights" />
+<AddHighlightComponent @ref="addComponent" OnHighlightAdded="HandleHighlightAdded" />
 
 <!-- 🔍 Filtrering -->
 <div class="filter-box">
@@ -122,7 +122,7 @@
     private User? CurrentUser;
     private string? ExpandedImageUrl;
     private int CurrentPage = 1;
-    private const int PageSize = 6; // altid 6
+    private const int PageSize = 6;
     private int TotalCount = 0;
     private int TotalPages => (int)Math.Ceiling((double)TotalCount / PageSize);
 
@@ -171,7 +171,7 @@
         {
             await HighlightService.Delete(HighlightToDelete.Id);
             HighlightToDelete = null;
-            await LoadHighlights(); // Genindlæs
+            await LoadPage(CurrentPage);
         }
     }
 
@@ -207,12 +207,9 @@
     private async Task GoPrev() { if (CurrentPage > 1) await LoadPage(CurrentPage - 1); }
     private async Task GoNext() { if (CurrentPage < TotalPages) await LoadPage(CurrentPage + 1); }
     private async Task GoTo(int page) { if (page >= 1 && page <= TotalPages) await LoadPage(page); }
-
-    private async Task ReloadHighlights()
+    
+    private async Task HandleHighlightAdded()
     {
-        if (Highlights.Count == 1 && CurrentPage > 1)
-            await LoadPage(CurrentPage - 1);
-        else
-            await LoadPage(CurrentPage);
+        await LoadPage(1);
     }
 }

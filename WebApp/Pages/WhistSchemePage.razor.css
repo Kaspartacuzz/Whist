@@ -38,13 +38,13 @@ td {
 /* Intensitetsniveauer */
 /* Farver med alpha-kanal */
 .cell-red.low {
-    background-color: rgba(244, 161, 161, 0.4);
+    background-color: rgba(244, 161, 161, 0.1);
 }
 .cell-red.medium {
-    background-color: rgba(244, 161, 161, 0.6);
+    background-color: rgba(244, 161, 161, 0.4);
 }
 .cell-red.high {
-    background-color: rgba(244, 161, 161, 0.8);
+    background-color: rgba(244, 161, 161, 0.7);
 }
 .cell-red.very-high {
     background-color: rgba(244, 161, 161, 1);
@@ -52,13 +52,13 @@ td {
 
 /* Gul */
 .cell-yellow.low {
-    background-color: rgba(255, 230, 0, 0.4);
+    background-color: rgba(255, 230, 0, 0.1);
 }
 .cell-yellow.medium {
-    background-color: rgba(255, 230, 0, 0.6);
+    background-color: rgba(255, 230, 0, 0.4);
 }
 .cell-yellow.high {
-    background-color: rgba(255, 230, 0, 0.8);
+    background-color: rgba(255, 230, 0, 0.7);
 }
 .cell-yellow.very-high {
     background-color: rgba(255, 230, 0, 1);
@@ -66,13 +66,13 @@ td {
 
 /* Grøn */
 .cell-green.low {
-    background-color: rgba(160, 240, 208, 0.4);
+    background-color: rgba(160, 240, 208, 0.1);
 }
 .cell-green.medium {
-    background-color: rgba(160, 240, 208, 0.6);
+    background-color: rgba(160, 240, 208, 0.4);
 }
 .cell-green.high {
-    background-color: rgba(160, 240, 208, 0.8);
+    background-color: rgba(160, 240, 208, 0.7);
 }
 .cell-green.very-high {
     background-color: rgba(160, 240, 208, 1);
@@ -83,15 +83,15 @@ td {
 /*th farve*/
 /* Blå baggrund til meldings-kolonne */
 th.cell-blue.low {
-    background-color: rgba(204, 224, 247, 0.4);  /* lysest */
+    background-color: rgba(204, 224, 247, 0.1);  /* lysest */
 }
 
 th.cell-blue.medium {
-    background-color: rgba(204, 224, 247, 0.6);
+    background-color: rgba(204, 224, 247, 0.4);
 }
 
 th.cell-blue.high {
-    background-color: rgba(204, 224, 247, 0.8);
+    background-color: rgba(204, 224, 247, 0.7);
 }
 
 th.cell-blue.very-high {
@@ -100,7 +100,7 @@ th.cell-blue.very-high {
 
 .point-overview-table {
     border-collapse: collapse;
-    font-size: 14px;
+    font-size: 18px;
     text-align: center;
     width: 100%;
     /* Fjern eller justér max-width */
@@ -127,7 +127,7 @@ th.cell-blue.very-high {
 /* Pointoversigt i samme stil som sol-meldinger */
 .point-overview-table {
     border-collapse: collapse;
-    font-size: 14px;
+    font-size: 18px;
     text-align: center;
     width: 100%;
     max-width: 300px;
@@ -160,7 +160,7 @@ th.cell-blue.very-high {
 
 .point-table {
     border-collapse: collapse;
-    font-size: 12px; /* Mindre tekst */
+    font-size: 18px;
     text-align: center;
     width: 95%; /* Lidt mindre bredde */
     margin: 0 auto; /* Centreret */

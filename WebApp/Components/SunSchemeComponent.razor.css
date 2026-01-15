@@ -1,7 +1,7 @@
 /* Grundlæggende tabelopsætning */
 .point-table {
     border-collapse: collapse;
-    font-size: 14px;
+    font-size: 18px;
     text-align: center;
     width: 100%;
     overflow: hidden;
