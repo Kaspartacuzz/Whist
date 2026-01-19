@@ -38,9 +38,20 @@
                 @if (CurrentUser is not null)
                 {
                     <div class="user-contact">
-                        <div><i class="bi bi-envelope"></i> @user.Email</div>
-                        <div><i class="bi bi-telephone"></i> @user.PhoneNumber</div>
-                        <div><i class="bi bi-geo-alt"></i> @user.Address</div>
+                        <div class="contact-row">
+                            <i class="bi bi-envelope"></i>
+                            <span class="contact-text">@user.Email</span>
+                        </div>
+
+                        <div class="contact-row">
+                            <i class="bi bi-telephone"></i>
+                            <span class="contact-text">@user.PhoneNumber</span>
+                        </div>
+
+                        <div class="contact-row">
+                            <i class="bi bi-geo-alt"></i>
+                            <span class="contact-text">@user.Address</span>
+                        </div>
                     </div>
                 }
             </div>

@@ -96,10 +96,17 @@ h2 {
     position: absolute;
     bottom: 20px;
     left: 20px;
+
+    /* ✅ vigtig: lås bredden så intet kan flyde over til højre side */
+    width: calc(100% - 20px);
+
     text-align: left;
     font-size: 0.7rem;
     color: #333;
     line-height: 1.8;
+
+    /* ✅ hvis noget stadig prøver at stikke ud, så klip det */
+    overflow: hidden;
 }
 
 .user-image {
@@ -120,7 +127,6 @@ h2 {
 .user-contact p {
     margin: 0.15rem 0;
     font-size: 0.7rem;             /* Mindre skriftstørrelse */
-    white-space: nowrap;            /* Undgå linjeskift */
     overflow: hidden;               /* Skjul overskudstekst */
     text-overflow: ellipsis;        /* Sæt ... hvis teksten er for lang */
     max-width: 100%;
@@ -214,6 +220,26 @@ h2 {
 .icon-button.red {
     color: #e53935;
 }
+
+.contact-row {
+    display: flex;
+    gap: 6px;
+    align-items: flex-start;
+}
+
+.contact-row i {
+    flex: 0 0 auto;
+    margin-top: 2px;
+}
+
+.contact-text {
+    min-width: 0;                 /* ✅ nødvendig i flex layouts */
+    max-width: 100%;
+    white-space: normal;          /* ✅ tillad flere linjer */
+    overflow-wrap: anywhere;      /* ✅ bryd lange emails pænt */
+    word-break: break-word;       /* fallback */
+}
+
 
 @media (max-width: 768px) {
     .page-container {
