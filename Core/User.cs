@@ -11,9 +11,11 @@ public class User
     [MaxLength(100)] [EmailAddress] public string Email { get; set; } = "";                                 // Brugerens e-mailadresse
     [MaxLength(100)] public string Password { get; set; } = "";                              // Brugerens adgangskode (skal senere hashes i rigtig database)
     [MaxLength(200)] public string Address { get; set; } = "";
-    [MaxLength(8)] [MinLength(8)] [Phone]public string PhoneNumber { get; set; } = "";                           // Brugerens Telefonnummer - bruges til mobilepay
+    [MaxLength(8)] [MinLength(8)] [Phone]public string PhoneNumber { get; set; } = "";      // Brugerens Telefonnummer - bruges til mobilepay
+    
+    public DateOnly? BirthDate { get; set; }                                                // Brugerens fødselsdato
     [MaxLength(500)] public string Description { get; set; } = "";                           // Lang tekst om personen
     [MaxLength(200)] public string FunFact { get; set; } = "";                               // Sjov info
-    public string ImageUrl { get; set; } = "";                              // Profilbillede
-    public ICollection<Fine> Fines { get; set; } = new List<Fine>();        // Liste over bøder
+    public string ImageUrl { get; set; } = "";                                               // Profilbillede
+    public ICollection<Fine> Fines { get; set; } = new List<Fine>();                         // Liste over bøder
 }

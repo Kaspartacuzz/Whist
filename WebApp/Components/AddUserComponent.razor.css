@@ -124,6 +124,35 @@
     background-color: #4829a5;
 }
 
+.modal-field {
+    margin-bottom: 1rem; /* matcher dine inputs */
+}
+
+.modal-label {
+    display: block;          /* <-- vigtig: gør at den ikke ligger inline */
+    margin-bottom: 0.35rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #111;
+}
+
+/* Sørg for at date input bruger samme "look" som de andre */
+input[type="date"].modal-input {
+    width: 100%;
+    box-sizing: border-box;
+    background-color: #f9f9f9; /* matcher .modal-input bg */
+    border: 1px solid #ccc;    /* matcher .modal-input border */
+    border-radius: 8px;        /* matcher .modal-input radius */
+    padding: 0.6rem 0.8rem;    /* matcher .modal-input padding */
+    font-family: inherit;
+    font-size: 1rem;
+}
+
+/* (valgfrit) gør kalender-ikonet mere “klikbart” på webkit (Safari/Chrome) */
+input[type="date"].modal-input::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+}
+
 @media (max-width: 600px) {
     .modal-container {
         width: 90%;
