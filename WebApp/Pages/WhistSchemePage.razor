@@ -8,6 +8,7 @@
 @inject IUserService UserService
 @inject IFineService FineService 
 @inject IJSRuntime JS
+@inject Service.AuthServices.IAuthService AuthService
 
 <h3 class="whist-point-title">Whist Point Skema</h3>
 
@@ -33,6 +34,8 @@
             @for (int i = 0; i < row.Points.Count; i++)
             {
                 var value = row.Points[i];
+                <td class="@GetCellClass(value, i, row.Label) @(_currentUser is null ? "disabled" : "")" 
+                    @onclick="() => OnPointClick(value)">
                     @((value.HasValue && value.Value > 0) ? value.Value.ToString() : "")
                 </td>
             }
@@ -52,6 +55,10 @@
     <div class="point-summary">
         <div class="top-bar">
             <h4>Pointoversigt</h4>
+            @if (_currentUser is not null)
+            {
+                <button class="btn-add" @onclick="ResetPointsAndCreateFines">+ Tilføj bøder</button>
+            }
         </div>
         <table class="point-overview-table">
             <thead>
@@ -77,6 +84,8 @@
                         <span class="point-value">@row.Total</span>
 
                         <div class="star-button-wrapper star-in-table">
+                            <button class="star-btn @(_currentUser is null ? "disabled" : "")" type="button"
+                                    @onclick="() => AddSessionStar(row.Id)">
                                 ⭐
                                 @if (GetSessionStars(row.Id) > 0)
                                 {
@@ -108,9 +117,11 @@
     private Dictionary<int, string> PlayerNames = new(); // PlayerId → NickName
     private const string SessionStarsStorageKey = "whist.sessionStars.v1";
     private Dictionary<int, int> SessionStars = new();
+    private User? _currentUser;
     
     protected override async Task OnInitializedAsync()
     {
+        _currentUser = await AuthService.GetCurrentUser();
         await LoadSessionStarsAsync();
         await LoadPoints();
 
@@ -198,6 +209,9 @@
 
     private async Task OnPointClick(int? value)
     {
+        if (_currentUser is null)
+            return;
+        
         if (value.HasValue)
         {
             SelectedPoint = value.Value;
@@ -393,6 +407,9 @@
     
     private async Task AddSessionStar(int userId)
     {
+        if (_currentUser is null)
+            return;
+
         SessionStars[userId] = SessionStars.TryGetValue(userId, out var s) ? s + 1 : 1;
         await SaveSessionStarsAsync();
     }
