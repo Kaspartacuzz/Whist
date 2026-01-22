@@ -33,7 +33,6 @@
             @for (int i = 0; i < row.Points.Count; i++)
             {
                 var value = row.Points[i];
-                <td class="@GetCellClass(value, i, row.Label)" @onclick="() => OnPointClick(value)">
                     @((value.HasValue && value.Value > 0) ? value.Value.ToString() : "")
                 </td>
             }
@@ -53,8 +52,6 @@
     <div class="point-summary">
         <div class="top-bar">
             <h4>Pointoversigt</h4>
-            <button class="btn-add" @onclick="ResetPointsAndCreateFines"
-                    style="margin: .5rem 0; padding: .4rem .8rem;">+ Tilføj bøder</button>
         </div>
         <table class="point-overview-table">
             <thead>
@@ -80,14 +77,12 @@
                         <span class="point-value">@row.Total</span>
 
                         <div class="star-button-wrapper star-in-table">
-                            <button class="star-button" type="button" @onclick="() => AddSessionStar(row.Id)">
                                 ⭐
                                 @if (GetSessionStars(row.Id) > 0)
                                 {
                                     <span class="star-count">@GetSessionStars(row.Id)</span>
                                 }
                             </button>
-
                         </div>
                     </td>
                 </tr>
