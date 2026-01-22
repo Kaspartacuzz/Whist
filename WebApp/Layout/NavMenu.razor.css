@@ -1,32 +1,165 @@
-@media (max-width: 768px) {
-    .mobile-toggle {
-        display: block !important;
+.nav-root {
+    position: sticky;
+    top: 0;
+    z-index: 2000;
+    background: #fff;
+    border-bottom: 1px solid #e6e6e6;
+}
+
+/* Top bar */
+.nav-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 18px 22px;
+}
+
+/* Whist Holdet */
+/* Brand (NavLink -> kræver ::deep) */
+::deep a.brand,
+::deep a.brand:visited,
+::deep a.brand:hover,
+::deep a.brand:active {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 800;
+    font-size: 20px;
+    line-height: 1;
+    color: #111 !important;
+    text-decoration: none !important;
+    white-space: nowrap;
+}
+
+
+/* Desktop links (midten) */
+.desktop-links {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    flex: 1;
+}
+
+/* “Button links” */
+::deep a.nav-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 10px 18px;
+    border: 1px solid #d7d7d7;
+    border-radius: 10px;
+
+    text-decoration: none !important;
+    font-weight: 600;
+    color: #1f3a7a !important;
+    background: #fff;
+}
+
+/* Active link */
+::deep a.nav-btn.active {
+    border-color: #bfc7da;
+    box-shadow: 0 1px 0 rgba(0,0,0,0.02);
+}
+
+/* Logout */
+.logout-btn {
+    padding: 8px 12px;
+    border: 2px solid #e04646;
+    border-radius: 10px;
+    background: #fff;
+    color: #e04646;
+    font-weight: 400;
+    font-size: 0.85rem;
+}
+
+.logout-btn.login {
+    border-color: #2a9d8f;
+    color: #2a9d8f;
+}
+
+/* Hamburger (kun mobil) */
+.hamburger {
+    display: none;
+    border: 0;
+    background: transparent;
+    padding: 6px 10px;
+    cursor: pointer;
+}
+
+.hamburger-icon {
+    font-size: 34px;
+    line-height: 1;
+    color: #111;
+}
+
+/* Mobile menu panel */
+.mobile-menu {
+    display: none;
+    padding: 18px 22px 30px 22px;
+    background: #fff;
+}
+
+.mobile-menu.open {
+    display: block;
+}
+
+.mobile-links {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    margin-top: 22px;
+}
+
+::deep a.mobile-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 100%;
+    padding: 22px 18px;
+
+    border: 1px solid #d7d7d7;
+    border-radius: 12px;
+
+    text-decoration: none !important;
+    font-weight: 700;
+    font-size: 26px;
+    color: #1f3a7a !important;
+    background: #fff;
+}
+
+::deep a.mobile-btn.active {
+    border-color: #bfc7da;
+}
+
+.mobile-logout {
+    display: block;
+    margin: 48px auto 0 auto; /* “Log ud” nederst*/
+}
+
+
+/* Responsive rules */
+@media (max-width: 900px) {
+    .desktop-links {
+        display: none;
     }
 
-    .main-links {
-        display: none !important;
+    .desktop-logout {
+        display: none;
     }
 
-    .desktop-auth-button {
-        display: none !important;
+    .hamburger {
+        display: block;
     }
 
-    .nav-top-wrapper {
-        padding-top: 1.5rem;
-        padding-bottom: 1.5rem;
+    .brand {
+        font-size: 44px; /* behold stort logo på mobil som i screenshot */
     }
 }
 
-@media (min-width: 769px) {
-    .mobile-toggle {
+@media (min-width: 901px) {
+    .mobile-menu {
         display: none !important;
-    }
-
-    .main-links {
-        display: flex !important;
-    }
-
-    .desktop-auth-button {
-        display: block !important;
     }
 }

@@ -1,18 +1,18 @@
-/* ======= MAIN CONTENT ======= */
 .main-container {
     max-width: 90%;
     margin: 2rem auto;
     padding: 2rem;
     background-color: transparent;
-    min-height: 100vh;              /* Gør containeren lige så høj som skærmen */
-    display: flex;
-    flex-direction: column;
+    min-height: calc(100vh - 90px);
 }
 
-.main-container.no-padding {
-    padding: 0 !important;
-    margin: 0 !important;
-    max-width: 100% !important;
+/* Mobil: lidt mere luft og “page feel” som i dine screenshots */
+@media (max-width: 900px) {
+    .main-container {
+        max-width: 92%;
+        margin: 1.5rem auto;
+        padding: 0;
+    }
 }
 
 html, body {
@@ -22,5 +22,5 @@ html, body {
 }
 
 .app-footer {
-    margin-top: auto;               /* Skubber footeren ned i bunden */
+    margin-top: auto;
 }

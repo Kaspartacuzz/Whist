@@ -6,136 +6,94 @@
 <!-- LoginModal-komponenten -->
 <LoginComponent @ref="_loginComponent" OnLoginSuccess="HandleLogin" />
 
-<nav style="background-color: #fff; padding: 1rem 2rem; box-shadow: 0 2px 8px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100; font-family: Poppins, sans-serif; width: 100vw;">
-    <div style="display: flex; align-items: center; justify-content: center; flex-wrap: wrap; position: relative;">
-        <div class="nav-top-wrapper">
-            <!-- Logo -->
-            <div class="logo" style="position: absolute; left: 2rem; top: 50%; transform: translateY(-50%); font-size: 1.8rem; font-weight: 700;">
-                <NavLink href="" style="text-decoration: none; color: #1a1a1a; white-space: nowrap;">Whist Holdet</NavLink>
-            </div>
-
-            <!-- Mobilmenu ikon -->
-            <button @onclick="ToggleMobileMenu"
-                    class="mobile-toggle"
-                    style="background: none; border: none; font-size: 1.8rem; display: none; cursor: pointer; position: absolute; right: 2rem; top: 50%; transform: translateY(-50%);">
-                ☰
-            </button>
-        </div>
+<nav class="nav-root">
+    <div class="nav-bar">
+        <!-- Brug NavLink som før (samme route-adfærd) -->
+        <NavLink class="brand" href="" @onclick="CloseMobileMenu" Match="NavLinkMatch.All">
+            Whist Holdet
+        </NavLink>
 
         <!-- Desktop links -->
-        <ul class="main-links" style="display: flex; gap: 1.5rem; flex-wrap: wrap; justify-content: center; flex-grow: 1; list-style: none; margin: 0; padding: 0;">
+        <div class="desktop-links">
             @if (_currentUser is not null)
             {
-                <li>
-                    <NavLink href="bøder" style="display: inline-block; padding: 0.5rem 1rem; font-size: 0.80rem; font-weight: 400; color: #26417b; background-color: #fff; border: 1px solid #e0e0e0; border-radius: 8px; text-decoration: none;"
-                             onmouseover="this.style.backgroundColor='#f2f6fd'" 
-                             onmouseout="this.style.backgroundColor='#fff'">
-                        Bøder
-                    </NavLink>
-                </li>
+                <NavLink class="nav-btn" href="bøder" Match="NavLinkMatch.Prefix">Bøder</NavLink>
             }
-            <li>
-                <NavLink href="highlights" style="display: inline-block; padding: 0.5rem 1rem; font-size: 0.80rem; font-weight: 400; color: #26417b; background-color: #fff; border: 1px solid #e0e0e0; border-radius: 8px; text-decoration: none;"
-                         onmouseover="this.style.backgroundColor='#f2f6fd'" 
-                         onmouseout="this.style.backgroundColor='#fff'">
-                    Highlights
-                </NavLink>
-            </li>
-            <li>
-                <NavLink href="medlemmer" style="display: inline-block; padding: 0.5rem 1rem; font-size: 0.80rem; font-weight: 400; color: #26417b; background-color: #fff; border: 1px solid #e0e0e0; border-radius: 8px; text-decoration: none;"
-                         onmouseover="this.style.backgroundColor='#f2f6fd'" 
-                         onmouseout="this.style.backgroundColor='#fff'">
-                    Medlemmer
-                </NavLink>
-            </li>
-            <li>
-                <NavLink href="regler" style="display: inline-block; padding: 0.5rem 1rem; font-size: 0.80rem; font-weight: 400; color: #26417b; background-color: #fff; border: 1px solid #e0e0e0; border-radius: 8px; text-decoration: none;"
-                         onmouseover="this.style.backgroundColor='#f2f6fd'" 
-                         onmouseout="this.style.backgroundColor='#fff'">
-                    Regler
-                </NavLink>
-            </li>
-            <li>
-                <NavLink href="skema" style="display: inline-block; padding: 0.5rem 1rem; font-size: 0.80rem; font-weight: 400; color: #26417b; background-color: #fff; border: 1px solid #e0e0e0; border-radius: 8px; text-decoration: none;"
-                         onmouseover="this.style.backgroundColor='#f2f6fd'" 
-                         onmouseout="this.style.backgroundColor='#fff'">
-                    Skema
-                </NavLink>
-            </li>
-            <li>
-                <NavLink href="kalender" style="display: inline-block; padding: 0.5rem 1rem; font-size: 0.80rem; font-weight: 400; color: #26417b; background-color: #fff; border: 1px solid #e0e0e0; border-radius: 8px; text-decoration: none;"
-                         onmouseover="this.style.backgroundColor='#f2f6fd'" 
-                         onmouseout="this.style.backgroundColor='#fff'">
-                    Kalender
-                </NavLink>
-            </li>
-        </ul>
 
-        <!-- Login/Logud knap -->
-        <div class="desktop-auth-button" style="position: absolute; right: 2rem;">
-            @if (_currentUser is null)
-            {
-                <button @onclick="ToggleLogin"
-                        style="font-size: 0.60rem; font-weight: 400; padding: 0.5rem 0.7rem; border-radius: 8px; border: 1px solid #2a9d8f; background-color: white; color: #2a9d8f; cursor: pointer;"
-                        onmouseover="this.style.backgroundColor='#2a9d8f'; this.style.color='white'"
-                        onmouseout="this.style.backgroundColor='white'; this.style.color='#2a9d8f'">
-                    Log ind
-                </button>
-            }
-            else
-            {
-                <button @onclick="ToggleLogin"
-                        style="font-size: 0.60rem; font-weight: 400; padding: 0.5rem 0.7rem; border-radius: 8px; border: 1px solid #cc3b3b; background-color: white; color: #cc3b3b; cursor: pointer;"
-                        onmouseover="this.style.backgroundColor='#cc3b3b'; this.style.color='white'"
-                        onmouseout="this.style.backgroundColor='white'; this.style.color='#cc3b3b'">
-                    Log ud
-                </button>
-            }
+            <NavLink class="nav-btn" href="highlights" Match="NavLinkMatch.Prefix">Highlights</NavLink>
+            <NavLink class="nav-btn" href="medlemmer" Match="NavLinkMatch.Prefix">Medlemmer</NavLink>
+            <NavLink class="nav-btn" href="regler" Match="NavLinkMatch.Prefix">Regler</NavLink>
+            <NavLink class="nav-btn" href="skema" Match="NavLinkMatch.Prefix">Skema</NavLink>
+            <NavLink class="nav-btn" href="kalender" Match="NavLinkMatch.Prefix">Kalender</NavLink>
         </div>
+
+        <!-- Desktop login/logout (samme logik som før) -->
+        @if (_currentUser is null)
+        {
+            <button type="button" class="logout-btn desktop-logout login" @onclick="ToggleLogin">
+                Log ind
+            </button>
+        }
+        else
+        {
+            <button type="button" class="logout-btn desktop-logout" @onclick="ToggleLogin">
+                Log ud
+            </button>
+        }
+
+        <!-- Mobile toggle -->
+        <button type="button" class="hamburger" @onclick="ToggleMobileMenu" aria-label="Menu">
+            <span class="hamburger-icon">☰</span>
+        </button>
     </div>
 
-    <!-- Mobilmenu dropdown -->
-    @if (isMobileMenuOpen)
-    {
-        <div style="margin-top: 1rem; display: flex; flex-direction: column; gap: 1rem;">
+    <!-- Mobile menu -->
+    <div class="mobile-menu @(isMobileOpen ? "open" : "")">
+        <div class="mobile-links">
             @if (_currentUser is not null)
             {
-                <NavLink href="bøder" @onclick="ToggleMobileMenu" style="margin-top: 2rem; padding: 0.8rem; border: 1px solid #ddd; border-radius: 8px; text-align: center; color: #26417b; text-decoration: none;">Bøder</NavLink>
+                <NavLink class="mobile-btn" href="bøder" Match="NavLinkMatch.Prefix" @onclick="CloseMobileMenu">
+                    Bøder
+                </NavLink>
             }
-            <NavLink href="highlights" @onclick="ToggleMobileMenu" style="padding: 0.8rem; border: 1px solid #ddd; border-radius: 8px; text-align: center; color: #26417b; text-decoration: none;">Highlights</NavLink>
-            <NavLink href="medlemmer" @onclick="ToggleMobileMenu" style="padding: 0.8rem; border: 1px solid #ddd; border-radius: 8px; text-align: center; color: #26417b; text-decoration: none;">Medlemmer</NavLink>
-            <NavLink href="regler" @onclick="ToggleMobileMenu" style="padding: 0.8rem; border: 1px solid #ddd; border-radius: 8px; text-align: center; color: #26417b; text-decoration: none;">Regler</NavLink>
-            <NavLink href="skema" @onclick="ToggleMobileMenu" style="padding: 0.8rem; border: 1px solid #ddd; border-radius: 8px; text-align: center; color: #26417b; text-decoration: none;">Skema</NavLink>
-            <NavLink href="kalender" @onclick="ToggleMobileMenu" style="padding: 0.8rem; border: 1px solid #ddd; border-radius: 8px; text-align: center; color: #26417b; text-decoration: none;">Kalender</NavLink>
-            <!-- Login/Logud knap -->
-            <div style="margin-top: 2rem; text-align: center;">
-                @if (_currentUser is null)
-                {
-                    <button @onclick="ToggleLogin"
-                            style="font-size: 0.60rem; font-weight: 400; padding: 0.5rem 0.7rem; border-radius: 8px; border: 1px solid #2a9d8f; background-color: white; color: #2a9d8f; cursor: pointer;"
-                            onmouseover="this.style.backgroundColor='#2a9d8f'; this.style.color='white'"
-                            onmouseout="this.style.backgroundColor='white'; this.style.color='#2a9d8f'">
-                        Log ind
-                    </button>
-                }
-                else
-                {
-                    <button @onclick="ToggleLogin"
-                            style="font-size: 0.60rem; font-weight: 400; padding: 0.5rem 0.7rem; border-radius: 8px; border: 1px solid #cc3b3b; background-color: white; color: #cc3b3b; cursor: pointer;"
-                            onmouseover="this.style.backgroundColor='#cc3b3b'; this.style.color='white'"
-                            onmouseout="this.style.backgroundColor='white'; this.style.color='#cc3b3b'">
-                        Log ud
-                    </button>
-                }
-            </div>
+
+            <NavLink class="mobile-btn" href="highlights" Match="NavLinkMatch.Prefix" @onclick="CloseMobileMenu">
+                Highlights
+            </NavLink>
+            <NavLink class="mobile-btn" href="medlemmer" Match="NavLinkMatch.Prefix" @onclick="CloseMobileMenu">
+                Medlemmer
+            </NavLink>
+            <NavLink class="mobile-btn" href="regler" Match="NavLinkMatch.Prefix" @onclick="CloseMobileMenu">
+                Regler
+            </NavLink>
+            <NavLink class="mobile-btn" href="skema" Match="NavLinkMatch.Prefix" @onclick="CloseMobileMenu">
+                Skema
+            </NavLink>
+            <NavLink class="mobile-btn" href="kalender" Match="NavLinkMatch.Prefix" @onclick="CloseMobileMenu">
+                Kalender
+            </NavLink>
         </div>
-    }
+
+        <!-- Mobile login/logout -->
+        @if (_currentUser is null)
+        {
+            <button type="button" class="logout-btn mobile-logout login" @onclick="ToggleLogin">
+                Log ind
+            </button>
+        }
+        else
+        {
+            <button type="button" class="logout-btn mobile-logout" @onclick="ToggleLogin">
+                Log ud
+            </button>
+        }
+    </div>
 </nav>
 
 @code {
     private LoginComponent? _loginComponent;
     private User? _currentUser;
-    private bool isMobileMenuOpen = false;
+    private bool isMobileOpen;
 
     protected override async Task OnInitializedAsync()
     {
@@ -150,6 +108,9 @@
 
     private async Task ToggleLogin()
     {
+        // Luk mobilmenu så UI ikke "hænger"
+        isMobileOpen = false;
+
         if (_currentUser is null)
         {
             _loginComponent?.Show();
@@ -158,12 +119,17 @@
         {
             await AuthService.Logout();
             _currentUser = null;
+
+            // som før
             NavigationManager.NavigateTo("/");
         }
     }
 
-    private void ToggleMobileMenu()
+    private void ToggleMobileMenu() => isMobileOpen = !isMobileOpen;
+
+    private void CloseMobileMenu()
     {
-        isMobileMenuOpen = !isMobileMenuOpen;
+        if (isMobileOpen)
+            isMobileOpen = false;
     }
 }
