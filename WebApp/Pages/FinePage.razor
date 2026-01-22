@@ -283,7 +283,7 @@
         };
 
         await FineService.Add(fine);
-        await LoadPage(1);
+        await ReloadFines();
     }
 
     private int GetStarCount(int userId)
