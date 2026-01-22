@@ -1,4 +1,5 @@
 @page "/om_os"
+@inject IJSRuntime JS
 
 <div class="full-bleed about-scroll">
     <!-- Sektion 1 -->
@@ -68,3 +69,14 @@
         <div class="image right-image" style="background-image: url('/images/about5.png');"></div>
     </div>
 </div>
+
+@code {
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // Sørger for at nav-hide også hook’er sig på .about-scroll efter siden er rendret
+            await JS.InvokeVoidAsync("navHideInit");
+        }
+    }
+}

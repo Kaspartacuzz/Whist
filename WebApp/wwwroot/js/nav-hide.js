@@ -1,13 +1,15 @@
 (() => {
   const HIDE_CLASS = "nav-hidden";
-  const THRESHOLD = 12;     // hvor meget man skal scroll før vi reagerer
-  const TOP_RESET = 5;      // hvis man er tæt på toppen -> vis nav
+  const THRESHOLD = 12;
+  const TOP_RESET = 5;
+
+  let windowHandlerAttached = false;
+  let aboutHandlerAttached = false;
 
   function attachScrollHandler(getScrollTop) {
     let last = getScrollTop();
 
     return () => {
-      // Hvis mobil-menuen er åben, skal nav ikke skjules (så UX ikke føles broken)
       const mobileMenuOpen = document.querySelector(".mobile-menu.open");
       if (mobileMenuOpen) {
         document.body.classList.remove(HIDE_CLASS);
@@ -17,7 +19,6 @@
 
       const current = getScrollTop();
 
-      // tæt på top -> vis nav
       if (current <= TOP_RESET) {
         document.body.classList.remove(HIDE_CLASS);
         last = current;
@@ -25,38 +26,49 @@
       }
 
       const delta = current - last;
-
-      // ignorer mikrobevægelser
       if (Math.abs(delta) < THRESHOLD) return;
 
-      if (delta > 0) {
-        // scroller ned -> skjul
-        document.body.classList.add(HIDE_CLASS);
-      } else {
-        // scroller op -> vis
-        document.body.classList.remove(HIDE_CLASS);
-      }
+      if (delta > 0) document.body.classList.add(HIDE_CLASS);
+      else document.body.classList.remove(HIDE_CLASS);
 
       last = current;
     };
   }
 
-  function init() {
-    // 1) Window scroll (alle normale pages)
+  function attachWindowScroll() {
+    if (windowHandlerAttached) return;
+
     const onWindowScroll = attachScrollHandler(() =>
       window.pageYOffset || document.documentElement.scrollTop || 0
     );
-    window.addEventListener("scroll", onWindowScroll, { passive: true });
 
-    // 2) About page scroll container (din scroll-snap side)
-    const about = document.querySelector(".about-scroll");
-    if (about) {
-      const onAboutScroll = attachScrollHandler(() => about.scrollTop || 0);
-      about.addEventListener("scroll", onAboutScroll, { passive: true });
-    }
+    window.addEventListener("scroll", onWindowScroll, { passive: true });
+    windowHandlerAttached = true;
   }
 
-  // Vent til DOM er klar
+  function attachAboutScrollIfPresent() {
+    const about = document.querySelector(".about-scroll");
+    if (!about) return;
+
+    // Hvis vi allerede har attached, så gør intet
+    if (aboutHandlerAttached) return;
+
+    const onAboutScroll = attachScrollHandler(() => about.scrollTop || 0);
+    about.addEventListener("scroll", onAboutScroll, { passive: true });
+    aboutHandlerAttached = true;
+  }
+
+  function init() {
+    attachWindowScroll();
+    attachAboutScrollIfPresent();
+  }
+
+  // 👇 Eksponér en funktion vi kan kalde fra Blazor efter render
+  window.navHideInit = () => {
+    init();
+  };
+
+  // Init ved load
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", init);
   } else {
