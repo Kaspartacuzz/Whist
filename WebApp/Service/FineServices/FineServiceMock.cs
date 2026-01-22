@@ -32,9 +32,9 @@ public class FineServiceMock : IFineService
         await _http.PutAsJsonAsync("api/fine", fine);
     }
 
-    public async Task Delete(int id)
+    public async Task Delete(int userId,int id)
     {
-        await _http.DeleteAsync($"api/fine/{id}");
+        await _http.DeleteAsync($"api/fine/user/{userId}/{id}");
     }
     
     public Task<PagedResult<Fine>> GetPaged(int page, int pageSize, int? userId = null)

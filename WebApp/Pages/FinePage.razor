@@ -251,7 +251,7 @@
     {
         if (FineToDelete is not null)
         {
-            await FineService.Delete(FineToDelete.Id);
+            await FineService.Delete(FineToDelete.UserId, FineToDelete.Id);
             FineToDelete = null;
             await ReloadFines();
         }

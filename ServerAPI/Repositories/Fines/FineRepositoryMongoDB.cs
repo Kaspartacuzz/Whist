@@ -54,9 +54,9 @@ public class FineRepositoryMongoDB : IFineRepository
         }
     }
 
-    public void Delete(int id)
+    public void Delete(int userId, int id)
     {
-        var user = _users.Find(u => u.Fines.Any(f => f.Id == id)).FirstOrDefault();
+        var user = _users.Find(u => u.Id == userId).FirstOrDefault();
         if (user == null) return;
 
         user.Fines = user.Fines.Where(f => f.Id != id).ToList();

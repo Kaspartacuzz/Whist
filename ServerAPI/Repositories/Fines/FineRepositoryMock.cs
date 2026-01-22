@@ -54,13 +54,10 @@ public class FineRepositoryMock : IFineRepository
         }
     }
 
-    public void Delete(int id)
+    public void Delete(int userId, int id)
     {
-        var fine = _fines.FirstOrDefault(f => f.Id == id);
-        if (fine != null)
-        {
-            _fines.Remove(fine);
-        }
+        var fine = _fines.FirstOrDefault(f => f.UserId == userId && f.Id == id);
+        if (fine != null) _fines.Remove(fine);
     }
 
     public PagedResult<Fine> GetPaged(int page, int pageSize, int? userId = null)

@@ -8,6 +8,6 @@ public interface IFineRepository
     Fine[] GetByUserId(int userId); // Hent bøder for én bruger
     void AddFine(Fine fine);      // Tilføj ny bøde
     void Update(Fine fine);       // Opdater en bøde (fx hvis betalt)
-    void Delete(int id);          // Slet en bøde (valgfrit)
+    void Delete(int userId, int id);          // Slet en bøde (valgfrit)
     PagedResult<Fine> GetPaged(int page, int pageSize, int? userId = null);
 }

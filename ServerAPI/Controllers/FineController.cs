@@ -41,10 +41,10 @@ public class FineController : ControllerBase
         return Ok();
     }
 
-    [HttpDelete("{id}")]
-    public IActionResult Delete(int id)
+    [HttpDelete("user/{userId}/{id}")]
+    public IActionResult Delete(int userId, int id)
     {
-        _fineRepository.Delete(id);
+        _fineRepository.Delete(userId, id);
         return Ok();
     }
     
