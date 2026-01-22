@@ -11,14 +11,29 @@ body, html {
     margin-left: calc(-50vw + 50%);
 }
 
+/* Scroll container KUN for Om os siden */
+.about-scroll {
+    height: calc(100vh - 90px);  /* 90px ≈ din navbar-højde */
+    overflow-y: auto;
+
+    scroll-snap-type: y mandatory;
+    scroll-behavior: smooth;
+
+    /* Så den ikke “snapper” ind under navbar */
+    scroll-padding-top: 0;
+}
+
 /* Sektioner */
 .section {
     display: flex;
     width: 100vw;
-    height: 100vh;
+    height: calc(100vh - 90px);
     overflow: hidden;
     margin: 0;
     padding: 0;
+
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
 }
 
 .section.light {

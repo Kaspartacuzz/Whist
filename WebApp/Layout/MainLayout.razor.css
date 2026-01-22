@@ -6,6 +6,12 @@
     min-height: calc(100vh - 90px);
 }
 
+.main-container--full {
+    max-width: 100%;
+    margin: 0;
+    padding: 0;
+}
+
 /* Mobil: lidt mere luft og “page feel” som i dine screenshots */
 @media (max-width: 900px) {
     .main-container {

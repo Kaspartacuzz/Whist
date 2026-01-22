@@ -1,12 +1,18 @@
 ﻿@using WebApp.Components
 @inherits LayoutComponentBase
+@inject NavigationManager Nav
 
 <NavMenu />
 
-<div class="main-container">
+<div class="@(AboutPage() ? "main-container main-container--full" : "main-container")">
     @Body
 </div>
 
 <FooterComponent></FooterComponent> 
 
 <footer class="app-footer"></footer>
+
+@code {
+    private bool AboutPage()
+        => Nav.Uri.EndsWith("/om_os", StringComparison.OrdinalIgnoreCase);
+}
