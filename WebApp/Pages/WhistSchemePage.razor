@@ -84,7 +84,7 @@
                         <span class="point-value">@row.Total</span>
 
                         <div class="star-button-wrapper star-in-table">
-                            <button class="star-btn @(_currentUser is null ? "disabled" : "")" type="button"
+                            <button class="star-button @(_currentUser is null ? "disabled" : "")" type="button"
                                     @onclick="() => AddSessionStar(row.Id)">
                                 ⭐
                                 @if (GetSessionStars(row.Id) > 0)
