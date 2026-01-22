@@ -129,6 +129,18 @@ footer.app-footer {
     flex-shrink: 0;
 }
 
+/* Fjerne og tilføje navmenu når man scroller */
+/* Hide-on-scroll: nav glider op */
+.nav-root {
+    transition: transform 180ms ease;
+    will-change: transform;
+}
+
+/* Når body får klassen nav-hidden */
+body.nav-hidden .nav-root {
+    transform: translateY(-110%);
+}
+
 
 
 
