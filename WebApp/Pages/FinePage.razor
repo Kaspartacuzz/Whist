@@ -51,12 +51,44 @@
     }
 </div>
 
-<!-- Samlet oversigt -->
-<div class="overview-box">
-    <div class="overview-title">Oversigt</div>
-    <p>👉 <strong>Bøder i alt:</strong> @TotalAmount kr</p>
-    <p>📊 <strong>Mangler at blive betalt:</strong> @TotalUnpaid kr</p>
+<!-- Horisontal oversigt: Bøder i alt + Mangler + Stjerner (mini chart) -->
+<div class="overview-box overview-strip">
+
+    <!-- Venstre: KPI'er -->
+    <div class="strip-kpis">
+        <div class="kpi">
+            <div class="kpi-label">Bøder i alt</div>
+            <div class="kpi-value">@TotalAmount kr</div>
+        </div>
+
+        <div class="kpi">
+            <div class="kpi-label">Mangler at blive betalt</div>
+            <div class="kpi-value text-red">@TotalUnpaid kr</div>
+        </div>
+    </div>
+
+    <div class="strip-divider"></div>
+
+    <!-- Højre: Stjerner i alt (fra dag 1) -->
+    <div class="strip-stars">
+        <div class="overview-title strip-title">Stjerner i alt</div>
+
+        @foreach (var user in Users)
+        {
+            var count = GetStarTotalCount(user.Id);
+            var pct = MaxStarTotal == 0 ? 0 : (int)Math.Round(count * 100.0 / MaxStarTotal);
+
+            <div class="star-row">
+                <div class="star-name">@user.NickName</div>
+                <div class="star-track">
+                    <div class="star-fill" style="width:@($"{pct}%")"></div>
+                </div>
+                <div class="star-value">@count</div>
+            </div>
+        }
+    </div>
 </div>
+
 
 <!-- Filtrering -->
 <div class="filter-box-wrapper">
@@ -158,7 +190,6 @@
     private AddFineComponent? addFineComponent;
     private ConfirmDeleteComponent? confirmComponent;
     private Fine? FineToDelete = null;
-    private const int PageSize = 10;
     private Dictionary<int, int> StarFineCounts = new(); // BrugerId → antal stjerner
     private List<Fine> AllFinesForSummary = new();
 
@@ -166,6 +197,7 @@
     //Sidevisning for bøder (maks 10)
     private int CurrentPage = 1;
     private int TotalCount = 0;
+    private const int PageSize = 10;
     private int TotalPages => (int)Math.Ceiling((double)TotalCount / PageSize);
     
     //Filtreringer
@@ -173,10 +205,17 @@
     private DateTime? filterToDate = null;
     private decimal? filterMinAmount = null;
     private decimal? filterMaxAmount = null;
-    private string? filterPaidStatus = null; // "true", "false", eller null (alle)
+    private string? filterPaidStatus = null;
     
     private decimal TotalAmount => AllFinesForSummary.Sum(f => f.Amount);
     private decimal TotalUnpaid => AllFinesForSummary.Where(f => !f.IsPaid).Sum(f => f.Amount);
+    
+    // Stjerner i alt gennem tiden (fra dag 1) - tæller både betalte og ubetalte
+    private int GetStarTotalCount(int userId)
+        => AllFinesForSummary.Count(f => f.UserId == userId && f.Comment == "Stjerne");
+
+    private int MaxStarTotal
+        => Users.Count == 0 ? 0 : Users.Max(u => GetStarTotalCount(u.Id));
 
     private IEnumerable<Fine> FilteredFines => Fines
         .Where(f =>

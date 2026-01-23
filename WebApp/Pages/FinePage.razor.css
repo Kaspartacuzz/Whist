@@ -340,6 +340,97 @@
     cursor: default;
 }
 
+/* Horisontal oversigt (én lang boks) */
+.overview-strip {
+    display: flex;
+    align-items: stretch;
+    gap: 16px;
+}
+
+.strip-kpis {
+    display: flex;
+    gap: 12px;
+    align-items: stretch;
+    min-width: 300px;
+}
+
+.kpi {
+    background: #fafafa;
+    border: 1px solid #f0f0f0;
+    border-radius: 12px;
+    padding: 10px 12px;
+    min-width: 160px;
+    
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.kpi-label {
+    font-size: 0.90rem;
+    color: #666;
+}
+
+.kpi-value {
+    font-weight: 800;
+    color: #222;
+
+    font-size: 2.2rem;      /* Gør beløbet større */
+    line-height: 1;
+    margin: auto 0;         /* Skubber beløbet ned i midten */
+    text-align: center;     /* Centrerer teksten horisontalt */
+}
+
+.strip-divider {
+    width: 1px;
+    background: #eee;
+    border-radius: 999px;
+}
+
+.strip-stars {
+    flex: 1;
+    min-width: 260px;
+}
+
+.strip-title {
+    margin-bottom: 0.6rem;
+}
+
+/* Mini bar chart (stjerner) */
+.star-row {
+    display: grid;
+    grid-template-columns: 90px 1fr 28px;
+    align-items: center;
+    gap: 10px;
+    margin-top: 8px;
+}
+
+.star-name {
+    font-size: 0.9rem;
+    color: #444;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.star-track {
+    height: 10px;
+    background: #f3f4f6;
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.star-fill {
+    height: 100%;
+    background-color: #6366F1;
+    border-radius: 999px;
+}
+
+.star-value {
+    text-align: right;
+    font-weight: 700;
+    color: #444;
+}
 
 
 /* Mobilvenlig */
@@ -364,5 +455,21 @@
 
     .filter-row {
         grid-template-columns: 1fr;
+    }
+
+    .overview-strip {
+        flex-direction: column;
+    }
+    .strip-divider {
+        width: 100%;
+        height: 1px;
+    }
+    .strip-kpis {
+        flex-wrap: wrap;
+        min-width: 0;
+    }
+    .kpi {
+        flex: 1;
+        min-width: 180px;
     }
 }
