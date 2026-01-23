@@ -276,6 +276,10 @@
 
         // Marker som betalt
         foreach (var fine in AllFinesForSummary.Where(f => f.UserId == CurrentUser.Id && !f.IsPaid))
+        {
+            fine.IsPaid = true;
+            await FineService.Update(fine);
+        }
 
         await ReloadFines();
     }
@@ -295,8 +299,7 @@
             await ReloadFines();
         }
     }
-
-
+    
     private void CancelDelete()
     {
         FineToDelete = null;
