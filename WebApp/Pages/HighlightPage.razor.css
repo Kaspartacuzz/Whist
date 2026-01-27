@@ -1,3 +1,9 @@
+/* =========================================================
+   HighlightPage (scoped CSS)
+   Ryddet op: fjernet gamle fine-table styles + ubrugte klasser
+   ========================================================= */
+
+/* --- Header --- */
 .page-header {
     display: flex;
     justify-content: space-between;
@@ -7,11 +13,11 @@
 
 .btn-add {
     background-color: #6366F1;
-    color: white;
+    color: #fff;
     border: none;
     padding: 0.5rem 1rem;
     border-radius: 0.5rem;
-    font-weight: bold;
+    font-weight: 700;
     cursor: pointer;
 }
 
@@ -19,6 +25,7 @@
     background-color: #4829a5;
 }
 
+/* --- Filter box --- */
 .filter-box {
     display: flex;
     gap: 1rem;
@@ -32,10 +39,12 @@
 .filter-item {
     display: flex;
     align-items: center;
-    background-color: white;
+    gap: 0.5rem;
+
+    background-color: #fff;
     padding: 0.5rem 0.75rem;
     border-radius: 0.5rem;
-    gap: 0.5rem;
+
     flex-grow: 1;
     min-width: 200px;
 }
@@ -48,51 +57,64 @@
     background-color: transparent;
 }
 
-.highlight-list {
+/* --- Grid/cards --- */
+.highlight-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+.highlight-card {
     display: flex;
     flex-direction: column;
-    gap: 1.25rem;
-}
-
-.card-image {
-    flex-shrink: 0;
-    width: 120px;
-    height: 120px;
-    background-color: #e5e7eb;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    border-radius: 0.5rem;
+    background-color: #fff;
+    border-radius: 0.75rem;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
     overflow: hidden;
+    height: 100%;
 }
 
-.card-image img {
+.highlight-image {
+    position: relative;
+    width: 100%;
+    height: 200px;
+    overflow: hidden;
+    background-color: #f3f4f6;
+}
+
+.highlight-image img {
     width: 100%;
     height: 100%;
     object-fit: cover;
 }
 
-.image-placeholder {
-    color: #6b7280;
-    font-size: 0.875rem;
-}
-
-.card-content {
-    flex-grow: 1;
+.highlight-body {
+    padding: 1rem;
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    flex-grow: 1;
 }
 
-.content-header {
+.highlight-title-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 0.5rem;
 }
 
-.card-date {
-    font-size: 0.875rem;
-    color: #6b7280;
+.title {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 700;
+    word-break: break-word;
+    white-space: normal;
+}
+
+.highlight-private-label {
+    font-size: 0.8rem;
+    color: #9ca3af;
+    font-style: italic;
+    white-space: nowrap;
 }
 
 .description {
@@ -102,36 +124,23 @@
     white-space: normal;
 }
 
-.content-footer {
+.highlight-footer {
+    margin-top: auto;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: auto;
+    padding-top: 1rem;
 }
 
-.avatar {
-    width: 24px;
-    height: 24px;
-    border-radius: 9999px;
-    background-color: #d1d5db;
+.card-date {
+    font-size: 0.875rem;
+    color: #6b7280;
 }
 
+/* --- Actions --- */
 .actions {
     display: flex;
     gap: 0.75rem;
-}
-
-.btn-link {
-    background: none;
-    border: none;
-    color: #6366F1;
-    cursor: pointer;
-    font-weight: 500;
-    padding: 0;
-}
-
-.btn-link.text-danger {
-    color: #EF4444;
 }
 
 .icon-button {
@@ -154,121 +163,9 @@
 
 .icon-button.red {
     color: #e53935;
-}.fine-table th:nth-child(1),
- .fine-table td:nth-child(1) {
-     width: 14%;
- }
-
-.fine-table th:nth-child(2),
-.fine-table td:nth-child(2) {
-    width: 18%;
 }
 
-.fine-table th:nth-child(3),
-.fine-table td:nth-child(3) {
-    width: 12%;
-}
-
-.fine-table th:nth-child(4),
-.fine-table td:nth-child(4) {
-    width: 40%;
-}
-
-.fine-table th:nth-child(5),
-.fine-table td:nth-child(5) {
-    width: 16%;
-    text-align: right; /* knapper helt til højre */
-}
-
-
-
-
-
-
-.highlight-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 1.5rem;
-}
-
-.highlight-card {
-    display: flex;
-    flex-direction: column;
-    background-color: white;
-    border-radius: 0.75rem;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
-    overflow: hidden;
-    height: 100%;
-}
-
-.highlight-image {
-    position: relative;
-    width: 100%;
-    height: 200px;
-    overflow: hidden;
-    background-color: #f3f4f6;
-}
-
-.highlight-image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.highlight-body h3 {
-    margin: 0;
-    font-size: 1.1rem;
-}
-
-.highlight-footer {
-    margin-top: auto;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding-top: 1rem;
-}
-
-.highlight-body {
-    padding: 1rem;
-    display: flex;
-    flex-direction: column;
-    flex-grow: 1;
-}
-
-.title{
-    word-break: break-word;
-    white-space: normal;
-}
-
-.highlight-private-label {
-    font-size: 0.75rem;
-    color: #9ca3af; /* grå tekst */
-    font-style: italic;
-    margin-bottom: 0.25rem;
-    display: block;
-}
-
-.highlight-title-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.highlight-title-row h3 {
-    margin: 0;
-    font-size: 1.1rem;
-    font-weight: bold;
-}
-
-.highlight-private-label {
-    font-size: 0.8rem;
-    color: #9ca3af;
-    font-style: italic;
-    white-space: nowrap;
-}
-
-/* Udvid ikon */
+/* --- Expand (image) button --- */
 .expand-button {
     position: absolute;
     bottom: 8px;
@@ -280,13 +177,14 @@
     padding: 0.3rem 0.5rem;
     cursor: pointer;
     transition: background-color 0.2s ease;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
-}
-.expand-button:hover {
-    background-color: white;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
 }
 
-/* Modal overlay */
+.expand-button:hover {
+    background-color: #fff;
+}
+
+/* --- Modal (image) --- */
 .image-modal-backdrop {
     position: fixed;
     inset: 0;
@@ -297,7 +195,6 @@
     z-index: 9999;
 }
 
-/* Modal indhold */
 .image-modal-content {
     position: relative;
     max-width: 90vw;
@@ -305,8 +202,9 @@
     background-color: #fff;
     padding: 1rem;
     border-radius: 0.5rem;
-    box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
 }
+
 .image-modal-content img {
     max-width: 100%;
     max-height: 80vh;
@@ -314,37 +212,14 @@
     margin: auto;
 }
 
-/* Luk knap */
 .close-button {
     position: absolute;
-    color: red;
     top: 0.5rem;
     right: 0.5rem;
+
+    color: red;
     background: none;
     border: none;
     font-size: 1.5rem;
     cursor: pointer;
 }
-
-.pagination {
-    display: flex;
-    gap: 0.5rem;
-    justify-content: center;
-    margin-top: 1rem;
-}
-
-.pagination button {
-    border: 1px solid #ddd;
-    background: #fff;
-    padding: 0.35rem 0.65rem;
-    border-radius: 6px;
-    cursor: pointer;
-}
-
-.pagination button.active,
-.pagination button:disabled {
-    font-weight: bold;
-    background: #f3f4f6;
-    cursor: default;
-}
-

@@ -10,22 +10,28 @@
 @inject IAuthService AuthService
 @inject IJSRuntime JSRuntime
 
-<!-- Tilføj knap -->
+<!-- =========================
+     TOP: Titel + Tilføj bøde
+     ========================= -->
 <div class="top-bar">
     <h2>Bøder</h2>
     <button class="btn-add" @onclick="OpenAddFineModal">+ Tilføj bøde</button>
 </div>
 
-<!-- Brugeroversigt -->
+<!-- =========================
+     BRUGERKORT (overblik pr. person)
+     ========================= -->
 <div class="user-grid">
     @foreach (var user in Users)
     {
+        // Vi bruger "AllFinesForSummary" til alt overblik (kort + totals + stjerner)
         var userFines = AllFinesForSummary.Where(f => f.UserId == user.Id).ToList();
         var total = userFines.Sum(f => f.Amount);
         var paid = userFines.Where(f => f.IsPaid).Sum(f => f.Amount);
         var unpaid = total - paid;
 
         <div class="user-card">
+            <!-- Stjerne-knap (opretter en "stjerne-bøde") -->
             <div class="star-button-wrapper">
                 <button class="star-button" @onclick="() => AddStarFine(user.Id)">
                     ⭐
@@ -35,7 +41,9 @@
                     }
                 </button>
             </div>
+
             <div class="user-header">@user.NickName</div>
+
             <div class="user-info">
                 <span>I alt:</span><span class="amount">@total kr</span>
                 <span>Betalt:</span><span class="amount">@paid kr</span>
@@ -43,6 +51,7 @@
                 <span class="amount @(unpaid > 0 ? "text-red" : "text-green")">@unpaid kr</span>
             </div>
 
+            <!-- "Betal nu" vises kun for den bruger der er logget ind + kun hvis der mangler betaling -->
             @if (CurrentUser?.Id == user.Id && unpaid > 0)
             {
                 <button class="pay-button" @onclick="PayNow">Betal nu</button>
@@ -51,10 +60,12 @@
     }
 </div>
 
-<!-- Horisontal oversigt: Bøder i alt + Mangler + Stjerner (mini chart) -->
+<!-- =========================
+     HORISONTAL OVERSIGT (Totals + Stjerner)
+     ========================= -->
 <div class="overview-box overview-strip">
 
-    <!-- Venstre: KPI'er -->
+    <!-- KPI'er (venstre) -->
     <div class="strip-kpis">
         <div class="kpi">
             <div class="kpi-label">Bøder i alt</div>
@@ -69,13 +80,15 @@
 
     <div class="strip-divider"></div>
 
-    <!-- Højre: Stjerner i alt (fra dag 1) -->
+    <!-- Stjerner i alt (højre) -->
     <div class="strip-stars">
         <div class="overview-title strip-title">Stjerner i alt</div>
 
         @foreach (var user in Users)
         {
             var count = GetStarTotalCount(user.Id);
+
+            // Procent ift. den der har flest stjerner (så baren skalerer korrekt)
             var pct = MaxStarTotal == 0 ? 0 : (int)Math.Round(count * 100.0 / MaxStarTotal);
 
             <div class="star-row">
@@ -89,8 +102,9 @@
     </div>
 </div>
 
-
-<!-- Filtrering -->
+<!-- =========================
+     FILTER-BOKS
+     ========================= -->
 <div class="filter-box-wrapper">
     <div class="filter-row">
         <div class="filter-item search">
@@ -131,8 +145,9 @@
     </div>
 </div>
 
-
-<!-- Tabel -->
+<!-- =========================
+     TABEL (viser page’en af bøder)
+     ========================= -->
 <div class="fine-table">
     <table>
         <thead>
@@ -145,10 +160,12 @@
             <th></th>
         </tr>
         </thead>
+
         <tbody>
         @foreach (var fine in FilteredFines)
         {
             var user = Users.FirstOrDefault(u => u.Id == fine.UserId);
+
             <tr>
                 <td>@fine.Date.ToShortDateString()</td>
                 <td>@user?.NickName</td>
@@ -167,59 +184,92 @@
         </tbody>
     </table>
 
+    <!-- Slet-confirm modal -->
     <ConfirmDeleteComponent @ref="confirmComponent"
                             OnConfirm="DeleteConfirmed"
                             OnCancel="CancelDelete"
                             Message="Er du sikker på at du vil slette denne bøde?" />
 </div>
 
+<!-- Pagination (kun hvis der er flere sider) -->
 @if (TotalPages > 1)
 {
     <PaginationComponent CurrentPage="CurrentPage"
-                TotalPages="TotalPages"
-                OnPageChanged="LoadPage" />
+                         TotalPages="TotalPages"
+                         OnPageChanged="LoadPage" />
 }
 
+<!-- Add/Edit modal -->
 <AddFineComponent @ref="addFineComponent" OnFineAdded="ReloadFines" />
 
 @code {
-    private List<Fine> Fines = new();
-    private List<User> Users = new();
+    // -----------------------------
+    // State
+    // -----------------------------
+    private List<Fine> Fines = new();                 // Det der vises i tabellen (current page)
+    private List<Fine> AllFinesForSummary = new();    // Bruges til kort/oversigter (alle bøder)
+    private List<User> Users = new();                 // Alle brugere
+    private User? CurrentUser;                        // Logget ind bruger
+
     private string searchTerm = "";
-    private User? CurrentUser;
+
+    // Component refs (modaler)
     private AddFineComponent? addFineComponent;
     private ConfirmDeleteComponent? confirmComponent;
-    private Fine? FineToDelete = null;
-    private Dictionary<int, int> StarFineCounts = new(); // BrugerId → antal stjerner
-    private List<Fine> AllFinesForSummary = new();
 
-    
-    //Sidevisning for bøder (maks 10)
+    private Fine? FineToDelete = null;
+
+    // -----------------------------
+    // Paging
+    // -----------------------------
     private int CurrentPage = 1;
     private int TotalCount = 0;
     private const int PageSize = 10;
     private int TotalPages => (int)Math.Ceiling((double)TotalCount / PageSize);
-    
-    //Filtreringer
+
+    // -----------------------------
+    // Filtre
+    // -----------------------------
     private DateTime? filterFromDate = null;
     private DateTime? filterToDate = null;
     private decimal? filterMinAmount = null;
     private decimal? filterMaxAmount = null;
     private string? filterPaidStatus = null;
-    
+
+    // -----------------------------
+    // Beregnede totals (til KPI'er)
+    // -----------------------------
     private decimal TotalAmount => AllFinesForSummary.Sum(f => f.Amount);
     private decimal TotalUnpaid => AllFinesForSummary.Where(f => !f.IsPaid).Sum(f => f.Amount);
-    
-    // Stjerner i alt gennem tiden (fra dag 1) - tæller både betalte og ubetalte
+
+    // Hvor meget den aktuelle bruger mangler at betale
+    private decimal UserUnpaid =>
+        CurrentUser is null
+            ? 0
+            : AllFinesForSummary.Where(f => f.UserId == CurrentUser.Id && !f.IsPaid).Sum(f => f.Amount);
+
+    // -----------------------------
+    // Stjerner
+    // -----------------------------
+
+    // Stjerner i alt gennem tiden (både betalte og ubetalte)
     private int GetStarTotalCount(int userId)
         => AllFinesForSummary.Count(f => f.UserId == userId && f.Comment == "Stjerne");
 
+    // Max stjerner (bruges til at skalere baren korrekt)
     private int MaxStarTotal
         => Users.Count == 0 ? 0 : Users.Max(u => GetStarTotalCount(u.Id));
 
+    // Stjerner der IKKE er betalt (badge på bruger-kortet)
+    private int GetStarCount(int userId)
+        => AllFinesForSummary.Count(f => f.UserId == userId && f.Comment == "Stjerne" && !f.IsPaid);
+
+    // -----------------------------
+    // Filtreret view af current-page bøder
+    // -----------------------------
     private IEnumerable<Fine> FilteredFines => Fines
         .Where(f =>
-            // Søgefelt
+            // Søgefelt (navn eller kommentar)
             (string.IsNullOrWhiteSpace(searchTerm) ||
              Users.FirstOrDefault(u => u.Id == f.UserId)?.NickName?.ToLower().Contains(searchTerm.ToLower()) == true ||
              f.Comment.ToLower().Contains(searchTerm.ToLower()))
@@ -239,25 +289,36 @@
         )
         .OrderByDescending(f => f.Date);
 
-    private decimal UserUnpaid =>
-        CurrentUser is null
-            ? 0
-            : AllFinesForSummary.Where(f => f.UserId == CurrentUser.Id && !f.IsPaid).Sum(f => f.Amount);
-   
+    // -----------------------------
+    // Lifecycle
+    // -----------------------------
     protected override async Task OnInitializedAsync()
     {
         Users = (await UserService.GetAll()).ToList();
         CurrentUser = await AuthService.GetCurrentUser();
-        await LoadSummary();  // <-- totals til kort
+
+        // 1) Indlæs alle bøder til overblik
+        await LoadSummary();
+
+        // 2) Indlæs første side til tabel
         await LoadPage(1);
     }
-    
+
+    // -----------------------------
+    // UI actions
+    // -----------------------------
+
+    // Åbner modal til at oprette en bøde
     private async Task OpenAddFineModal()
     {
         if (addFineComponent != null)
             await addFineComponent.Show();
     }
-    
+
+    // Betal nu:
+    // 1) åbner MobilePay box
+    // 2) markerer alle ubetalte bøder for CurrentUser som betalt i DB
+    // 3) reloader UI (summary + tabel)
     private async Task PayNow()
     {
         if (CurrentUser is null)
@@ -269,13 +330,16 @@
             return;
         }
 
-        // URL til mobilepay boks
-        var mobilePayUrl = $"https://qr.mobilepay.dk/box/fe1b90f5-2c86-49be-af9f-8562d21a5b3a/pay-in";
-
+        // Åbn MobilePay box i ny fane (din nuværende løsning)
+        var mobilePayUrl = "https://qr.mobilepay.dk/box/fe1b90f5-2c86-49be-af9f-8562d21a5b3a/pay-in";
         await JSRuntime.InvokeVoidAsync("open", mobilePayUrl, "_blank");
 
-        // Marker som betalt
-        foreach (var fine in AllFinesForSummary.Where(f => f.UserId == CurrentUser.Id && !f.IsPaid))
+        // Marker ALLE ubetalte bøder for brugeren som betalt
+        var unpaidFines = AllFinesForSummary
+            .Where(f => f.UserId == CurrentUser.Id && !f.IsPaid)
+            .ToList();
+
+        foreach (var fine in unpaidFines)
         {
             fine.IsPaid = true;
             await FineService.Update(fine);
@@ -283,7 +347,10 @@
 
         await ReloadFines();
     }
-    
+
+    // -----------------------------
+    // CRUD: Delete / Edit
+    // -----------------------------
     private void ConfirmDelete(Fine fine)
     {
         FineToDelete = fine;
@@ -299,20 +366,23 @@
             await ReloadFines();
         }
     }
-    
+
     private void CancelDelete()
     {
         FineToDelete = null;
     }
-    
+
+    // Åbner AddFine modal i edit-mode (AddFineComponent håndterer selv "edit vs add")
     private async Task EditFine(Fine fine)
     {
-        FineToDelete = null; // 🧹 vigtig!
-    
+        FineToDelete = null; // vigtig: ryd state
         if (addFineComponent is not null)
             await addFineComponent.Show(fine);
     }
-    
+
+    // -----------------------------
+    // Stjerne-bøde
+    // -----------------------------
     private async Task AddStarFine(int userId)
     {
         var fine = new Fine
@@ -328,28 +398,27 @@
         await ReloadFines();
     }
 
-    private int GetStarCount(int userId)
-    {
-        return AllFinesForSummary.Count(f => f.UserId == userId && f.Comment == "Stjerne" && !f.IsPaid);
-    }
-    
+    // -----------------------------
+    // Paging + reload helpers
+    // -----------------------------
     private async Task LoadPage(int page)
     {
         CurrentPage = page < 1 ? 1 : page;
+
+        // Bemærk: din GetPaged endpoint server-side pager data (godt!)
         var result = await FineService.GetPaged(CurrentPage, PageSize);
         Fines = result.Items.ToList();
         TotalCount = result.TotalCount;
+
         StateHasChanged();
     }
 
-    private async Task GoPrev() { if (CurrentPage > 1) await LoadPage(CurrentPage - 1); }
-    private async Task GoNext() { if (CurrentPage < TotalPages) await LoadPage(CurrentPage + 1); }
-    private async Task GoTo(int page) { if (page >= 1 && page <= TotalPages) await LoadPage(page); }
-
+    // Reloader både summary (kort/oversigt) og tabel (current page)
     private async Task ReloadFines()
     {
-        await LoadSummary(); // <-- vigtig!
+        await LoadSummary();
 
+        // Hvis sidste element på en side bliver slettet, hop én side tilbage
         if (Fines.Count == 1 && CurrentPage > 1)
             await LoadPage(CurrentPage - 1);
         else
@@ -358,10 +427,9 @@
         StateHasChanged();
     }
 
-    
+    // Henter ALLE bøder (bruges kun til kort/oversigt)
     private async Task LoadSummary()
     {
         AllFinesForSummary = (await FineService.GetAll()).ToList();
     }
 }
-

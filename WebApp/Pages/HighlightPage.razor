@@ -1,14 +1,27 @@
 @page "/highlights"
 
+@using System.Globalization
 @using Core
 @using WebApp.Components
 @using WebApp.Service
+
 @inject Service.HighlightServices.IHighlightService HighlightService
 @inject Service.AuthServices.IAuthService AuthService
 @inject IUserService UserService
 
+<!--
+    Highlights-side:
+    - Viser highlights i et grid (med evt. billede)
+    - Filtrering: søg + fra/til dato
+    - Privat highlights skjules for ikke-loggede brugere
+    - Pagination hentes via API (GetPaged)
+    - Modal: klik for at se billede i stor størrelse
+-->
+
 <div class="page-header">
     <h2>Highlights</h2>
+
+    @* Kun loggede brugere kan tilføje *@
     @if (CurrentUser is not null)
     {
         <button class="btn-add" @onclick="OpenAddModal">
@@ -17,44 +30,45 @@
     }
 </div>
 
+@* Re-usable add/edit component (bruges også til redigering via Show(h)) *@
 <AddHighlightComponent @ref="addComponent" OnHighlightAdded="HandleHighlightAdded" />
 
 <!-- 🔍 Filtrering -->
 <div class="filter-box">
-    <div class="filter-item search">
+    <div class="filter-item">
         <span class="icon-search">🔍</span>
         <input placeholder="Søg i highlights..."
                @bind="searchTerm"
                @bind:event="oninput" />
     </div>
 
-    <div class="filter-item date">
+    <div class="filter-item">
         <span class="icon-calendar">📅</span>
-        <input type="date"
-               @bind="filterFrom" />
+        <input type="date" @bind="filterFrom" />
     </div>
 
-    <div class="filter-item date">
+    <div class="filter-item">
         <span class="icon-calendar">📅</span>
-        <input type="date"
-               @bind="filterTo" />
+        <input type="date" @bind="filterTo" />
     </div>
 </div>
 
+<!-- Highlights grid -->
 <div class="highlight-grid">
     @foreach (var h in FilteredHighlights)
     {
+        // Privat highlight: skjules for ikke-loggede brugere
         if (h.IsPrivate && CurrentUser is null)
-        {
             continue;
-        }
 
         <div class="highlight-card">
             @if (!string.IsNullOrEmpty(h.ImageUrl))
             {
                 <div class="highlight-image">
                     <img src="@h.ImageUrl" alt="Highlight billede" />
-                    <button class="expand-button" title="Se i stor størrelse" @onclick="() => OpenImageModal(h.ImageUrl)">
+                    <button class="expand-button"
+                            title="Se i stor størrelse"
+                            @onclick="() => OpenImageModal(h.ImageUrl)">
                         ⛶
                     </button>
                 </div>
@@ -69,14 +83,15 @@
                         <span class="highlight-private-label">Privat</span>
                     }
                 </div>
+
                 <p class="description">@h.Description</p>
 
                 <div class="highlight-footer">
-                    <span class="card-date">@(
-                                            TimeZoneInfo.ConvertTimeFromUtc(h.Date, TimeZoneInfo.FindSystemTimeZoneById("Europe/Copenhagen"))
-                                                .ToString("d. MMMM yyyy", new System.Globalization.CultureInfo("da-DK")))
-                        </span>
+                    <span class="card-date">
+                        @FormatDanishDate(h.Date)
+                    </span>
 
+                    @* Kun loggede brugere kan redigere/slette *@
                     @if (CurrentUser is not null)
                     {
                         <div class="actions">
@@ -90,11 +105,13 @@
     }
 </div>
 
+<!-- Slet-bekræftelse -->
 <ConfirmDeleteComponent @ref="confirmComponent"
                         OnConfirm="DeleteConfirmed"
                         OnCancel="CancelDelete"
                         Message="Er du sikker på at du vil slette dette highlight?" />
 
+<!-- Billede-modal -->
 @if (ExpandedImageUrl is not null)
 {
     <div class="image-modal-backdrop" @onclick="CloseImageModal">
@@ -105,59 +122,92 @@
     </div>
 }
 
+<!-- Pagination -->
 @if (TotalPages > 1)
 {
     <PaginationComponent CurrentPage="CurrentPage"
-                TotalPages="TotalPages"
-                OnPageChanged="LoadPage" />
+                         TotalPages="TotalPages"
+                         OnPageChanged="LoadPage" />
 }
 
-
 @code {
+    // ----------------------------
+    // State (data + filter + paging)
+    // ----------------------------
+
     private List<Highlight> Highlights = new();
-    private List<User> Users = new();
+
     private string searchTerm = "";
     private DateTime? filterFrom = null;
     private DateTime? filterTo = null;
+
     private User? CurrentUser;
-    private string? ExpandedImageUrl;
+
     private int CurrentPage = 1;
     private const int PageSize = 6;
     private int TotalCount = 0;
     private int TotalPages => (int)Math.Ceiling((double)TotalCount / PageSize);
 
-    private AddHighlightComponent? addComponent;
+    // Modal (billede i stor størrelse)
+    private string? ExpandedImageUrl;
 
+    // Component refs
+    private AddHighlightComponent? addComponent;
+    private ConfirmDeleteComponent? confirmComponent;
+
+    // Delete-flow
+    private Highlight? HighlightToDelete;
+
+    // Cache (så vi ikke laver FindSystemTimeZoneById/CultureInfo for hvert render item)
+    private static readonly TimeZoneInfo CopenhagenTz = TimeZoneInfo.FindSystemTimeZoneById("Europe/Copenhagen");
+    private static readonly CultureInfo DanishCulture = new("da-DK");
+
+    // ----------------------------
+    // Computed view
+    // ----------------------------
+
+    /// <summary>
+    /// Filtrerer de highlights vi allerede har hentet for den aktuelle side (pagination),
+    /// og sorterer dem efter dato (nyeste først).
+    /// </summary>
     private IEnumerable<Highlight> FilteredHighlights => Highlights
         .Where(h =>
             (string.IsNullOrWhiteSpace(searchTerm)
-             || h.Title.ToLower().Contains(searchTerm.ToLower())
-             || h.Description.ToLower().Contains(searchTerm.ToLower()))
+             || (h.Title?.ToLower().Contains(searchTerm.ToLower()) ?? false)
+             || (h.Description?.ToLower().Contains(searchTerm.ToLower()) ?? false))
             && (!filterFrom.HasValue || h.Date.Date >= filterFrom.Value.Date)
             && (!filterTo.HasValue || h.Date.Date <= filterTo.Value.Date)
         )
         .OrderByDescending(h => h.Date);
 
+    // ----------------------------
+    // Lifecycle
+    // ----------------------------
+
     protected override async Task OnInitializedAsync()
     {
+        // Bruger afgør om knapper (tilføj/rediger/slet) skal vises
         CurrentUser = await AuthService.GetCurrentUser();
+
+        // Load første side
         await LoadPage(1);
     }
 
-    private async Task LoadHighlights()
+    // ----------------------------
+    // UI actions
+    // ----------------------------
+
+    private Task OpenAddModal()
     {
-        Highlights = (await HighlightService.GetAll()).ToList();
-        Users = (await UserService.GetAll()).ToList();
+        addComponent?.Show();
+        return Task.CompletedTask;
     }
 
-    private async Task OpenAddModal()
+    private void EditHighlight(Highlight highlight)
     {
-        if (addComponent is not null)
-            addComponent.Show();
+        // Re-using samme modal til edit
+        addComponent?.Show(highlight);
     }
-    
-    private ConfirmDeleteComponent? confirmComponent;
-    private Highlight? HighlightToDelete;
 
     private void ConfirmDelete(Highlight highlight)
     {
@@ -167,24 +217,21 @@
 
     private async Task DeleteConfirmed()
     {
-        if (HighlightToDelete is not null)
-        {
-            await HighlightService.Delete(HighlightToDelete.Id);
-            HighlightToDelete = null;
-            await LoadPage(CurrentPage);
-        }
+        if (HighlightToDelete is null)
+            return;
+
+        await HighlightService.Delete(HighlightToDelete.Id);
+        HighlightToDelete = null;
+
+        // Bliv på samme side og refresh
+        await LoadPage(CurrentPage);
     }
 
     private void CancelDelete()
     {
         HighlightToDelete = null;
     }
-    
-    private async Task EditHighlight(Highlight h)
-    {
-        addComponent?.Show(h);
-    }
-    
+
     private void OpenImageModal(string url)
     {
         ExpandedImageUrl = url;
@@ -194,22 +241,43 @@
     {
         ExpandedImageUrl = null;
     }
-    
-    private async Task LoadPage(int page)
-    {
-        CurrentPage = page < 1 ? 1 : page;
-        var result = await HighlightService.GetPaged(CurrentPage, PageSize);
-        Highlights = result.Items.ToList();
-        TotalCount = result.TotalCount;
-        StateHasChanged();
-    }
 
-    private async Task GoPrev() { if (CurrentPage > 1) await LoadPage(CurrentPage - 1); }
-    private async Task GoNext() { if (CurrentPage < TotalPages) await LoadPage(CurrentPage + 1); }
-    private async Task GoTo(int page) { if (page >= 1 && page <= TotalPages) await LoadPage(page); }
-    
+    /// <summary>
+    /// Når AddHighlightComponent siger "tilføjet", så reloader vi side 1 (så du ser det med det samme).
+    /// </summary>
     private async Task HandleHighlightAdded()
     {
         await LoadPage(1);
+    }
+
+    // ----------------------------
+    // Paging
+    // ----------------------------
+
+    /// <summary>
+    /// Henter en side via API (server-side paging).
+    /// </summary>
+    private async Task LoadPage(int page)
+    {
+        CurrentPage = page < 1 ? 1 : page;
+
+        var result = await HighlightService.GetPaged(CurrentPage, PageSize);
+        Highlights = result.Items.ToList();
+        TotalCount = result.TotalCount;
+
+        StateHasChanged();
+    }
+
+    // ----------------------------
+    // Helpers
+    // ----------------------------
+
+    /// <summary>
+    /// Formatterer dato pænt på dansk i lokal timezone.
+    /// </summary>
+    private static string FormatDanishDate(DateTime utcDate)
+    {
+        var local = TimeZoneInfo.ConvertTimeFromUtc(utcDate, CopenhagenTz);
+        return local.ToString("d. MMMM yyyy", DanishCulture);
     }
 }
