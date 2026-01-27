@@ -7,24 +7,28 @@
 
 <div class="page-header">
     <h2>Regler</h2>
+
+    @* Kun brugere med login må oprette/redigere/slette *@
     @if (CurrentUser is not null)
     {
         <div class="rules-actions">
             <button class="btn-add" @onclick="OpenAddModal">+ Opret regel</button>
+
             <button class="btn-add" @onclick="ToggleEditMode">
                 @(editMode ? "Afslut redigering" : "Rediger regler")
             </button>
         </div>
     }
-    
 </div>
 
+@* Modal til opret/redigér *@
 <AddRuleComponent @ref="addRuleComponent" OnRuleSaved="LoadRules" />
+
+@* Modal til bekræft slet *@
 <ConfirmDeleteComponent @ref="confirmDeleteComponent"
                         OnConfirm="DeleteConfirmed"
                         OnCancel="CancelDelete"
                         Message="Er du sikker på at du vil slette denne regel?" />
-
 
 @if (Rules.Count == 0)
 {
@@ -41,6 +45,7 @@ else
                     <div class="rule-text">@rule.Text</div>
                 </div>
 
+                @* Knapper vises kun i rediger-tilstand *@
                 @if (editMode)
                 {
                     <div class="actions">
@@ -53,40 +58,51 @@ else
     </div>
 }
 
-
 @code {
+    // =========================
+    // State
+    // =========================
     private List<Rule> Rules = new();
-    private AddRuleComponent? addRuleComponent;
-    private bool editMode = false;
-    private ConfirmDeleteComponent? confirmDeleteComponent;
-    private Rule? RuleToDelete;
+    private bool editMode;
+
     private User? CurrentUser;
 
+    private AddRuleComponent? addRuleComponent;
+    private ConfirmDeleteComponent? confirmDeleteComponent;
+
+    private Rule? RuleToDelete;
+
+    // =========================
+    // Lifecycle
+    // =========================
     protected override async Task OnInitializedAsync()
     {
         CurrentUser = await AuthService.GetCurrentUser();
         await LoadRules();
     }
 
+    // =========================
+    // Data
+    // =========================
     private async Task LoadRules()
     {
         Rules = await RuleService.GetAll();
+
+        // Sikrer render, også hvis callback kommer fra en child-component
+        await InvokeAsync(StateHasChanged);
     }
 
+    // =========================
+    // UI-handlers
+    // =========================
     private void OpenAddModal()
-    {
-        addRuleComponent?.Show();
-    }
-    
+        => addRuleComponent?.Show();
+
     private void ToggleEditMode()
-    {
-        editMode = !editMode;
-    }
+        => editMode = !editMode;
 
     private void EditRule(Rule rule)
-    {
-        addRuleComponent?.Show(rule);
-    }
+        => addRuleComponent?.Show(rule);
 
     private void ConfirmDelete(Rule rule)
     {
@@ -94,18 +110,19 @@ else
         confirmDeleteComponent?.Show();
     }
 
+    // =========================
+    // Delete flow
+    // =========================
     private async Task DeleteConfirmed()
     {
-        if (RuleToDelete is not null)
-        {
-            await RuleService.Delete(RuleToDelete.Id);
-            RuleToDelete = null;
-            await LoadRules();
-        }
+        if (RuleToDelete is null) return;
+
+        await RuleService.Delete(RuleToDelete.Id);
+        RuleToDelete = null;
+
+        await LoadRules();
     }
 
     private void CancelDelete()
-    {
-        RuleToDelete = null;
-    }
+        => RuleToDelete = null;
 }

@@ -4,46 +4,80 @@ using ServerAPI.Repositories.Rules;
 
 namespace ServerAPI.Controllers;
 
+/// <summary>
+/// API-controller for regler.
+/// 
+/// Princip:
+/// - Controller er "tynd": validerer input og kalder repository.
+/// - Ingen database/logik her.
+/// </summary>
 [ApiController]
 [Route("api/[controller]")]
 public class RuleController : ControllerBase
 {
-    private readonly IRuleRepository _repository;
+    private readonly IRuleRepository _repo;
 
-    public RuleController(IRuleRepository repository)
+    public RuleController(IRuleRepository repo)
     {
-        _repository = repository;
+        _repo = repo;
     }
 
+    // =========================
+    // READ
+    // =========================
+
+    /// <summary>
+    /// Henter alle regler.
+    /// </summary>
     [HttpGet]
     public async Task<ActionResult<IEnumerable<Rule>>> GetAll()
     {
-        var rules = await _repository.GetAll();
+        var rules = await _repo.GetAll();
         return Ok(rules);
     }
 
+    // =========================
+    // WRITE
+    // =========================
+
+    /// <summary>
+    /// Opretter en ny regel.
+    /// Returnerer 400 hvis tekst mangler.
+    /// </summary>
     [HttpPost]
     public async Task<ActionResult<Rule>> Add([FromBody] Rule rule)
     {
         if (string.IsNullOrWhiteSpace(rule.Text))
             return BadRequest("Regeltekst mangler.");
 
-        var added = await _repository.Add(rule);
+        var added = await _repo.Add(rule);
+
+        // Bemærk: CreatedAtAction peger på GetAll (som ikke returnerer en enkelt rule),
+        // men vi bevarer adfærden som den er i din nuværende kode.
         return CreatedAtAction(nameof(GetAll), new { id = added.Id }, added);
     }
 
-    [HttpPut("{id}")]
-    public async Task<IActionResult> Update(int id, Rule rule)
+    /// <summary>
+    /// Opdaterer en regel.
+    /// Returnerer 400 hvis id i route ikke matcher rule.Id.
+    /// </summary>
+    [HttpPut("{id:int}")]
+    public async Task<IActionResult> Update(int id, [FromBody] Rule rule)
     {
-        if (id != rule.Id) return BadRequest();
-        await _repository.Update(rule);
+        if (id != rule.Id)
+            return BadRequest();
+
+        await _repo.Update(rule);
         return NoContent();
     }
 
-    [HttpDelete("{id}")]
+    /// <summary>
+    /// Sletter en regel ud fra id.
+    /// </summary>
+    [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)
     {
-        await _repository.Delete(id);
+        await _repo.Delete(id);
         return NoContent();
     }
 }
