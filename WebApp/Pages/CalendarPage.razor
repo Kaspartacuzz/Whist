@@ -3,18 +3,19 @@
 @using Core
 @using WebApp.Components
 
-@inject IJSRuntime JS
 @inject Service.CalendarServices.ICalendarService CalendarService
 @inject Service.AuthServices.IAuthService AuthService
 
 <h2>Kalender</h2>
 
+<!-- Månedsskift -->
 <div class="calendar-controls">
     <button class="btn-add" @onclick="PreviousMonth">←</button>
     <div class="calendar-current">@CurrentMonthName @CurrentYear</div>
     <button class="btn-add" @onclick="NextMonth">→</button>
 </div>
 
+<!-- År/måned dropdowns -->
 <div class="calendar-filters-styled">
     <div class="filter-item dropdown">
         <label class="filter-label">Vælg år:</label>
@@ -43,6 +44,7 @@
     </div>
 </div>
 
+<!-- Kalender grid -->
 <div class="calendar-grid">
     @foreach (var day in DayHeaders)
     {
@@ -62,6 +64,7 @@
 
         <div class="@cellClass" @onclick="@(CurrentUser is not null ? (() => SelectDate(date)) : null)">
             <div class="day-number">@day</div>
+
             @if (EventDates.TryGetValue(date.Date, out var note))
             {
                 <div class="event-note">@note</div>
@@ -70,6 +73,7 @@
     }
 </div>
 
+<!-- Modal: tilføj/redigér note -->
 @if (ShowNoteModal && SelectedDate.HasValue && CurrentUser is not null)
 {
     <div class="modal-backdrop">
@@ -77,9 +81,8 @@
             <h3 class="modal-title">
                 @SelectedDate.Value.ToString("d. MMMM yyyy", new CultureInfo("da-DK"))
             </h3>
-            
-            <textarea id="noteText"
-                      class="modal-input"
+
+            <textarea class="modal-input"
                       rows="4"
                       @bind="NewNote"
                       placeholder="Skriv note eller begivenhed her..."></textarea>
@@ -100,12 +103,14 @@
     </div>
 }
 
+<!-- Lister: tidligere/kommende begivenheder -->
 @if (PastEvents.Any() || UpcomingEvents.Any())
 {
     <div class="event-tables-wrapper">
         <!-- Tidligere begivenheder -->
         <div class="fine-table">
             <h3>🕘 Tidligere begivenheder</h3>
+
             @if (PastEvents.Any())
             {
                 <table>
@@ -119,6 +124,7 @@
                         }
                     </tr>
                     </thead>
+
                     <tbody>
                     @foreach (var evt in PastEvents)
                     {
@@ -136,6 +142,7 @@
                     }
                     </tbody>
                 </table>
+
                 @if (EventDates.Count(e => e.Key < DateTime.Today) > 3)
                 {
                     <div style="text-align: right; margin-top: 0.5rem;">
@@ -154,6 +161,7 @@
         <!-- Kommende begivenheder -->
         <div class="fine-table">
             <h3>📅 Kommende begivenheder</h3>
+
             @if (UpcomingEvents.Any())
             {
                 <table>
@@ -167,6 +175,7 @@
                         }
                     </tr>
                     </thead>
+
                     <tbody>
                     @foreach (var evt in UpcomingEvents)
                     {
@@ -184,6 +193,7 @@
                     }
                     </tbody>
                 </table>
+
                 @if (EventDates.Count(e => e.Key >= DateTime.Today) > 3)
                 {
                     <div style="text-align: right; margin-top: 0.5rem;">
@@ -208,30 +218,42 @@
                         Message="Er du sikker på at du vil slette denne begivenhed?" />
 
 @code {
+    // ------------------------------------------------------------
+    // UI state
+    // ------------------------------------------------------------
+
+    private User? CurrentUser;
+
     private DateTime? SelectedDate;
-    private DateTime dateToDelete;
     private string NewNote = "";
     private bool ShowNoteModal = false;
-    private int idToDelete; // ← nyt felt til sletning med ID
 
-    private Dictionary<DateTime, string> EventDates = new();
+    // Bekræft-slet
+    private int idToDelete;
+    private DateTime dateToDelete;
     private ConfirmDeleteComponent? confirmComponent;
 
+    // ------------------------------------------------------------
+    // Kalender data
+    // ------------------------------------------------------------
+
+    // Dato → Note (bruges i grid + tabeller)
+    private Dictionary<DateTime, string> EventDates = new();
+
+    // Liste med alle events fra API (bruges for at finde Id ved sletning)
+    private List<Core.Calendar> AllEvents = new();
+
+    // År/måned
     private int currentYear = DateTime.Today.Year;
     private int currentMonth = DateTime.Today.Month;
-    private User? CurrentUser;
+
+    // Vis alle / vis top 3 i tabeller
     private bool ShowAllPastEvents = false;
     private bool ShowAllUpcomingEvents = false;
 
-    private IEnumerable<KeyValuePair<DateTime, string>> UpcomingEvents =>
-        ShowAllUpcomingEvents
-            ? EventDates.Where(e => e.Key >= DateTime.Today).OrderBy(e => e.Key)
-            : EventDates.Where(e => e.Key >= DateTime.Today).OrderBy(e => e.Key).Take(3);
-
-    private IEnumerable<KeyValuePair<DateTime, string>> PastEvents =>
-        ShowAllPastEvents
-            ? EventDates.Where(e => e.Key < DateTime.Today).OrderByDescending(e => e.Key)
-            : EventDates.Where(e => e.Key < DateTime.Today).OrderByDescending(e => e.Key).Take(3);
+    // ------------------------------------------------------------
+    // Computed properties (visning)
+    // ------------------------------------------------------------
 
     private int CurrentYear
     {
@@ -241,7 +263,7 @@
             if (currentYear != value)
             {
                 currentYear = value;
-                _ = LoadEvents();
+                _ = LoadEvents(); // fire-and-forget: holder adfærd som nu
             }
         }
     }
@@ -254,17 +276,36 @@
             if (currentMonth != value)
             {
                 currentMonth = value;
-                _ = LoadEvents();
+                _ = LoadEvents(); // fire-and-forget: holder adfærd som nu
             }
         }
     }
 
     private int DaysInMonth => DateTime.DaysInMonth(CurrentYear, CurrentMonth);
+
+    // Mandag som første dag (da-DK)
     private int LeadingEmptyDays => ((int)new DateTime(CurrentYear, CurrentMonth, 1).DayOfWeek + 6) % 7;
+
     private string CurrentMonthName => CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(CurrentMonth);
+
     private string[] DayHeaders => new[] { "Man", "Tir", "Ons", "Tor", "Fre", "Lør", "Søn" };
+
+    // +/- 5 år tilbage, og mange år frem
     private List<int> YearRange = Enumerable.Range(DateTime.Today.Year - 5, 56).ToList();
-    private List<Core.Calendar> AllEvents = new();
+
+    private IEnumerable<KeyValuePair<DateTime, string>> UpcomingEvents =>
+        ShowAllUpcomingEvents
+            ? EventDates.Where(e => e.Key >= DateTime.Today).OrderBy(e => e.Key)
+            : EventDates.Where(e => e.Key >= DateTime.Today).OrderBy(e => e.Key).Take(3);
+
+    private IEnumerable<KeyValuePair<DateTime, string>> PastEvents =>
+        ShowAllPastEvents
+            ? EventDates.Where(e => e.Key < DateTime.Today).OrderByDescending(e => e.Key)
+            : EventDates.Where(e => e.Key < DateTime.Today).OrderByDescending(e => e.Key).Take(3);
+
+    // ------------------------------------------------------------
+    // Lifecycle
+    // ------------------------------------------------------------
 
     protected override async Task OnInitializedAsync()
     {
@@ -272,15 +313,26 @@
         await LoadEvents();
     }
 
+    // ------------------------------------------------------------
+    // Data loading
+    // ------------------------------------------------------------
+
     private async Task LoadEvents()
     {
         var allEvents = await CalendarService.GetAll();
         AllEvents = allEvents;
+
+        // OBS: Vi viser dato i lokal tid i UI.
         EventDates = allEvents
             .GroupBy(e => e.Date.ToLocalTime().Date)
             .ToDictionary(g => g.Key, g => g.First().Note);
+
         StateHasChanged();
     }
+
+    // ------------------------------------------------------------
+    // UI actions
+    // ------------------------------------------------------------
 
     private void SelectDate(DateTime date)
     {
@@ -292,30 +344,28 @@
         ShowNoteModal = true;
     }
 
-    private async Task SaveNote()
-    {
-        if (SelectedDate.HasValue)
-        {
-            var calendar = new Core.Calendar
-            {
-                Date = SelectedDate.Value.Date,
-                Note = NewNote
-            };
-
-            await CalendarService.Save(calendar);
-            await LoadEvents();
-
-            NewNote = "";
-            SelectedDate = null;
-            ShowNoteModal = false;
-        }
-    }
-
     private void CloseModal()
     {
         SelectedDate = null;
         NewNote = "";
         ShowNoteModal = false;
+    }
+
+    private async Task SaveNote()
+    {
+        if (!SelectedDate.HasValue)
+            return;
+
+        var calendar = new Core.Calendar
+        {
+            Date = SelectedDate.Value.Date,
+            Note = NewNote
+        };
+
+        await CalendarService.Save(calendar);
+        await LoadEvents();
+
+        CloseModal();
     }
 
     private async Task PreviousMonth()
@@ -329,6 +379,7 @@
         {
             CurrentMonth--;
         }
+
         await LoadEvents();
     }
 
@@ -343,53 +394,54 @@
         {
             CurrentMonth++;
         }
+
         await LoadEvents();
     }
 
-    private void EditEvent(DateTime date)
-    {
-        SelectDate(date);
-    }
+    private void EditEvent(DateTime date) => SelectDate(date);
+
+    // ------------------------------------------------------------
+    // Sletning (via ConfirmDeleteComponent)
+    // ------------------------------------------------------------
 
     private void RequestDelete(DateTime date)
     {
-        // Find det matchende kalender-event (du skal gemme en liste over events)
+        // Find matchende event, så vi kan slette via Id
         var calendar = AllEvents.FirstOrDefault(e => e.Date.Date == date.Date);
-        if (calendar != null)
-        {
-            idToDelete = calendar.Id;
-            dateToDelete = calendar.Date;
-            confirmComponent?.Show();
-        }
+        if (calendar is null)
+            return;
+
+        idToDelete = calendar.Id;
+        dateToDelete = calendar.Date;
+
+        confirmComponent?.Show();
     }
 
     private async Task DeleteConfirmed()
     {
         await CalendarService.Delete(idToDelete);
+
+        // Fjern fra lokalt cache (og refresh bagefter)
         EventDates.Remove(dateToDelete);
 
         if (SelectedDate == dateToDelete)
         {
-            SelectedDate = null;
-            NewNote = "";
-            ShowNoteModal = false;
+            CloseModal();
         }
 
-        await LoadEvents(); // ← vigtigt at hente data igen
+        await LoadEvents();
     }
 
     private void CancelDelete()
     {
         dateToDelete = default;
     }
-    
-    private void ToggleShowAllPastEvents()
-    {
-        ShowAllPastEvents = !ShowAllPastEvents;
-    }
-    
-    private void ToggleShowAllUpcomingEvents()
-    {
-        ShowAllUpcomingEvents = !ShowAllUpcomingEvents;
-    }
+
+    // ------------------------------------------------------------
+    // Vis alle / vis færre i tabeller
+    // ------------------------------------------------------------
+
+    private void ToggleShowAllPastEvents() => ShowAllPastEvents = !ShowAllPastEvents;
+
+    private void ToggleShowAllUpcomingEvents() => ShowAllUpcomingEvents = !ShowAllUpcomingEvents;
 }

@@ -1,25 +1,27 @@
 using Core;
 using Microsoft.AspNetCore.Mvc;
 using ServerAPI.Repositories.Calendars;
-using System.Net;
-using System.Net.Mail;
-using ServerAPI.Repositories;
 
+namespace WebAPI.Controllers;
+
+/// <summary>
+/// API-controller for kalender-events.
+/// Controlleren er bevidst "tynd":
+/// - Ingen mail-logik her (det ligger i MailReminderWorker)
+/// - Ingen database-specifik logik her (det ligger i repository)
+/// </summary>
 [ApiController]
 [Route("api/[controller]")]
 public class CalendarController : ControllerBase
 {
     private readonly ICalendarRepository _repo;
-    private readonly IUserRepository _users;
-    private readonly IConfiguration _config;
 
-    public CalendarController(ICalendarRepository repo, IUserRepository users, IConfiguration config)
+    public CalendarController(ICalendarRepository repo)
     {
         _repo = repo;
-        _users = users;
-        _config = config;
     }
 
+    /// <summary>Henter alle kalender-events.</summary>
     [HttpGet]
     public async Task<ActionResult<List<Calendar>>> GetAll()
     {
@@ -27,6 +29,10 @@ public class CalendarController : ControllerBase
         return Ok(items);
     }
 
+    /// <summary>
+    /// Gemmer et event (opret/ret).
+    /// Repository håndterer selv om det er add/update.
+    /// </summary>
     [HttpPost]
     public async Task<IActionResult> Save(Calendar calendar)
     {
@@ -34,6 +40,7 @@ public class CalendarController : ControllerBase
         return Ok();
     }
 
+    /// <summary>Sletter et event ud fra id.</summary>
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)
     {
