@@ -55,11 +55,20 @@ public class FineServiceMock : IFineService
     }
 
     /// <inheritdoc />
-    public Task<PagedResult<Fine>> GetPaged(int page, int pageSize, int? userId = null)
+    public Task<PagedResult<Fine>> GetPaged(
+        int page, int pageSize, int? userId = null,
+        string? searchTerm = null, DateTime? fromDate = null, DateTime? toDate = null,
+        decimal? minAmount = null, decimal? maxAmount = null, bool? isPaid = null)
     {
-        // Henter en pagineret liste af bøder. Backend bestemmer total count.
         var url = $"api/fine/paged?page={page}&pageSize={pageSize}";
+
         if (userId.HasValue) url += $"&userId={userId.Value}";
+        if (!string.IsNullOrWhiteSpace(searchTerm)) url += $"&searchTerm={Uri.EscapeDataString(searchTerm)}";
+        if (fromDate.HasValue) url += $"&fromDate={Uri.EscapeDataString(fromDate.Value.ToString("O"))}";
+        if (toDate.HasValue) url += $"&toDate={Uri.EscapeDataString(toDate.Value.ToString("O"))}";
+        if (minAmount.HasValue) url += $"&minAmount={minAmount.Value}";
+        if (maxAmount.HasValue) url += $"&maxAmount={maxAmount.Value}";
+        if (isPaid.HasValue) url += $"&isPaid={isPaid.Value.ToString().ToLowerInvariant()}";
 
         return _http.GetFromJsonAsync<PagedResult<Fine>>(url)!;
     }

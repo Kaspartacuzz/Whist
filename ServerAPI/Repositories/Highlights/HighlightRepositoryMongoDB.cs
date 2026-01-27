@@ -1,6 +1,7 @@
 using Core;
 using MongoDB.Driver;
 using MongoDB.Bson.Serialization.Attributes;
+using MongoDB.Bson;
 
 namespace ServerAPI.Repositories.Highlights;
 
@@ -59,19 +60,44 @@ public class HighlightRepositoryMongoDB : IHighlightRepository
     }
 
     /// <inheritdoc />
-    public async Task<PagedResult<Highlight>> GetPaged(int page, int pageSize)
+    public async Task<PagedResult<Highlight>> GetPaged(
+        int page,
+        int pageSize,
+        string? searchTerm = null,
+        DateTime? fromDate = null,
+        DateTime? toDate = null,
+        bool includePrivate = true)
     {
-        // Guard rails (samme adfærd som din nuværende kode)
         if (page < 1) page = 1;
         if (pageSize < 1) pageSize = 6;
 
         var skip = (page - 1) * pageSize;
 
-        // Total antal highlights (bruges af UI til at beregne TotalPages)
-        var totalCount = (int)await _highlights.CountDocumentsAsync(_ => true);
+        var filter = Builders<Highlight>.Filter.Empty;
 
-        // Hent page items (nyeste først)
-        var items = await _highlights.Find(_ => true)
+        // Privat-filter: hvis includePrivate=false, så fjern private FØR paging
+        if (!includePrivate)
+            filter &= Builders<Highlight>.Filter.Eq(h => h.IsPrivate, false);
+
+        // Søgning i Title/Description (case-insensitive regex)
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            var regex = new BsonRegularExpression(searchTerm, "i");
+            var titleFilter = Builders<Highlight>.Filter.Regex(h => h.Title, regex);
+            var descFilter = Builders<Highlight>.Filter.Regex(h => h.Description, regex);
+            filter &= Builders<Highlight>.Filter.Or(titleFilter, descFilter);
+        }
+
+        // Dato-interval (inklusive)
+        if (fromDate.HasValue)
+            filter &= Builders<Highlight>.Filter.Gte(h => h.Date, fromDate.Value.Date);
+
+        if (toDate.HasValue)
+            filter &= Builders<Highlight>.Filter.Lt(h => h.Date, toDate.Value.Date.AddDays(1));
+
+        var totalCount = (int)await _highlights.CountDocumentsAsync(filter);
+
+        var items = await _highlights.Find(filter)
             .SortByDescending(h => h.Date)
             .Skip(skip)
             .Limit(pageSize)

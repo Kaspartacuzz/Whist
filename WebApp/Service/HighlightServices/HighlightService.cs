@@ -72,10 +72,24 @@ public class HighlightService : IHighlightService
     // =========================
 
     /// <inheritdoc />
-    public async Task<PagedResult<Highlight>> GetPaged(int page, int pageSize = 6)
+    public async Task<PagedResult<Highlight>> GetPaged(
+        int page,
+        int pageSize = 6,
+        string? searchTerm = null,
+        DateTime? fromDate = null,
+        DateTime? toDate = null,
+        bool includePrivate = true)
     {
-        // Henter highlights pagineret (server-side).
-        var url = $"api/highlight/paged?page={page}&pageSize={pageSize}";
+        var url = $"api/highlight/paged?page={page}&pageSize={pageSize}&includePrivate={includePrivate}";
+
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+            url += $"&searchTerm={Uri.EscapeDataString(searchTerm)}";
+
+        if (fromDate.HasValue)
+            url += $"&fromDate={Uri.EscapeDataString(fromDate.Value.ToString("O"))}";
+
+        if (toDate.HasValue)
+            url += $"&toDate={Uri.EscapeDataString(toDate.Value.ToString("O"))}";
 
         return await _http.GetFromJsonAsync<PagedResult<Highlight>>(url)
                ?? new PagedResult<Highlight>(new List<Highlight>(), 0, page, pageSize);

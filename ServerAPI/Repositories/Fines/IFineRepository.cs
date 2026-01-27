@@ -36,5 +36,14 @@ public interface IFineRepository
     /// <summary>
     /// Henter bøder pagineret. Kan filtrere på userId.
     /// </summary>
-    PagedResult<Fine> GetPaged(int page, int pageSize, int? userId = null);
+    PagedResult<Fine> GetPaged(
+        int page,
+        int pageSize,
+        int? userId = null,
+        string? searchTerm = null,
+        DateTime? fromDate = null,
+        DateTime? toDate = null,
+        decimal? minAmount = null,
+        decimal? maxAmount = null,
+        bool? isPaid = null);
 }

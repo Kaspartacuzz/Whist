@@ -60,7 +60,8 @@ public class FineRepositoryMock : IFineRepository
         if (fine != null) _fines.Remove(fine);
     }
 
-    public PagedResult<Fine> GetPaged(int page, int pageSize, int? userId = null)
+    public PagedResult<Fine> GetPaged(int page, int pageSize, int? userId = null, string? searchTerm = null, DateTime? fromDate = null,
+        DateTime? toDate = null, decimal? minAmount = null, decimal? maxAmount = null, bool? isPaid = null)
     {
         throw new NotImplementedException();
     }

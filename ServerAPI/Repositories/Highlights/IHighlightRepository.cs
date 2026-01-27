@@ -39,5 +39,11 @@ public interface IHighlightRepository
     /// Henter highlights pagineret (server-side paging).
     /// page = 1 betyder første side.
     /// </summary>
-    Task<PagedResult<Highlight>> GetPaged(int page, int pageSize);
+    Task<PagedResult<Highlight>> GetPaged(
+        int page,
+        int pageSize,
+        string? searchTerm = null,
+        DateTime? fromDate = null,
+        DateTime? toDate = null,
+        bool includePrivate = true);
 }

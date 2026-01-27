@@ -130,49 +130,97 @@ public class FineRepositoryMongoDB : IFineRepository
     }
 
     /// <inheritdoc />
-    public PagedResult<Fine> GetPaged(int page, int pageSize, int? userId = null)
+    public PagedResult<Fine> GetPaged(int page, int pageSize, int? userId = null, string? searchTerm = null, DateTime? fromDate = null, DateTime? toDate = null, decimal? minAmount = null, decimal? maxAmount = null, bool? isPaid = null)
+{
+    if (page < 1) page = 1;
+    if (pageSize < 1) pageSize = 5;
+
+    var skip = (page - 1) * pageSize;
+
+    var userFilter = userId.HasValue
+        ? Builders<User>.Filter.Eq(u => u.Id, userId.Value)
+        : Builders<User>.Filter.Empty;
+
+    // 1) Hvis vi søger på navn, så find userIds der matcher (case-insensitive)
+    HashSet<int>? matchedUserIds = null;
+
+    if (!string.IsNullOrWhiteSpace(searchTerm))
     {
-        // Bemærk: disse guards var allerede i din kode.
-        if (page < 1) page = 1;
-        if (pageSize < 1) pageSize = 5;
+        var term = searchTerm.Trim().ToLowerInvariant();
 
-        var skip = (page - 1) * pageSize;
-
-        var userFilter = userId.HasValue
-            ? Builders<User>.Filter.Eq(u => u.Id, userId.Value)
-            : Builders<User>.Filter.Empty;
-
-        // ---- totalCount ----
-        // totalCount beregnes forskelligt afhængigt af om vi filtrerer på userId.
-        int totalCount;
-
-        if (userId.HasValue)
-        {
-            // For én user: hent count af fines direkte fra user-dokumentet
-            totalCount = _users.Find(userFilter)
-                .Project(u => u.Fines.Count)
-                .FirstOrDefault();
-        }
-        else
-        {
-            // For alle users: summer count af fines pr. user
-            totalCount = _users.Aggregate()
-                .Project(u => new { Count = u.Fines.Count })
-                .ToList()
-                .Sum(x => x.Count);
-        }
-
-        // ---- items (paged) ----
-        // Her bruger vi aggregation + Unwind for at kunne sortere og page på Fine-niveau.
-        var items = _users.Aggregate()
-            .Match(userFilter)
-            .Unwind<User, FineWrapper>(u => u.Fines)
-            .SortByDescending(fw => fw.Fines.Date)
-            .Skip(skip)
-            .Limit(pageSize)
-            .Project(fw => fw.Fines)
-            .ToList();
-
-        return new PagedResult<Fine>(items, totalCount, page, pageSize);
+        matchedUserIds = _users.Find(_ => true)
+            .Project(u => new { u.Id, u.NickName })
+            .ToList()
+            .Where(u => (u.NickName ?? "").ToLowerInvariant().Contains(term))
+            .Select(u => u.Id)
+            .ToHashSet();
     }
+
+    // 2) Byg fine-level filter (efter unwind)
+    var fineFilters = new List<FilterDefinition<FineWrapper>>();
+
+    // Paid filter
+    if (isPaid.HasValue)
+        fineFilters.Add(Builders<FineWrapper>.Filter.Eq(f => f.Fines.IsPaid, isPaid.Value));
+
+    // Date range (inklusive)
+    if (fromDate.HasValue)
+        fineFilters.Add(Builders<FineWrapper>.Filter.Gte(f => f.Fines.Date, fromDate.Value.Date));
+
+    if (toDate.HasValue)
+        fineFilters.Add(Builders<FineWrapper>.Filter.Lt(f => f.Fines.Date, toDate.Value.Date.AddDays(1)));
+
+    // Amount range
+    if (minAmount.HasValue)
+        fineFilters.Add(Builders<FineWrapper>.Filter.Gte(f => f.Fines.Amount, minAmount.Value));
+
+    if (maxAmount.HasValue)
+        fineFilters.Add(Builders<FineWrapper>.Filter.Lte(f => f.Fines.Amount, maxAmount.Value));
+    
+    // SearchTerm: comment contains OR userId in matchedUserIds
+    if (!string.IsNullOrWhiteSpace(searchTerm))
+    {
+        var term = searchTerm.Trim();
+
+        var commentMatch = Builders<FineWrapper>.Filter.Regex(
+            f => f.Fines.Comment,
+            new MongoDB.Bson.BsonRegularExpression(term, "i"));
+
+        var orParts = new List<FilterDefinition<FineWrapper>> { commentMatch };
+
+        if (matchedUserIds is { Count: > 0 })
+        {
+            var userIdMatch = Builders<FineWrapper>.Filter.In(f => f.Fines.UserId, matchedUserIds);
+            orParts.Add(userIdMatch);
+        }
+
+        fineFilters.Add(Builders<FineWrapper>.Filter.Or(orParts));
+    }
+
+    var fineFilter = fineFilters.Count == 0
+        ? Builders<FineWrapper>.Filter.Empty
+        : Builders<FineWrapper>.Filter.And(fineFilters);
+
+    // 3) TotalCount: count efter samme filtre
+    var totalCount = _users.Aggregate()
+        .Match(userFilter)
+        .Unwind<User, FineWrapper>(u => u.Fines)
+        .Match(fineFilter)
+        .Count()
+        .FirstOrDefault()
+        ?.Count ?? 0;
+
+    // 4) Items: match + sort + skip + limit
+    var items = _users.Aggregate()
+        .Match(userFilter)
+        .Unwind<User, FineWrapper>(u => u.Fines)
+        .Match(fineFilter)
+        .SortByDescending(fw => fw.Fines.Date)
+        .Skip(skip)
+        .Limit(pageSize)
+        .Project(fw => fw.Fines)
+        .ToList();
+
+    return new PagedResult<Fine>(items, (int)totalCount, page, pageSize);
+}
 }

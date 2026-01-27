@@ -109,34 +109,34 @@
     <div class="filter-row">
         <div class="filter-item search">
             <span class="icon-search">🔍</span>
-            <input placeholder="Søg i bøder..." @bind-value="searchTerm" @bind-value:event="oninput" />
+            <input placeholder="Søg i bøder..." @bind-value="searchTerm" @bind-value:event="oninput" @bind-value:after="OnFiltersChanged" />
         </div>
 
         <div class="filter-item date">
             <span class="icon-calendar">📅</span>
-            <input type="date" @bind-value="filterFromDate" @bind-value:event="oninput" />
+            <input type="date" @bind-value="filterFromDate" @bind-value:event="oninput" @bind-value:after="OnFiltersChanged" />
         </div>
 
         <div class="filter-item date">
             <span class="icon-calendar">📅</span>
-            <input type="date" @bind-value="filterToDate" @bind-value:event="oninput" />
+            <input type="date" @bind-value="filterToDate" @bind-value:event="oninput" @bind-value:after="OnFiltersChanged" />
         </div>
     </div>
 
     <div class="filter-row">
         <div class="filter-item amount">
             <span class="icon-money">💰</span>
-            <input type="number" placeholder="Min beløb" @bind-value="filterMinAmount" @bind-value:event="oninput" />
+            <input type="number" placeholder="Min beløb" @bind-value="filterMinAmount" @bind-value:event="oninput"  @bind-value:after="OnFiltersChanged"/>
         </div>
 
         <div class="filter-item amount">
             <span class="icon-money">💰</span>
-            <input type="number" placeholder="Max beløb" @bind-value="filterMaxAmount" @bind-value:event="oninput" />
+            <input type="number" placeholder="Max beløb" @bind-value="filterMaxAmount" @bind-value:event="oninput" @bind-value:after="OnFiltersChanged" />
         </div>
 
         <div class="filter-item dropdown">
             <label>Status:</label>
-            <select class="filter-select" @bind="filterPaidStatus">
+            <select class="filter-select" @bind="filterPaidStatus" @bind:after="OnFiltersChanged">
                 <option value="">Alle</option>
                 <option value="true">✅ Betalt</option>
                 <option value="false">❌ Ikke betalt</option>
@@ -235,6 +235,7 @@
     private decimal? filterMinAmount = null;
     private decimal? filterMaxAmount = null;
     private string? filterPaidStatus = null;
+    private async Task OnFiltersChanged() => await LoadPage(1);
 
     // -----------------------------
     // Beregnede totals (til KPI'er)
@@ -265,29 +266,10 @@
         => AllFinesForSummary.Count(f => f.UserId == userId && f.Comment == "Stjerne" && !f.IsPaid);
 
     // -----------------------------
-    // Filtreret view af current-page bøder
+    // Filtreret bøder ud fra dato
     // -----------------------------
-    private IEnumerable<Fine> FilteredFines => Fines
-        .Where(f =>
-            // Søgefelt (navn eller kommentar)
-            (string.IsNullOrWhiteSpace(searchTerm) ||
-             Users.FirstOrDefault(u => u.Id == f.UserId)?.NickName?.ToLower().Contains(searchTerm.ToLower()) == true ||
-             f.Comment.ToLower().Contains(searchTerm.ToLower()))
+    private IEnumerable<Fine> FilteredFines => Fines.OrderByDescending(f => f.Date);
 
-            // Datoer
-            && (!filterFromDate.HasValue || f.Date.Date >= filterFromDate.Value.Date)
-            && (!filterToDate.HasValue || f.Date.Date <= filterToDate.Value.Date)
-
-            // Beløb
-            && (!filterMinAmount.HasValue || f.Amount >= filterMinAmount.Value)
-            && (!filterMaxAmount.HasValue || f.Amount <= filterMaxAmount.Value)
-
-            // Betalt-status
-            && (string.IsNullOrEmpty(filterPaidStatus) ||
-                (filterPaidStatus == "true" && f.IsPaid) ||
-                (filterPaidStatus == "false" && !f.IsPaid))
-        )
-        .OrderByDescending(f => f.Date);
 
     // -----------------------------
     // Lifecycle
@@ -406,7 +388,17 @@
         CurrentPage = page < 1 ? 1 : page;
 
         // Bemærk: din GetPaged endpoint server-side pager data (godt!)
-        var result = await FineService.GetPaged(CurrentPage, PageSize);
+        var result = await FineService.GetPaged(
+            CurrentPage,
+            PageSize,
+            userId: null, // behold null hvis du viser alle;
+            searchTerm: searchTerm,
+            fromDate: filterFromDate,
+            toDate: filterToDate,
+            minAmount: filterMinAmount,
+            maxAmount: filterMaxAmount,
+            isPaid: ParsePaidStatus());
+
         Fines = result.Items.ToList();
         TotalCount = result.TotalCount;
 
@@ -431,5 +423,14 @@
     private async Task LoadSummary()
     {
         AllFinesForSummary = (await FineService.GetAll()).ToList();
+    }
+    
+    // Filtrere status på om en bøde er betalt
+    private bool? ParsePaidStatus()
+    {
+        if (string.IsNullOrWhiteSpace(filterPaidStatus))
+            return null;
+        
+        return filterPaidStatus == "true";
     }
 }

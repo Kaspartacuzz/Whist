@@ -39,17 +39,18 @@
         <span class="icon-search">🔍</span>
         <input placeholder="Søg i highlights..."
                @bind="searchTerm"
-               @bind:event="oninput" />
+               @bind:event="oninput" 
+               @bind:after="OnFiltersChanged" />
     </div>
 
     <div class="filter-item">
         <span class="icon-calendar">📅</span>
-        <input type="date" @bind="filterFrom" />
+        <input type="date" @bind="filterFrom"  @bind:after="OnFiltersChanged" />
     </div>
 
     <div class="filter-item">
         <span class="icon-calendar">📅</span>
-        <input type="date" @bind="filterTo" />
+        <input type="date" @bind="filterTo" @bind:after="OnFiltersChanged" />
     </div>
 </div>
 
@@ -147,6 +148,7 @@
     private const int PageSize = 6;
     private int TotalCount = 0;
     private int TotalPages => (int)Math.Ceiling((double)TotalCount / PageSize);
+    private async Task OnFiltersChanged() => await LoadPage(1);
 
     // Modal (billede i stor størrelse)
     private string? ExpandedImageUrl;
@@ -261,12 +263,20 @@
     {
         CurrentPage = page < 1 ? 1 : page;
 
-        var result = await HighlightService.GetPaged(CurrentPage, PageSize);
+        var result = await HighlightService.GetPaged(
+            CurrentPage,
+            PageSize,
+            searchTerm,
+            filterFrom,
+            filterTo,
+            includePrivate: CurrentUser is not null);
+
         Highlights = result.Items.ToList();
         TotalCount = result.TotalCount;
 
         StateHasChanged();
     }
+
 
     // ----------------------------
     // Helpers

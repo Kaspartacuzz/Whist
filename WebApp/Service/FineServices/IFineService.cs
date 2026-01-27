@@ -37,5 +37,14 @@ public interface IFineService
     /// Henter bøder pagineret fra backend.
     /// page = 1 betyder første side.
     /// </summary>
-    Task<PagedResult<Fine>> GetPaged(int page, int pageSize, int? userId = null);
+    Task<PagedResult<Fine>> GetPaged(
+        int page,
+        int pageSize,
+        int? userId = null,
+        string? searchTerm = null,
+        DateTime? fromDate = null,
+        DateTime? toDate = null,
+        decimal? minAmount = null,
+        decimal? maxAmount = null,
+        bool? isPaid = null);
 }

@@ -39,5 +39,12 @@ public interface IHighlightService
     /// Henter highlights pagineret fra backend (server-side paging).
     /// Standard pageSize = 6 for at passe til grid'et.
     /// </summary>
-    Task<PagedResult<Highlight>> GetPaged(int page, int pageSize = 6);
+    Task<PagedResult<Highlight>> GetPaged(
+        int page,
+        int pageSize = 6,
+        string? searchTerm = null,
+        DateTime? fromDate = null,
+        DateTime? toDate = null,
+        bool includePrivate = true);
+
 }

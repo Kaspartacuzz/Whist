@@ -59,9 +59,13 @@ public class HighlightController : ControllerBase
     [HttpGet("paged")]
     public async Task<ActionResult<PagedResult<Highlight>>> GetPaged(
         [FromQuery] int page = 1,
-        [FromQuery] int pageSize = 6)
+        [FromQuery] int pageSize = 6,
+        [FromQuery] string? searchTerm = null,
+        [FromQuery] DateTime? fromDate = null,
+        [FromQuery] DateTime? toDate = null,
+        [FromQuery] bool includePrivate = true)
     {
-        var result = await _repository.GetPaged(page, pageSize);
+        var result = await _repository.GetPaged(page, pageSize, searchTerm, fromDate, toDate, includePrivate);
         return Ok(result);
     }
 

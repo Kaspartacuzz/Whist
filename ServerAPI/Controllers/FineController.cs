@@ -53,13 +53,18 @@ public class FineController : ControllerBase
     public ActionResult<PagedResult<Fine>> GetPaged(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 10,
-        [FromQuery] int? userId = null)
+        [FromQuery] int? userId = null,
+        [FromQuery] string? searchTerm = null,
+        [FromQuery] DateTime? fromDate = null,
+        [FromQuery] DateTime? toDate = null,
+        [FromQuery] decimal? minAmount = null,
+        [FromQuery] decimal? maxAmount = null,
+        [FromQuery] bool? isPaid = null)
     {
-        // NOTE: Dette er allerede i din kode – jeg bevarer det uændret.
         page = Math.Max(1, page);
         pageSize = Math.Clamp(pageSize, 1, 100);
 
-        var result = _fineRepository.GetPaged(page, pageSize, userId);
+        var result = _fineRepository.GetPaged(page, pageSize, userId, searchTerm, fromDate, toDate, minAmount, maxAmount, isPaid);
         return Ok(result);
     }
 

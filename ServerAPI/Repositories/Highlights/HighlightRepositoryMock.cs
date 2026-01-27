@@ -44,7 +44,8 @@ public class HighlightRepositoryMock : IHighlightRepository
         return Task.CompletedTask;
     }
 
-    public Task<PagedResult<Highlight>> GetPaged(int page, int pageSize)
+    public Task<PagedResult<Highlight>> GetPaged(int page, int pageSize, string? searchTerm = null, DateTime? fromDate = null, DateTime? toDate = null,
+        bool includePrivate = true)
     {
         throw new NotImplementedException();
     }
