@@ -1,11 +1,22 @@
+using System.Net.Http.Json;
 using Blazored.LocalStorage;
 using Core;
-using System.Net.Http.Json;
 
 namespace WebApp.Service.AuthServices;
 
+/// <summary>
+/// Simpel auth-service til frontend.
+/// 
+/// Nuværende adfærd (bevidst bevaret):
+/// - Henter alle users fra API og matcher email+password i browseren.
+/// - Gemmer den fundne bruger i localStorage som "currentUser".
+/// 
+/// OBS: Sikkerhed kan strammes senere (server-side auth + hashing + tokens).
+/// </summary>
 public class AuthService : IAuthService
 {
+    private const string CurrentUserStorageKey = "currentUser";
+
     private readonly HttpClient _http;
     private readonly ILocalStorageService _localStorage;
 
@@ -17,25 +28,27 @@ public class AuthService : IAuthService
 
     public async Task<bool> Login(string email, string password)
     {
-        var users = await _http.GetFromJsonAsync<User[]>("api/user");
-        var user = users?.FirstOrDefault(u => u.Email == email && u.Password == password);
+        // Bevar logik: hent alle brugere og find match
+        var users = await _http.GetFromJsonAsync<User[]>("api/user") ?? Array.Empty<User>();
 
-        if (user != null)
-        {
-            await _localStorage.SetItemAsync("currentUser", user);
-            return true;
-        }
+        var user = users.FirstOrDefault(u =>
+            string.Equals(u.Email, email, StringComparison.OrdinalIgnoreCase) &&
+            u.Password == password);
 
-        return false;
+        if (user is null)
+            return false;
+
+        await _localStorage.SetItemAsync(CurrentUserStorageKey, user);
+        return true;
     }
 
     public async Task Logout()
     {
-        await _localStorage.RemoveItemAsync("currentUser");
+        await _localStorage.RemoveItemAsync(CurrentUserStorageKey);
     }
 
     public async Task<User?> GetCurrentUser()
     {
-        return await _localStorage.GetItemAsync<User>("currentUser");
+        return await _localStorage.GetItemAsync<User>(CurrentUserStorageKey);
     }
 }

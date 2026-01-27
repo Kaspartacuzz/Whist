@@ -2,21 +2,31 @@
 @inject IAuthService AuthService
 @inject NavigationManager Navigation
 
+@* Vises kun når "show" er true *@
 @if (show)
 {
-    <div class="modal-overlay">
-        <div class="modal-box login-modal">
+    <div class="modal-overlay" @onclick="OnBackdropClick">
+        @* Stop klik i selve boksen fra at lukke modal *@
+        <div class="modal-box" @onclick:stopPropagation="true">
             <h3>Log ind</h3>
 
-            <input type="email" placeholder="Email" @bind="email" />
-            <input type="password" placeholder="Adgangskode" @bind="password" />
+            @* oninput = opdaterer state mens man skriver *@
+            <input type="email"
+                   placeholder="Email"
+                   @bind-value="email"
+                   @bind-value:event="oninput" />
+
+            <input type="password"
+                   placeholder="Adgangskode"
+                   @bind-value="password"
+                   @bind-value:event="oninput" />
 
             <div class="modal-actions">
                 <button class="primary" @onclick="Login">Log ind</button>
                 <button class="secondary" @onclick="Hide">Annuller</button>
             </div>
 
-            @if (!string.IsNullOrEmpty(errorMessage))
+            @if (!string.IsNullOrWhiteSpace(errorMessage))
             {
                 <p class="error-message">@errorMessage</p>
             }
@@ -25,37 +35,59 @@
 }
 
 @code {
-    private bool show = false;
+    // UI-state
+    private bool show;
     private string email = "";
     private string password = "";
     private string errorMessage = "";
 
+    // Parent kan hooke på "login success" (typisk til at opdatere NavMenu state)
     [Parameter] public EventCallback OnLoginSuccess { get; set; }
 
+    /// <summary>
+    /// Vises udefra (fx via @ref i NavMenu).
+    /// </summary>
     public void Show()
     {
         show = true;
-        StateHasChanged();
+        errorMessage = "";
+        StateHasChanged(); // vigtigt når kaldet kommer udefra
     }
 
+    /// <summary>
+    /// Lukker modal og nulstiller felter.
+    /// </summary>
     public void Hide()
     {
         show = false;
-        email = password = errorMessage = "";
+        email = "";
+        password = "";
+        errorMessage = "";
+        StateHasChanged(); // sikrer at UI opdaterer med det samme når man lukker
+    }
+
+    private void OnBackdropClick()
+    {
+        // Klik udenfor boksen lukker modal (valgfrit, men lækkert UX)
+        Hide();
     }
 
     private async Task Login()
     {
+        errorMessage = "";
+
         var success = await AuthService.Login(email, password);
+
         if (success)
         {
+            // Navigér + giv besked til parent om at login lykkedes
             Navigation.NavigateTo("/");
             await OnLoginSuccess.InvokeAsync();
             Hide();
+            return;
         }
-        else
-        {
-            errorMessage = "Forkert email eller adgangskode";
-        }
+
+        errorMessage = "Forkert email eller adgangskode";
+        StateHasChanged(); // sørg for fejltekst kommer frem med det samme
     }
 }

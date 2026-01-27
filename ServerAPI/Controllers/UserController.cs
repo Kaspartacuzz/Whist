@@ -4,78 +4,127 @@ using ServerAPI.Repositories;
 
 namespace ServerAPI.Controllers;
 
+/// <summary>
+/// API-controller for brugere.
+/// 
+/// Ansvar:
+/// - Eksponere endpoints til UI'et
+/// - Holde controller "tynd": input-validering + kald til repository
+/// 
+/// Bemærk:
+/// - Billed-sletning ligger her, fordi den bruger WebRoot + Request.Host.
+/// </summary>
 [ApiController]
 [Route("api/[controller]")]
 public class UserController : ControllerBase
 {
-    // Dependency Injection: vi får et IUserRepository-objekt udefra
-    // og gemmer det i en privat variabel, så vi kan bruge det i controllerens metoder
-    private readonly IUserRepository _userRepository;
+    private readonly IUserRepository _repo;
     private readonly IWebHostEnvironment _env;
 
-    public UserController(IUserRepository userRepository, IWebHostEnvironment env)
+    public UserController(IUserRepository repo, IWebHostEnvironment env)
     {
-        _userRepository = userRepository;
+        _repo = repo;
         _env = env;
     }
 
-    
-    [HttpGet]
-    // Returnerer en liste med brugere hentet fra Userrepository
-    public User[] GetAll()
-    {
-        return _userRepository.GetAll(); // Kalder Userrepositoryets GetAll-metode
-    }
-    
-    [HttpGet("{id}")]
-    // Returnerer én bruger baseret på det angivne ID
-    public User? GetById(int id)
-    {
-        return _userRepository.GetById(id); // Kalder Userrepositoryets GetById-metode
-    }
-    
-    [HttpPost]
-    // Tilføjer en ny bruger til listen i UserRepository
-    public void Add(User user)
-    {
-        _userRepository.AddUser(user); // Kalder Userrepositoryets Add-metode
-    }
-    
-    [HttpDelete("{id}")]
-    public void Delete(int id)
-    {
-        var user = _userRepository.GetById(id);
-    
-        if (user is not null && !string.IsNullOrEmpty(user.ImageUrl))
-        {
-            try
-            {
-                var relativePath = user.ImageUrl.Replace($"{Request.Scheme}://{Request.Host}", "");
-                var fullPath = Path.Combine(_env.WebRootPath, relativePath.TrimStart('/'));
+    // =========================
+    // READ
+    // =========================
 
-                if (System.IO.File.Exists(fullPath))
-                    System.IO.File.Delete(fullPath);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"⚠️ Kunne ikke slette profilbillede: {ex.Message}");
-            }
+    /// <summary>
+    /// Henter alle brugere.
+    /// </summary>
+    [HttpGet]
+    public ActionResult<User[]> GetAll()
+    {
+        return Ok(_repo.GetAll());
+    }
+
+    /// <summary>
+    /// Henter en bruger på id.
+    /// </summary>
+    [HttpGet("{id:int}")]
+    public ActionResult<User?> GetById(int id)
+    {
+        var user = _repo.GetById(id);
+        return user is null ? NotFound() : Ok(user);
+    }
+
+    // =========================
+    // WRITE
+    // =========================
+
+    /// <summary>
+    /// Opretter en ny bruger.
+    /// </summary>
+    [HttpPost]
+    public IActionResult Add([FromBody] User user)
+    {
+        _repo.AddUser(user);
+        return Ok();
+    }
+
+    /// <summary>
+    /// Sletter en bruger og forsøger samtidig at slette profilbilledet fra wwwroot,
+    /// hvis brugeren har ImageUrl sat.
+    /// </summary>
+    [HttpDelete("{id:int}")]
+    public IActionResult Delete(int id)
+    {
+        var user = _repo.GetById(id);
+
+        // Best-effort: slet profilbillede hvis det findes
+        if (user is not null && !string.IsNullOrWhiteSpace(user.ImageUrl))
+        {
+            TryDeleteProfileImage(user.ImageUrl);
         }
 
-        _userRepository.Delete(id);
+        _repo.Delete(id);
+        return Ok();
     }
 
-    [HttpPut("{id}")]
+    /// <summary>
+    /// Opdaterer en bruger.
+    /// Returnerer 400 hvis id i URL ikke matcher body.Id.
+    /// </summary>
+    [HttpPut("{id:int}")]
     public async Task<IActionResult> UpdateUser(int id, [FromBody] User updatedUser)
     {
         if (id != updatedUser.Id)
-            return BadRequest("ID i URL og body matcher ikke");
+            return BadRequest("ID i URL og body matcher ikke.");
 
-        var existingUser = _userRepository.GetById(id);
-        if (existingUser == null)
-            return NotFound("Bruger ikke fundet");
+        var existingUser = _repo.GetById(id);
+        if (existingUser is null)
+            return NotFound("Bruger ikke fundet.");
 
-        await _userRepository.UpdateUser(updatedUser);
+        await _repo.UpdateUser(updatedUser);
         return NoContent();
+    }
+
+    // =========================
+    // Helpers
+    // =========================
+
+    /// <summary>
+    /// Forsøger at slette billedefilen ud fra ImageUrl.
+    /// Metoden er "best effort": fejl må ikke stoppe sletning af brugeren.
+    /// </summary>
+    private void TryDeleteProfileImage(string imageUrl)
+    {
+        try
+        {
+            // imageUrl er typisk en fuld URL: https://host/.../uploads/xyz.jpg
+            // Vi konverterer til relativ path, så vi kan finde filen i wwwroot.
+            var relativePath = imageUrl.Replace($"{Request.Scheme}://{Request.Host}", "");
+            var fullPath = Path.Combine(_env.WebRootPath, relativePath.TrimStart('/'));
+
+            if (System.IO.File.Exists(fullPath))
+                System.IO.File.Delete(fullPath);
+        }
+        catch (Exception ex)
+        {
+            // Best-effort: log til console (kan senere skiftes til ILogger)
+            Console.WriteLine($"⚠️ Kunne ikke slette profilbillede: {ex.Message}");
+        }
     }
 }

@@ -2,12 +2,24 @@ using Core;
 
 namespace WebApp.Service;
 
-    // Interface til UserService – definerer hvilke metoder der kan kaldes fra Razor-komponenter
+/// <summary>
+/// Kontrakt for frontend service til brugere.
+/// UI-laget bruger denne til at hente/rette/slette medlemmer.
+/// </summary>
 public interface IUserService
 {
-    Task<User[]> GetAll();            // Henter alle brugere
-    Task<User?> GetById(int id);      // Henter én bruger baseret på ID
-    Task AddUser(User user);              // Tilføjer en ny bruger
-    Task Delete(int id);              // Sletter en bruger baseret på ID
-    Task Update (User user);
+    /// <summary>Henter alle brugere.</summary>
+    Task<User[]> GetAll();
+
+    /// <summary>Henter én bruger ud fra id.</summary>
+    Task<User?> GetById(int id);
+
+    /// <summary>Opretter en ny bruger.</summary>
+    Task AddUser(User user);
+
+    /// <summary>Sletter en bruger ud fra id.</summary>
+    Task Delete(int id);
+
+    /// <summary>Opdaterer en eksisterende bruger.</summary>
+    Task Update(User user);
 }

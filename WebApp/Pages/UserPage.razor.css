@@ -1,3 +1,8 @@
+/* =========================================================
+   UserPage (scoped CSS)
+   Fokus: kort-layout pr. medlem + mobil responsivitet
+   ========================================================= */
+
 .top-bar {
     display: flex;
     justify-content: space-between;
@@ -5,23 +10,7 @@
     margin-bottom: 1.5rem;
 }
 
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-}
-
-body {
-    font-family: 'Segoe UI', sans-serif;
-    background-color: #f7f7f7 !important;
-    color: #333;
-}
-
-h2 {
-    text-align: center;
-    margin-bottom: 1.5rem;
-}
-
+/* Knap (samme stil som resten af projektet) */
 .btn-add {
     background-color: #6366F1;
     color: white;
@@ -36,6 +25,7 @@ h2 {
     background-color: #4829a5;
 }
 
+/* Grid med kort */
 .page-container {
     display: grid;
     grid-template-columns: repeat(2, 1fr); /* 2 kolonner på stor skærm */
@@ -43,12 +33,6 @@ h2 {
     width: 100%;
     padding: 0;
     margin: 0 auto;
-}
-
-.user-boxes {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
 }
 
 .user-card {
@@ -65,11 +49,11 @@ h2 {
     flex-wrap: wrap;
 }
 
+/* Venstre side */
 .user-left {
     width: 200px;
     max-width: 260px;
-    word-wrap: break-word;     /* Bryd lange ord */
-    overflow-wrap: break-word; /* Garanter linjeskift hvis nødvendigt */
+    overflow-wrap: break-word;
     white-space: normal;
     background-color: #f7f7f7;
     padding: 10px;
@@ -79,34 +63,7 @@ h2 {
     justify-content: flex-start;
     height: 100%;
     position: relative;
-    min-height: 350px; /* Justér om nødvendigt */
-}
-
-.user-name {
-    font-size: 0.74rem;                /* Mindre skrift */
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    text-align: center;
-    margin-bottom: 0.2rem;
-    max-width: 100%;
-}
-
-.user-contact {
-    position: absolute;
-    bottom: 20px;
-    left: 20px;
-
-    /* ✅ vigtig: lås bredden så intet kan flyde over til højre side */
-    width: calc(100% - 20px);
-
-    text-align: left;
-    font-size: 0.7rem;
-    color: #333;
-    line-height: 1.8;
-
-    /* ✅ hvis noget stadig prøver at stikke ud, så klip det */
-    overflow: hidden;
+    min-height: 350px;
 }
 
 .user-image {
@@ -118,24 +75,57 @@ h2 {
     background-color: #eee;
 }
 
+.user-name {
+    font-size: 0.74rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: center;
+    margin-bottom: 0.2rem;
+    max-width: 100%;
+}
+
+/* I din markup hedder den user-nickname (tidl. var der kun .nickname) */
+.user-nickname,
 .nickname {
     font-style: italic;
     color: #777;
     font-size: 1rem;
 }
 
-.user-contact p {
-    margin: 0.15rem 0;
-    font-size: 0.7rem;             /* Mindre skriftstørrelse */
-    overflow: hidden;               /* Skjul overskudstekst */
-    text-overflow: ellipsis;        /* Sæt ... hvis teksten er for lang */
+/* Kontaktinfo (kun synlig for loggede brugere) */
+.user-contact {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    width: calc(100% - 20px);
+    text-align: left;
+    font-size: 0.7rem;
+    color: #333;
+    line-height: 1.8;
+    overflow: hidden;
+}
+
+.contact-row {
+    display: flex;
+    gap: 6px;
+    align-items: flex-start;
+}
+
+.contact-row i {
+    flex: 0 0 auto;
+    margin-top: 2px;
+}
+
+.contact-text {
+    min-width: 0;
     max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
-.icon {
-    margin-right: 5px;
-}
-
+/* Højre side */
 .user-right {
     flex: 2;
     min-width: 0;
@@ -144,30 +134,24 @@ h2 {
 }
 
 .fun-fact {
-    background-color: #f0f3ff; /* lys lilla */
+    background-color: #f0f3ff;
     padding: 1rem 1rem;
     border-radius: 12px;
-    margin-bottom: 1.2rem;
-    margin-top: 1.5rem;
     margin: 1rem;
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    color: #2f2fcf; /* mørk lilla tekst og ikon */
+    color: #2f2fcf;
     font-size: 0.8rem;
     font-weight: 500;
     max-width: 100%;
-    word-wrap: break-word;
+    overflow-wrap: break-word;
 }
 
 .fun-fact i {
     font-size: 1.5rem;
     color: #2f2fcf;
     flex-shrink: 0;
-}
-
-.fun-fact strong {
-    font-weight: 500;
 }
 
 .user-right h4 {
@@ -180,13 +164,14 @@ h2 {
     max-width: 100%;
     padding: 1rem 1rem;
     overflow: hidden;
-    word-wrap: break-word;
+    overflow-wrap: break-word;
     white-space: normal;
     line-height: 1.5;
     font-size: 0.78rem;
     color: #333;
 }
 
+/* Actions (kun for loggede brugere) */
 .actions {
     position: absolute;
     bottom: 10px;
@@ -213,43 +198,21 @@ h2 {
     background-color: rgba(0, 0, 0, 0.05);
 }
 
-.icon-button.blue {
-    color: #4a4ae6;
-}
+.icon-button.blue { color: #4a4ae6; }
+.icon-button.red  { color: #e53935; }
 
-.icon-button.red {
-    color: #e53935;
-}
-
-.contact-row {
-    display: flex;
-    gap: 6px;
-    align-items: flex-start;
-}
-
-.contact-row i {
-    flex: 0 0 auto;
-    margin-top: 2px;
-}
-
-.contact-text {
-    min-width: 0;                 /* ✅ nødvendig i flex layouts */
-    max-width: 100%;
-    white-space: normal;          /* ✅ tillad flere linjer */
-    overflow-wrap: anywhere;      /* ✅ bryd lange emails pænt */
-    word-break: break-word;       /* fallback */
-}
-
-
+/* ------------------------------------------------------------
+   Mobil
+------------------------------------------------------------ */
 @media (max-width: 768px) {
     .page-container {
-        grid-template-columns: 1fr; /* Skift til 1 kolonne */
+        grid-template-columns: 1fr;
         gap: 1rem;
         padding: 0 1rem;
     }
 
     .user-card {
-        flex-direction: row;        /* Behold side-om-side layout */
+        flex-direction: row;
         flex-wrap: wrap;
         width: 100%;
         max-width: 100%;
@@ -257,13 +220,13 @@ h2 {
     }
 
     .user-left {
-        width: 160px;              /* Mindre venstreside */
+        width: 160px;
         min-height: 250px;
         padding: 0.7rem;
     }
 
     .user-image {
-        width: 120px;              /* Mindre billede */
+        width: 120px;
         height: 120px;
     }
 
@@ -271,6 +234,7 @@ h2 {
         font-size: 0.7rem;
     }
 
+    .user-nickname,
     .nickname {
         font-size: 0.75rem;
     }
@@ -298,17 +262,4 @@ h2 {
         font-size: 0.75rem;
         line-height: 1.4;
     }
-
-    .actions {
-        position: absolute;
-        bottom: 10px;
-        right: 10px;
-        display: flex;
-        gap: 0.5rem;
-        font-size: 1rem;
-        z-index: 2;
-        background-color: white;
-        padding-left: 0.3rem;
-    }
 }
-

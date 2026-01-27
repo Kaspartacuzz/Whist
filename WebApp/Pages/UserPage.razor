@@ -4,28 +4,28 @@
 @using WebApp.Components
 @using WebApp.Service
 @using WebApp.Service.AuthServices
-@using WebApp.Service.FineServices
+
 @inject IUserService UserService
-@inject IFineService FineService
 @inject IAuthService AuthService
 
 <div class="top-bar">
     <h2>Medlemmer</h2>
 
+    @* Kun loggede brugere må tilføje/redigere/slette *@
     @if (CurrentUser is not null)
     {
-        <button class="btn-add" @onclick="OpenAddUserModal">
-            + Tilføj medlem
-        </button>
+        <button class="btn-add" @onclick="OpenAddUserModal">+ Tilføj medlem</button>
     }
 </div>
+
+@* Modal/component til opret/redigér *@
 <AddUserComponent @ref="addUserComponent" OnUserAdded="ReloadUsers" />
 
 <div class="page-container">
     @foreach (var user in Users)
     {
         <div class="user-card">
-            <!-- Venstre kolonne: billede og info -->
+            <!-- Venstre kolonne: billede + kontaktinfo -->
             <div class="user-left">
                 @if (!string.IsNullOrEmpty(user.ImageUrl))
                 {
@@ -56,7 +56,7 @@
                 }
             </div>
 
-            <!-- Højre kolonne: beskrivelse, fun fact, knapper -->
+            <!-- Højre kolonne: fun fact + beskrivelse + actions -->
             <div class="user-right">
                 @if (!string.IsNullOrEmpty(user.FunFact))
                 {
@@ -73,43 +73,50 @@
                     <h4>Om @user.NickName</h4>
                     <p>@user.Description</p>
                 </div>
-                
-                <div class="content-footer">
-                    <div class="author">
-                    </div>
 
-                    @if (CurrentUser is not null)
-                    {
-                        <div class="actions">
-                            <button class="icon-button blue" title="Redigér" @onclick="() => EditUser(user)">✏️</button>
-                            <button class="icon-button red" title="Slet" @onclick="() => ConfirmDeleteUser(user)">🗑️</button>
-                        </div>
-                    }
-                </div>
+                @if (CurrentUser is not null)
+                {
+                    <div class="actions">
+                        <button class="icon-button blue" title="Redigér" @onclick="() => EditUser(user)">✏️</button>
+                        <button class="icon-button red" title="Slet" @onclick="() => ConfirmDeleteUser(user)">🗑️</button>
+                    </div>
+                }
             </div>
         </div>
     }
 </div>
 
+@* Bekræft sletning *@
 <ConfirmDeleteComponent @ref="confirmDeleteComponent"
                         OnConfirm="DeleteConfirmed"
                         OnCancel="CancelDelete"
                         Message="Er du sikker på at du vil slette denne bruger?" />
 
-
 @code {
+    // =========================
+    // State
+    // =========================
     private List<User> Users = new();
-    private AddUserComponent? addUserComponent;
     private User? CurrentUser;
-    private User? UserToDelete = null;
+
+    private AddUserComponent? addUserComponent;
+
+    // Slet-flow
+    private User? UserToDelete;
     private ConfirmDeleteComponent? confirmDeleteComponent;
 
+    // =========================
+    // Lifecycle
+    // =========================
     protected override async Task OnInitializedAsync()
     {
         CurrentUser = await AuthService.GetCurrentUser();
         await LoadUsers();
     }
 
+    // =========================
+    // Data
+    // =========================
     private async Task LoadUsers()
     {
         Users = (await UserService.GetAll()).ToList();
@@ -118,20 +125,24 @@
     private async Task ReloadUsers()
     {
         await LoadUsers();
-        StateHasChanged();
+        await InvokeAsync(StateHasChanged);
     }
 
+    // =========================
+    // UI actions
+    // =========================
     private void OpenAddUserModal()
-    {
-        addUserComponent?.Show();
-    }
-    
+        => addUserComponent?.Show();
+
     private async Task EditUser(User user)
     {
         if (addUserComponent is not null)
             await addUserComponent.Show(user);
     }
 
+    // =========================
+    // Delete flow
+    // =========================
     private void ConfirmDeleteUser(User user)
     {
         UserToDelete = user;
@@ -140,16 +151,14 @@
 
     private async Task DeleteConfirmed()
     {
-        if (UserToDelete is not null)
-        {
-            await UserService.Delete(UserToDelete.Id);
-            UserToDelete = null;
-            await ReloadUsers();
-        }
+        if (UserToDelete is null) return;
+
+        await UserService.Delete(UserToDelete.Id);
+        UserToDelete = null;
+
+        await ReloadUsers();
     }
 
     private void CancelDelete()
-    {
-        UserToDelete = null;
-    }
+        => UserToDelete = null;
 }
