@@ -4,6 +4,12 @@ using ServerAPI.Repositories.Points;
 
 namespace WebAPI.Controllers;
 
+/// <summary>
+/// API-controller for Whist points.
+/// Ansvar:
+/// - Eksponere simple endpoints til UI'et (WhistSchemePage)
+/// - Holde controller "tynd": ingen forretningslogik her
+/// </summary>
 [ApiController]
 [Route("api/[controller]")]
 public class PointController : ControllerBase
@@ -15,6 +21,14 @@ public class PointController : ControllerBase
         _repository = repository;
     }
 
+    // =========================
+    // READ
+    // =========================
+
+    /// <summary>
+    /// Henter alle point entries.
+    /// UI bruger dette til at beregne totals pr. spiller.
+    /// </summary>
     [HttpGet]
     public async Task<ActionResult<List<PointEntry>>> GetAll()
     {
@@ -22,6 +36,13 @@ public class PointController : ControllerBase
         return Ok(points);
     }
 
+    // =========================
+    // WRITE
+    // =========================
+
+    /// <summary>
+    /// Tilføjer en ny point entry.
+    /// </summary>
     [HttpPost]
     public async Task<ActionResult> Add(PointEntry point)
     {
@@ -29,6 +50,9 @@ public class PointController : ControllerBase
         return Ok();
     }
 
+    /// <summary>
+    /// Sletter en enkelt point entry ud fra id.
+    /// </summary>
     [HttpDelete("{id}")]
     public async Task<ActionResult> Delete(int id)
     {
@@ -36,6 +60,10 @@ public class PointController : ControllerBase
         return Ok();
     }
 
+    /// <summary>
+    /// Sletter alle point entries (nulstil).
+    /// Bruges når points konverteres til bøder.
+    /// </summary>
     [HttpDelete("all")]
     public async Task<ActionResult> DeleteAll()
     {

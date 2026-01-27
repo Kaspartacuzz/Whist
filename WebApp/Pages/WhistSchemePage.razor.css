@@ -15,19 +15,20 @@ td {
     text-align: center;
 }
 
-/*Header farver*/
-.cell-red{
+/* -----------------------------------------
+   Header farver
+----------------------------------------- */
+.cell-red {
     background-color: red;
 }
 
-.cell-yellow{
+.cell-yellow {
     background-color: yellow;
 }
 
-.cell-green{
+.cell-green {
     background-color: green;
 }
-
 
 .cell-empty {
     background-color: slategrey;
@@ -35,8 +36,10 @@ td {
     cursor: default;
 }
 
-/* Intensitetsniveauer */
-/* Farver med alpha-kanal */
+/* -----------------------------------------
+   Intensitetsniveauer (alpha-kanal)
+----------------------------------------- */
+/* Rød */
 .cell-red.low {
     background-color: rgba(244, 161, 161, 0.1);
 }
@@ -78,45 +81,25 @@ td {
     background-color: rgba(160, 240, 208, 1);
 }
 
-
-
-/*th farve*/
-/* Blå baggrund til meldings-kolonne */
+/* -----------------------------------------
+   th farve (blå baggrund til meldings-kolonne)
+----------------------------------------- */
 th.cell-blue.low {
-    background-color: rgba(204, 224, 247, 0.1);  /* lysest */
+    background-color: rgba(204, 224, 247, 0.1);
 }
-
 th.cell-blue.medium {
     background-color: rgba(204, 224, 247, 0.4);
 }
-
 th.cell-blue.high {
     background-color: rgba(204, 224, 247, 0.7);
 }
-
 th.cell-blue.very-high {
-    background-color: rgba(204, 224, 247, 1);    /* fuld styrke */
+    background-color: rgba(204, 224, 247, 1);
 }
 
-.point-overview-table {
-    border-collapse: collapse;
-    font-size: 18px;
-    text-align: center;
-    width: 100%;
-    /* Fjern eller justér max-width */
-    margin-top: 2rem;
-    max-width: none;
-}
-
-.point-overview th,
-.point-overview td {
-    border: 1px solid #ccc;
-    padding: 8px;
-    text-align: left;
-}
-
-
-/* Hover */
+/* -----------------------------------------
+   Hover (kun aktive celler)
+----------------------------------------- */
 .point-table td:not(.cell-empty):hover {
     outline: 2px solid black;
     cursor: pointer;
@@ -124,14 +107,94 @@ th.cell-blue.very-high {
     transition: all 0.15s ease-in-out;
 }
 
-/* Pointoversigt i samme stil som sol-meldinger */
+/* -----------------------------------------
+   Point skema (hovedtabel)
+----------------------------------------- */
+.point-table {
+    border-collapse: collapse;
+    font-size: 18px;
+    text-align: center;
+    width: 95%;
+    margin: 0 auto;
+}
+
+.point-table th,
+.point-table td {
+    width: 32px;
+    height: 28px;
+    padding: 3px;
+    font-weight: bold;
+    border: 2px solid black;
+    text-align: center;
+}
+
+/* -- Justér h3-overskriften med samme bredde/centrering -- */
+h3.whist-point-title {
+    width: 95%;
+    margin: 0 auto;
+    margin-bottom: 1rem;
+}
+
+/* -----------------------------------------
+   Under-sektion: sol-meldinger + pointoversigt
+----------------------------------------- */
+.below-tables-container {
+    width: 95%;
+    margin: 2rem auto 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 2rem;
+}
+
+.sun-scheme,
+.point-summary {
+    flex: 1 1 50%;
+    margin-bottom: 2rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.sun-scheme h4,
+.point-summary h4 {
+    margin-top: 0;
+    margin-bottom: 0.6rem;
+    font-size: 1.4rem;
+    text-align: left;
+}
+
+.top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    min-height: 30px;
+    max-height: 30px;
+}
+
+/* Tilføj bøder knap */
+.btn-add {
+    background-color: #6366F1;
+    color: white;
+    border: none;
+    border-radius: 0.5rem;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.btn-add:hover {
+    background-color: #4829a5;
+}
+
+/* -----------------------------------------
+   Pointoversigt (tabel)
+----------------------------------------- */
 .point-overview-table {
     border-collapse: collapse;
     font-size: 18px;
     text-align: center;
     width: 100%;
-    max-width: 300px;
-    margin-top: 2rem;
+    margin-top: 1rem;
+    max-width: none;
 }
 
 .point-overview-table th,
@@ -158,85 +221,9 @@ th.cell-blue.very-high {
     color: red;
 }
 
-.point-table {
-    border-collapse: collapse;
-    font-size: 18px;
-    text-align: center;
-    width: 95%; /* Lidt mindre bredde */
-    margin: 0 auto; /* Centreret */
-}
-
-.point-table th,
-.point-table td {
-    width: 32px;     /* Mindre celler */
-    height: 28px;
-    padding: 3px;
-    font-weight: bold;
-    border: 2px solid black;
-    text-align: center;
-}
-
-.below-tables-container {
-    width: 95%;
-    margin: 2rem auto 0 auto; /* Samme “95% + center” som .point-table */
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 2rem;
-}
-
-.sun-scheme,
-.point-summary {
-    flex: 1 1 50%;
-    margin-bottom: 2rem;
-    display: flex;
-    flex-direction: column;
-}
-
-.sun-scheme h4,
-.point-summary h4 {
-    margin-top: 0;
-    margin-bottom: 0.6rem;
-    font-size: 1.4rem;
-    text-align: left; /* eller center, hvis du ønsker det */
-}
-
-.point-overview-table {
-    width: 100%;
-    margin-top: 1rem;
-    max-width: none;
-}
-
-
-/* -- Justér h3-overskriften med samme bredde/centrering -- */
-h3.whist-point-title {
-    width: 95%;         /* matcher tabellernes 95% */
-    margin: 0 auto;
-    margin-bottom: 1rem; /* lidt afstand ned til tabel */
-}
-
-/* Tilføj bøder knap */
-.btn-add {
-    background-color: #6366F1;
-    color: white;
-    border: none;
-    border-radius: 0.5rem;
-    font-weight: bold;
-    cursor: pointer;
-}
-
-.btn-add:hover {
-    background-color: #4829a5;
-}
-
-.top-bar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    min-height: 30px;
-    max-height: 30px;
-}
-
+/* -----------------------------------------
+   Stjerne-knap inde i pointoversigten
+----------------------------------------- */
 .point-cell {
     position: relative;
     padding-right: 2.5rem; /* plads til stjernen */
@@ -266,25 +253,26 @@ h3.whist-point-title {
     position: absolute;
     top: -0.5rem;
     right: -0.6rem;
-    background-color: #6366F1; /* fx blå/lilla */
+    background-color: #6366F1;
     color: white;
     border-radius: 50%;
     font-size: 0.7rem;
     padding: 0.2rem 0.45rem;
 }
 
-/* Sørg for at tabellen ikke “bløder” ud af skærmen på mobil */
-/* - Enten ved at den kan scrolle vandret
-   - eller ved at skaleres let ned.*/
+/* -----------------------------------------
+   Mobil
+----------------------------------------- */
 @media (max-width: 768px) {
     .point-table {
         width: 100%;
-        /* Mindre tekst og celler, så det hele kan være på samme linje */
         font-size: 10px;
     }
+
     .below-tables-container {
-        flex-wrap: wrap; /* så de to tabeller stables, hvis de ikke kan være ved siden af hinanden */
+        flex-wrap: wrap;
     }
+
     .sun-scheme,
     .point-summary {
         flex: 1 1 100%;
@@ -292,6 +280,3 @@ h3.whist-point-title {
         align-items: flex-start;
     }
 }
-
-
-
