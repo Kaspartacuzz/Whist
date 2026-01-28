@@ -1,12 +1,36 @@
+@* =========================================================
+   PaginationComponent
+   Formål:
+   - Viser pagination-knapper til server-side paging
+   - Parent sender CurrentPage + TotalPages
+   - Når bruger klikker, kalder vi OnPageChanged(pageNumber)
+   
+   Designvalg:
+   - Viser "Forrige" og "Næste" hvis muligt
+   - Viser kun et lille vindue af sidetal (CurrentPage-1 .. CurrentPage+1)
+     så UI ikke bliver rodet ved mange sider
+   ========================================================= *@
+
 <div class="pagination">
+
+    @* "Forrige" vises kun hvis vi ikke allerede er på side 1 *@
     @if (CurrentPage > 1)
     {
-        <button type="button" @onclick="() => OnPageChanged.InvokeAsync(CurrentPage - 1)">◀️ Forrige</button>
+        <button type="button"
+                @onclick="() => OnPageChanged.InvokeAsync(CurrentPage - 1)">
+            ◀️ Forrige
+        </button>
     }
 
+    @* Sidetal: vi viser kun et lille udvalg af sider omkring den aktive side *@
     @foreach (var pageNumber in GetPageNumbers())
     {
         var isActive = pageNumber == CurrentPage;
+
+        @* Aktiv side:
+           - får class="active"
+           - disabled=true så den ikke kan klikkes igen
+           - aria-current="page" for bedre accessibility *@
         <button type="button"
                 class="@(isActive ? "active" : null)"
                 disabled="@isActive"
@@ -16,21 +40,48 @@
         </button>
     }
 
+    @* "Næste" vises kun hvis vi ikke allerede er på sidste side *@
     @if (CurrentPage < TotalPages)
     {
-        <button type="button" @onclick="() => OnPageChanged.InvokeAsync(CurrentPage + 1)">Næste ▶️</button>
+        <button type="button"
+                @onclick="() => OnPageChanged.InvokeAsync(CurrentPage + 1)">
+            Næste ▶️
+        </button>
     }
 </div>
 
 @code {
+    // =========================
+    // Input fra parent
+    // =========================
+
+    /// <summary>Den side der aktuelt vises.</summary>
     [Parameter] public int CurrentPage { get; set; }
+
+    /// <summary>Antal sider i alt (beregnes typisk i parent ud fra totalCount/pageSize).</summary>
     [Parameter] public int TotalPages { get; set; }
+
+    /// <summary>
+    /// Callback når brugeren vælger en ny side.
+    /// Parent håndterer typisk: LoadPage(pageNumber)
+    /// </summary>
     [Parameter] public EventCallback<int> OnPageChanged { get; set; }
 
+    // =========================
+    // Helper
+    // =========================
+
+    /// <summary>
+    /// Returnerer de sidetal vi vil vise i UI.
+    /// Lige nu: max 3 sider: (Current-1, Current, Current+1) begrænset til 1..TotalPages.
+    ///
+    /// Kompleksitet: O(1) (da vi altid viser højst 3 tal).
+    /// </summary>
     private IEnumerable<int> GetPageNumbers()
     {
         var start = Math.Max(1, CurrentPage - 1);
-        var end   = Math.Min(TotalPages, CurrentPage + 1);
+        var end = Math.Min(TotalPages, CurrentPage + 1);
+
         return Enumerable.Range(start, end - start + 1);
     }
 }

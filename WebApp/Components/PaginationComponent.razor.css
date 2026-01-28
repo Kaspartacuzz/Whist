@@ -1,3 +1,8 @@
+/* =========================================================
+   PaginationComponent (scoped CSS)
+   Fokus: simpel og ren pagination bar
+   ========================================================= */
+
 .pagination {
     display: flex;
     gap: 0.5rem;
@@ -13,6 +18,7 @@
     cursor: pointer;
 }
 
+/* Aktiv side: markér visuelt og fjern "klik" cue */
 .pagination button.active {
     font-weight: bold;
     background: #f3f4f6;
