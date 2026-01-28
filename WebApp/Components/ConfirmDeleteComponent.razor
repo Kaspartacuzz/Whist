@@ -1,28 +1,139 @@
+@using Microsoft.AspNetCore.Components.Web
+
+@* =========================================================
+   ConfirmDeleteComponent
+   Formål:
+   - Genbrugelig modal til "Er du sikker?" ved sletning
+   - Parent kalder Show() for at vise modalen
+   - OnConfirm / OnCancel kaldes tilbage til parent
+
+   UX:
+   - Fokus sættes automatisk på "Ja"-knappen, så Enter kan bekræfte med det samme
+   - Tastatur:
+       Enter  => Confirm
+       Escape => Cancel
+   ========================================================= *@
+
 @if (IsVisible)
 {
-    <div class="modal-overlay">
-        <div class="modal-box">
+    @* Overlay/backdrop.
+       Vi bruger @onkeydown på overlay, så tastatur virker uanset hvor fokus er. *@
+    <div class="modal-overlay"
+         tabindex="0"
+         @onkeydown="HandleKeyDown">
+
+        @* Selve modal boksen *@
+        <div class="modal-box" @onclick:stopPropagation="true">
+            @* Besked kan overrides fra parent via parameter *@
             <p>@Message</p>
+
+            @* Action knapper *@
             <div class="modal-actions">
-                <button @onclick="Confirm">Ja</button>
-                <button @onclick="Cancel">Nej</button>
+                @* "Ja" (Confirm)
+                   @ref bruges til at fokusere knappen når modalen åbner *@
+                <button @ref="ConfirmButtonRef"
+                        class="confirm-btn"
+                        @onclick="Confirm">
+                    Ja
+                </button>
+
+                @* "Nej" (Cancel) *@
+                <button class="cancel-btn"
+                        @onclick="Cancel">
+                    Nej
+                </button>
             </div>
         </div>
     </div>
 }
 
 @code {
+    // =========================
+    // Parameters (callbacks + tekst)
+    // =========================
+
+    /// <summary>Kaldes når brugeren bekræfter sletning.</summary>
     [Parameter] public EventCallback OnConfirm { get; set; }
+
+    /// <summary>Kaldes når brugeren annullerer.</summary>
     [Parameter] public EventCallback OnCancel { get; set; }
+
+    /// <summary>Tekst i modalen.</summary>
     [Parameter] public string Message { get; set; } = "Er du sikker på at du vil slette dette?";
 
+    // =========================
+    // State
+    // =========================
+
+    /// <summary>Styrer om modalen vises.</summary>
     public bool IsVisible { get; private set; } = false;
 
+    // Fokus-håndtering (så Enter virker direkte)
+    private ElementReference ConfirmButtonRef;
+    private bool _shouldFocusConfirmButton;
+
+    // =========================
+    // Public API (kaldes fra parent via @ref)
+    // =========================
+
+    /// <summary>
+    /// Viser modalen.
+    /// Fokus sættes på "Ja" efter render, så Enter bekræfter med det samme.
+    /// </summary>
     public void Show()
     {
         IsVisible = true;
+        _shouldFocusConfirmButton = true;
         StateHasChanged();
     }
+
+    // =========================
+    // Lifecycle (fokus)
+    // =========================
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        // Når modalen åbner, fokusér "Ja"-knappen én gang
+        if (IsVisible && _shouldFocusConfirmButton)
+        {
+            _shouldFocusConfirmButton = false;
+
+            try
+            {
+                await ConfirmButtonRef.FocusAsync();
+            }
+            catch
+            {
+                // Best-effort: fokus er nice-to-have, men må ikke crashe noget
+            }
+        }
+    }
+
+    // =========================
+    // Keyboard handling
+    // =========================
+
+    /// <summary>
+    /// Enter => Confirm
+    /// Escape => Cancel
+    /// </summary>
+    private async Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (!IsVisible) return;
+
+        if (e.Key == "Enter")
+        {
+            await Confirm();
+        }
+        else if (e.Key == "Escape")
+        {
+            await Cancel();
+        }
+    }
+
+    // =========================
+    // Actions
+    // =========================
 
     private async Task Confirm()
     {

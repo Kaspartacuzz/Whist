@@ -1,3 +1,8 @@
+/* =========================================================
+   SunSchemeComponent (scoped CSS)
+   Fokus: tabel-layout til "Sol" skemaet
+   ========================================================= */
+
 /* Grundlæggende tabelopsætning */
 .point-table {
     border-collapse: collapse;
@@ -32,7 +37,7 @@
     color: black;
 }
 
-/* Klikbare celler */
+/* Klikbare celler (point-kolonnen) */
 .clickable {
     cursor: pointer;
     transition: background-color 0.2s ease;

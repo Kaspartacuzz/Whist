@@ -1,10 +1,31 @@
 @using Core
 @using WebApp.Service
 @using WebApp.Service.PointServices
+
 @inject IUserService UserService
 @inject IPointService PointService
 
+@* =========================================================
+   SunSchemeComponent
+   Formål:
+   - Viser en "Sol"-tabel (melding/point/slås af)
+   - Når man klikker på en point-værdi:
+       1) Henter spillere (brugere)
+       2) Åbner SelectPlayersComponent i "Sol-mode"
+       3) Ved bekræftelse oprettes PointEntry i backend via PointService
+       4) Parent informeres via PointsChanged callback (så totals/visning kan reloades)
 
+   Bemærk:
+   - "Sol-mode" betyder: 1 vs 3 (enten 1 vinder + 3 tabere, eller 3 vindere + 1 taber)
+   - Point fordeling:
+       * Solo vinder: +3× base til solo, -base til hver af de tre
+       * Solo taber:  -3× base til solo, +base til hver af de tre
+   ========================================================= *@
+
+@* ---------------------------------------------------------
+   1) TABEL: statisk “skema” over sol-meldinger
+   - Point-kolonnen er klikbar (åbner modal)
+   --------------------------------------------------------- *@
 <table class="point-table">
     <thead>
         <tr>
@@ -13,20 +34,29 @@
             <th class="cell-red very-high">Slås af</th>
         </tr>
     </thead>
+
     <tbody>
+        @* Rækkerne er defineret i SunRows (i @code) *@
         @foreach (var row in SunRows)
         {
             <tr>
                 <td class="cell-red very-high">@row.Name</td>
+
+                @* Klik på point åbner spiller-valg (modal) *@
                 <td class="cell-red very-high clickable" @onclick="() => OnPointClick(row.Point)">
                     @row.Point
                 </td>
+
                 <td class="cell-red very-high">@row.BeatenBy</td>
             </tr>
         }
     </tbody>
 </table>
 
+@* ---------------------------------------------------------
+   2) MODAL: vælg vindere/tabere i "Sol-mode"
+   - IsSunMode=true => SelectPlayersComponent håndhæver 1v3 eller 3v1
+   --------------------------------------------------------- *@
 @if (IsModalOpen)
 {
     <SelectPlayersComponent
@@ -34,124 +64,184 @@
         Players="@Players"
         IsSunMode="true"
         OnConfirm="HandleSunSubmission"
-        OnCancel="() => IsModalOpen = false" />
+        OnCancel="CloseModal" />
 }
 
 @code {
-    [Parameter] public EventCallback PointsChanged { get; set; }
-    private bool IsModalOpen = false;
-    private int SelectedPoint;
-    private List<SelectPlayersComponent.SelectableUser> Players = new();
-    
-    private List<PointEntry> AllPoints = new();
-    private Dictionary<int, string> PlayerNames = new();
-    private Dictionary<int, int> PlayerTotals = new();
+    // =========================
+    // Callback til parent
+    // =========================
 
-    private List<SunRow> SunRows = new()
+    /// <summary>
+    /// Parent kan hooke på denne for at genindlæse point-data (fx totals/tabel).
+    /// </summary>
+    [Parameter] public EventCallback PointsChanged { get; set; }
+
+    // =========================
+    // UI-state
+    // =========================
+    private bool IsModalOpen = false;
+
+    /// <summary>Den pointværdi brugeren klikkede på i tabellen (fx 3,6,12,24).</summary>
+    private int SelectedPoint;
+
+    /// <summary>Spillerliste som sendes til SelectPlayersComponent.</summary>
+    private List<SelectPlayersComponent.SelectableUser> Players = new();
+
+    // =========================
+    // Data til tabellen
+    // =========================
+
+    /// <summary>
+    /// De faste "Sol" rækker som vises i tabellen.
+    /// </summary>
+    private readonly List<SunRow> SunRows = new()
     {
-        new() { Name = "Sol", Point = 3, BeatenBy = "9 Vip" },
-        new() { Name = "Ren Sol", Point = 6, BeatenBy = "10 Vip" },
-        new() { Name = "Bordlægger", Point = 12, BeatenBy = "11 Vip" },
-        new() { Name = "Super bordlægger", Point = 24, BeatenBy = "12 Vip" }
+        new() { Name = "Sol",               Point = 3,  BeatenBy = "9 Vip"  },
+        new() { Name = "Ren Sol",           Point = 6,  BeatenBy = "10 Vip" },
+        new() { Name = "Bordlægger",        Point = 12, BeatenBy = "11 Vip" },
+        new() { Name = "Super bordlægger",  Point = 24, BeatenBy = "12 Vip" }
     };
 
-    public class SunRow
+    /// <summary>
+    /// Lille model til at vise en række i tabellen.
+    /// </summary>
+    private sealed class SunRow
     {
-        public string Name { get; set; }
+        public string Name { get; set; } = "";
         public int Point { get; set; }
-        public string BeatenBy { get; set; }
+        public string BeatenBy { get; set; } = "";
     }
 
+    // =========================
+    // Event handlers
+    // =========================
+
+    /// <summary>
+    /// Brugeren klikker på en point-værdi:
+    /// - gemmer SelectedPoint
+    /// - henter brugerlisten (4 personer)
+    /// - åbner modal
+    /// </summary>
     private async Task OnPointClick(int point)
     {
         SelectedPoint = point;
 
+        // Hent spillere (for jer: U=4 => i praksis O(1))
         var users = await UserService.GetAll();
-        Players = users.Select(u => new SelectPlayersComponent.SelectableUser
-        {
-            Id = u.Id,
-            Nickname = u.NickName
-        }).ToList();
+
+        // Map fra User -> SelectableUser (UI-model)
+        Players = users
+            .Select(u => new SelectPlayersComponent.SelectableUser
+            {
+                Id = u.Id,
+                Nickname = u.NickName
+            })
+            .ToList();
 
         IsModalOpen = true;
+        StateHasChanged();
     }
 
-   private async Task HandleSunSubmission((List<SelectPlayersComponent.SelectableUser> winners, List<SelectPlayersComponent.SelectableUser> losers) result)
-{
-    var (winners, losers) = result;
-    var date = DateTime.UtcNow;
-
-    if (winners.Count == 1 && losers.Count == 3)
+    /// <summary>
+    /// Kaldes når SelectPlayersComponent bekræfter valg.
+    /// Opretter PointEntry records efter sol-reglerne.
+    /// </summary>
+    private async Task HandleSunSubmission(
+        (List<SelectPlayersComponent.SelectableUser> winners, List<SelectPlayersComponent.SelectableUser> losers) result)
     {
-        // Den ene er vinder → +3× base til solo, -base til hver af de tre
-        var solo = winners[0];
+        var (winners, losers) = result;
+        var date = DateTime.UtcNow;
 
-        await PointService.Add(new PointEntry
+        // Sol-mode forventer enten 1v3 eller 3v1.
+        // Vi håndterer begge scenarier eksplicit for tydelighed.
+        if (winners.Count == 1 && losers.Count == 3)
         {
-            PlayerId = solo.Id,
-            Points = SelectedPoint * 3,
-            Date = date
-        });
+            // 1 vinder (solo) + 3 tabere:
+            // solo: +3× base
+            // tabere: -1× base hver
+            var solo = winners[0];
 
-        foreach (var l in losers)
-        {
             await PointService.Add(new PointEntry
             {
-                PlayerId = l.Id,
-                Points = -SelectedPoint,
+                PlayerId = solo.Id,
+                Points = SelectedPoint * 3,
                 Date = date
             });
+
+            foreach (var l in losers)
+            {
+                await PointService.Add(new PointEntry
+                {
+                    PlayerId = l.Id,
+                    Points = -SelectedPoint,
+                    Date = date
+                });
+            }
         }
+        else if (winners.Count == 3 && losers.Count == 1)
+        {
+            // 3 vindere + 1 taber (solo taber):
+            // solo: -3× base
+            // vindere: +1× base hver
+            var solo = losers[0];
+
+            await PointService.Add(new PointEntry
+            {
+                PlayerId = solo.Id,
+                Points = -SelectedPoint * 3,
+                Date = date
+            });
+
+            foreach (var w in winners)
+            {
+                await PointService.Add(new PointEntry
+                {
+                    PlayerId = w.Id,
+                    Points = SelectedPoint,
+                    Date = date
+                });
+            }
+        }
+        else
+        {
+            // Fallback (burde i praksis ikke ske, fordi IsSunMode=true validerer 1v3/3v1)
+            foreach (var w in winners)
+            {
+                await PointService.Add(new PointEntry
+                {
+                    PlayerId = w.Id,
+                    Points = SelectedPoint,
+                    Date = date
+                });
+            }
+
+            foreach (var l in losers)
+            {
+                await PointService.Add(new PointEntry
+                {
+                    PlayerId = l.Id,
+                    Points = -SelectedPoint,
+                    Date = date
+                });
+            }
+        }
+
+        // Informér parent om at point-data bør reloades
+        if (PointsChanged.HasDelegate)
+            await PointsChanged.InvokeAsync();
+
+        // Luk modal
+        IsModalOpen = false;
+        StateHasChanged();
     }
-    else if (winners.Count == 3 && losers.Count == 1)
+
+    /// <summary>
+    /// Lukker modal (bruges af OnCancel fra SelectPlayersComponent).
+    /// </summary>
+    private void CloseModal()
     {
-        // Den ene er taber → -3× base til solo, +base til hver af de tre
-        var solo = losers[0];
-
-        await PointService.Add(new PointEntry
-        {
-            PlayerId = solo.Id,
-            Points = -SelectedPoint * 3,
-            Date = date
-        });
-
-        foreach (var w in winners)
-        {
-            await PointService.Add(new PointEntry
-            {
-                PlayerId = w.Id,
-                Points = SelectedPoint,
-                Date = date
-            });
-        }
+        IsModalOpen = false;
+        StateHasChanged();
     }
-    else
-    {
-        // Fallback (burde ikke ske i sol): almindelig fordeling
-        foreach (var w in winners)
-        {
-            await PointService.Add(new PointEntry
-            {
-                PlayerId = w.Id,
-                Points = SelectedPoint,
-                Date = date
-            });
-        }
-        foreach (var l in losers)
-        {
-            await PointService.Add(new PointEntry
-            {
-                PlayerId = l.Id,
-                Points = -SelectedPoint,
-                Date = date
-            });
-        }
-    }
-
-    // Opdatér forælderen (du har allerede koblet denne callback til LoadPoints i PointComponent)
-    if (PointsChanged.HasDelegate)
-        await PointsChanged.InvokeAsync();
-
-    IsModalOpen = false;
-}
 }
