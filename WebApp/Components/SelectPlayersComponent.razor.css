@@ -1,3 +1,8 @@
+/* =========================================================
+   SelectPlayersComponent (scoped CSS)
+   Modal styling (samme “designsystem” som dine andre modals)
+   ========================================================= */
+
 /* Modal backdrop */
 .modal-backdrop {
     position: fixed;

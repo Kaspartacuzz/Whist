@@ -1,9 +1,35 @@
 @using Core
 
+@* =========================================================
+   SelectPlayersComponent
+   Formål:
+   - Modal hvor man vælger vindere/tabere for en runde og tildeler PointValue point
+   - Understøtter 2 modes:
+       1) Normal mode (IsSunMode = false):
+          - Standard: 2 vindere / 2 tabere
+          - Alternativt: 1/3 eller 3/1 (fx ved selvmakker)
+          - "Selvmakker" kan krydses af som vinder/taber (uden Id)
+       2) Sol-mode (IsSunMode = true):
+          - Enten 1 vinder + 3 tabere, eller 1 taber + 3 vindere
+          - UI hjælper ved at auto-sætte resten når man vælger én person
+
+   Bemærk:
+   - Komponenten vises altid når den rendres (som din nuværende @if(true)).
+     I praksis er det parenten der styrer om komponenten er på siden.
+   ========================================================= *@
+
 @if (true)
 {
+    @* Backdrop: fast overlay der dækker hele skærmen *@
     <div class="modal-backdrop">
+
+        @* Modal container:
+           Indeholder titel, valg af vindere/tabere og actions *@
         <div class="modal-container">
+
+            @* Titel:
+               - Sol-mode: “Sol-melding: X point”
+               - Normal: “Tildel X point” *@
             <h3 class="modal-title">
                 @if (IsSunMode)
                 {
@@ -15,8 +41,15 @@
                 }
             </h3>
 
+            @* ---------------------------------------------------------
+               Vindere-sektion
+               - Brugeren kan markere spillere som vindere
+               - I normal mode findes også "Selvmakker"
+               --------------------------------------------------------- *@
             <div class="modal-section">
-                <label class="modal-label">@(IsSunMode ? "Vindere" : "Vindere"):</label>
+                <label class="modal-label">Vindere:</label>
+
+                @* Liste med alle spillere *@
                 @foreach (var player in Players)
                 {
                     <div>
@@ -26,6 +59,8 @@
                         @player.Nickname
                     </div>
                 }
+
+                @* Selvmakker gælder kun i normal mode *@
                 @if (!IsSunMode)
                 {
                     <div>
@@ -37,8 +72,14 @@
                 }
             </div>
 
+            @* ---------------------------------------------------------
+               Tabere-sektion
+               - Brugeren kan markere spillere som tabere
+               - I normal mode findes også "Selvmakker"
+               --------------------------------------------------------- *@
             <div class="modal-section">
-                <label class="modal-label">@(IsSunMode ? "Tabere" : "Tabere"):</label>
+                <label class="modal-label">Tabere:</label>
+
                 @foreach (var player in Players)
                 {
                     <div>
@@ -48,6 +89,7 @@
                         @player.Nickname
                     </div>
                 }
+
                 @if (!IsSunMode)
                 {
                     <div>
@@ -59,31 +101,68 @@
                 }
             </div>
 
+            @* Fejlbesked (fx forkert kombination valgt) *@
             @if (!string.IsNullOrEmpty(ErrorMessage))
             {
                 <div style="color: red; font-size: 0.9rem;">@ErrorMessage</div>
             }
 
+            @* Actions:
+               - Bekræft => validerer kombinationen og kalder OnConfirm
+               - Annuller => kalder OnCancel *@
             <div class="modal-actions">
                 <button class="modal-btn primary" @onclick="Confirm">Bekræft</button>
                 <button class="modal-btn cancel" @onclick="Close">Annuller</button>
             </div>
+
         </div>
     </div>
 }
 
 @code {
+    // =========================
+    // Parameters (input fra parent)
+    // =========================
+
+    /// <summary>Hvor mange point der tildeles i denne handling.</summary>
     [Parameter] public int PointValue { get; set; }
+
+    /// <summary>Liste af spillere der kan vælges. Parent bygger den (typisk 4 spillere).</summary>
     [Parameter] public List<SelectableUser> Players { get; set; } = new();
+
+    /// <summary>
+    /// Callback ved "Bekræft".
+    /// Returnerer de valgte vindere og tabere (som to lister).
+    /// </summary>
     [Parameter] public EventCallback<(List<SelectableUser> winners, List<SelectableUser> losers)> OnConfirm { get; set; }
+
+    /// <summary>Callback ved "Annuller".</summary>
     [Parameter] public EventCallback OnCancel { get; set; }
+
+    /// <summary>
+    /// Sol-mode ændrer reglerne for validering og auto-udfyldning.
+    /// </summary>
     [Parameter] public bool IsSunMode { get; set; } = false;
 
+    // =========================
+    // UI-state
+    // =========================
+
+    /// <summary>Fejlbesked der vises i modalen ved ugyldige valg.</summary>
     private string ErrorMessage = "";
 
+    /// <summary>Selvmakker kan markeres som vinder/taber i normal mode.</summary>
     private bool IsSelfmakkerWinner = false;
     private bool IsSelfmakkerLoser = false;
 
+    // =========================
+    // Model til UI-valg
+    // =========================
+
+    /// <summary>
+    /// Intern UI-model til at kunne markere spillere som vinder/taber.
+    /// (Parent mapper fra User → SelectableUser)
+    /// </summary>
     public class SelectableUser
     {
         public int Id { get; set; }
@@ -92,13 +171,24 @@
         public bool IsLoser { get; set; }
     }
 
+    // =========================
+    // Actions
+    // =========================
+
+    /// <summary>
+    /// Validerer kombinationen og sender (winners, losers) tilbage til parent.
+    /// </summary>
     private async Task Confirm()
     {
         var winners = Players.Where(p => p.IsWinner).ToList();
         var losers = Players.Where(p => p.IsLoser).ToList();
 
+        // --- Sol-mode validering ---
         if (IsSunMode)
         {
+            // Sol-mode accepterer kun:
+            // - 1 vinder + 3 tabere
+            // - 1 taber + 3 vindere
             if (!(winners.Count == 1 && losers.Count == 3) &&
                 !(winners.Count == 3 && losers.Count == 1))
             {
@@ -108,21 +198,23 @@
         }
         else
         {
-            // If exactly one selfmakker side is chosen, auto-assign the remaining 3 to the opposite side.
-            // This allows the flow: pick ONE player, tick selfmakker (winner or loser), then confirm.
-            if (IsSelfmakkerWinner ^ IsSelfmakkerLoser) // exactly one of them is true
+            // Normal mode:
+            // Hvis kun én af selvmakker-boksene er valgt, forsøger vi at auto-udfylde resten.
+            // Det gør det muligt at: vælge én spiller + sætte selvmakker (winner/loser) og trykke bekræft.
+
+            if (IsSelfmakkerWinner ^ IsSelfmakkerLoser) // XOR: præcis én af dem er true
             {
                 if (IsSelfmakkerWinner)
                 {
-                    // Expect exactly one winner (the selfmakker). If so, set all others as losers.
+                    // Forvent: 1 vinder valgt (selvmakker). Hvis ja, så sæt resten som tabere.
                     if (winners.Count == 1 && winners.Count + losers.Count < 4)
                     {
                         losers = Players.Where(p => !winners.Contains(p)).ToList();
                     }
                 }
-                else // IsSelfmakkerLoser
+                else
                 {
-                    // Expect exactly one loser (the selfmakker). If so, set all others as winners.
+                    // Forvent: 1 taber valgt (selvmakker). Hvis ja, så sæt resten som vindere.
                     if (losers.Count == 1 && winners.Count + losers.Count < 4)
                     {
                         winners = Players.Where(p => !losers.Contains(p)).ToList();
@@ -130,9 +222,9 @@
                 }
             }
 
-            // Final validation for normal mode:
+            // Final validering i normal mode:
             // - Standard 2v2
-            // - OR 1v3 / 3v1 (which includes the selfmakker scenarios)
+            // - Eller 1v3 / 3v1 (inkl. selvmakker-scenarier)
             if (!((winners.Count == 2 && losers.Count == 2) ||
                   (winners.Count == 1 && losers.Count == 3) ||
                   (winners.Count == 3 && losers.Count == 1)))
@@ -142,18 +234,28 @@
             }
         }
 
+        // Hvis alt er ok, send tilbage til parent
         await OnConfirm.InvokeAsync((winners, losers));
     }
 
+    /// <summary>
+    /// Lukker modalen (parent bestemmer typisk at skjule komponenten bagefter).
+    /// </summary>
     private async Task Close()
     {
         await OnCancel.InvokeAsync();
     }
 
+    // =========================
+    // Toggle helpers (UI logik)
+    // =========================
+
     private void ToggleWinner(SelectableUser selected)
     {
         if (IsSunMode)
         {
+            // Sol-mode:
+            // 1 vinder vælges -> resten markeres som tabere automatisk.
             foreach (var p in Players)
             {
                 p.IsWinner = false;
@@ -167,8 +269,13 @@
         }
         else
         {
+            // Normal mode:
+            // Man kan vælge vindere. Hvis man ender på præcis 2 vindere,
+            // sætter vi automatisk resten til tabere (2v2).
             selected.IsWinner = !selected.IsWinner;
-            IsSelfmakkerWinner = false; // reset selvmakker ved manuel valg
+
+            // Selvmakker resettes ved manuelt valg
+            IsSelfmakkerWinner = false;
 
             var winners = Players.Where(p => p.IsWinner).ToList();
 
@@ -176,10 +283,13 @@
             {
                 foreach (var p in Players)
                     p.IsLoser = !p.IsWinner;
+
                 IsSelfmakkerLoser = false;
             }
             else
             {
+                // Hvis der ikke er præcis 2 vindere, nulstiller vi tabere,
+                // så man frit kan vælge kombinationer.
                 foreach (var p in Players)
                     p.IsLoser = false;
             }
@@ -189,27 +299,34 @@
     private void ToggleLoser(SelectableUser selected)
     {
         selected.IsLoser = !selected.IsLoser;
-        IsSelfmakkerLoser = false; // reset selvmakker ved manuel valg
+
+        // Selvmakker resettes ved manuelt valg
+        IsSelfmakkerLoser = false;
 
         if (!IsSunMode)
         {
+            // Normal mode:
+            // Hvis vi har præcis 2 tabere, sættes resten til vindere (2v2).
             var losers = Players.Where(p => p.IsLoser).ToList();
 
             if (losers.Count == 2)
             {
                 foreach (var p in Players)
                     p.IsWinner = !p.IsLoser;
+
                 IsSelfmakkerWinner = false;
             }
             else
             {
+                // Ellers nulstiller vi vindere for at undgå “låst” state.
                 foreach (var p in Players)
                     p.IsWinner = false;
             }
         }
         else
         {
-            // i sol-mode: 1 taber → resten vindere
+            // Sol-mode:
+            // 1 taber -> resten vindere
             if (Players.Count(p => p.IsLoser) == 1)
             {
                 foreach (var p in Players)
@@ -225,18 +342,18 @@
 
         if (IsSelfmakkerWinner)
         {
-            // Find én anden valgt vinder
+            // Når selvmakker er vinder:
+            // Hvis der findes én "normal" valgt vinder, markeres resten som tabere.
             var selected = Players.FirstOrDefault(p => p.IsWinner);
             if (selected != null)
             {
                 foreach (var p in Players)
-                {
                     p.IsLoser = p != selected;
-                }
             }
         }
         else
         {
+            // Hvis selvmakker fravælges, nulstilles tabere igen.
             foreach (var p in Players)
                 p.IsLoser = false;
         }
@@ -249,17 +366,18 @@
 
         if (IsSelfmakkerLoser)
         {
+            // Når selvmakker er taber:
+            // Hvis der findes én "normal" valgt taber, markeres resten som vindere.
             var selected = Players.FirstOrDefault(p => p.IsLoser);
             if (selected != null)
             {
                 foreach (var p in Players)
-                {
                     p.IsWinner = p != selected;
-                }
             }
         }
         else
         {
+            // Hvis selvmakker fravælges, nulstilles vindere igen.
             foreach (var p in Players)
                 p.IsWinner = false;
         }
