@@ -2,45 +2,70 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ServerAPI.Controllers;
 
+/// <summary>
+/// Upload controller til profilbilleder.
+/// Gemmer filer i: wwwroot/uploads/{yyyy.MM.dd}/{guid}.{ext}
+/// Returnerer en offentlig URL til filen.
+/// </summary>
 [ApiController]
 [Route("api/[controller]")]
 public class UploadController : ControllerBase
 {
     private readonly IWebHostEnvironment _env;
 
+    // Tilladte filtyper til upload
+    private static readonly HashSet<string> AllowedExtensions = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ".jpg", ".jpeg", ".png", ".webp"
+    };
+
+    // Maks filstørrelse (5 MB)
+    private const long MaxFileSizeBytes = 5 * 1024 * 1024;
+
     public UploadController(IWebHostEnvironment env)
     {
         _env = env;
     }
 
+    /// <summary>
+    /// Upload af billede via multipart/form-data.
+    /// Feltet skal hedde "file".
+    /// </summary>
     [HttpPost("image")]
-    public async Task<IActionResult> UploadImage([FromForm] IFormFile file)
+    public async Task<IActionResult> UploadImage([FromForm] IFormFile file, CancellationToken ct)
     {
-        if (file == null || file.Length == 0)
+        // 1) Basis validering
+        if (file is null || file.Length == 0)
             return BadRequest("Intet billede modtaget.");
 
-        // ✅ Begræns filtyper
-        var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp" };
-        var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
-        if (!allowedExtensions.Contains(ext))
+        if (file.Length > MaxFileSizeBytes)
+            return BadRequest("Filen er for stor. Maks 5 MB tilladt.");
+
+        // 2) Valider filtype ud fra extension
+        // NOTE: Dette er ikke "virus scanning" eller fuld MIME-validering, men fint til jeres use-case.
+        var originalName = Path.GetFileName(file.FileName); // undgå evt. path traversal
+        var ext = Path.GetExtension(originalName);
+
+        if (string.IsNullOrWhiteSpace(ext) || !AllowedExtensions.Contains(ext))
             return BadRequest("Filtypen er ikke tilladt. Kun jpg, jpeg, png og webp er tilladt.");
 
-        // ✅ Begræns størrelse til f.eks. 5 MB
-        const long maxFileSize = 5 * 1024 * 1024;
-        if (file.Length > maxFileSize)
-            return BadRequest("Filen er for stor. Maks 5 MB tilladt.");
-        
-        var fileName = $"{Guid.NewGuid()}{ext}";
+        // 3) Byg upload sti (wwwroot/uploads/yyyy.MM.dd/)
+        var fileName = $"{Guid.NewGuid()}{ext.ToLowerInvariant()}";
         var folderName = DateTime.UtcNow.ToString("yyyy.MM.dd");
         var uploadPath = Path.Combine(_env.WebRootPath, "uploads", folderName);
 
-        if (!Directory.Exists(uploadPath))
-            Directory.CreateDirectory(uploadPath);
+        // Opret mappe hvis den ikke findes
+        Directory.CreateDirectory(uploadPath);
 
+        // 4) Gem filen
         var filePath = Path.Combine(uploadPath, fileName);
-        await using var stream = new FileStream(filePath, FileMode.Create);
-        await file.CopyToAsync(stream);
 
+        await using (var stream = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.None))
+        {
+            await file.CopyToAsync(stream, ct);
+        }
+
+        // 5) Returnér offentligt URL (kræver at static files er enabled i backend)
         var fileUrl = $"{Request.Scheme}://{Request.Host}/uploads/{folderName}/{fileName}";
         return Ok(new { Url = fileUrl });
     }

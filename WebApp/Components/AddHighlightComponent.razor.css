@@ -1,3 +1,8 @@
+/* =========================================================
+   AddHighlightComponent (scoped CSS)
+   Modal layout + input styling + billede-preview
+   ========================================================= */
+
 .modal-backdrop {
     position: fixed;
     top: 0; left: 0;
@@ -11,7 +16,7 @@
 }
 
 .modal-container {
-    max-height: 90vh;            
+    max-height: 90vh;
     overflow-y: auto;
     background-color: #fff;
     padding: 2rem;
@@ -59,7 +64,7 @@
 
 .modal-image-preview {
     max-width: 100%;
-    max-height: 300px;       /* Justerbar efter behov */
+    max-height: 300px; /* Justerbar efter behov */
     object-fit: contain;
     border-radius: 8px;
     margin-top: 0.5rem;

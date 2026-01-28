@@ -3,15 +3,23 @@
 @inject IUserService UserService
 @inject Service.FineServices.IFineService FineService
 
+@* Modal vises kun når showModal = true *@
 @if (showModal)
 {
-    <div class="modal-backdrop">
-        <div class="modal-container">
-            <h3 class="modal-title">@(FineToEdit is null ? "Opret ny bøde" : "Rediger bøde")</h3>
+    @* Klik på baggrunden lukker modal (nice UX) *@
+    <div class="modal-backdrop" @onclick="Close">
+        @* Stop klik i selve modal-boksen fra at lukke *@
+        <div class="modal-container" @onclick:stopPropagation="true">
+            <h3 class="modal-title">
+                @(FineToEdit is null ? "Opret ny bøde" : "Rediger bøde")
+            </h3>
 
+            @* Bruger-valg skal kun være muligt ved oprettelse.
+               Ved redigering ændrer man typisk ikke "hvem bøden tilhører". *@
             @if (FineToEdit is null)
             {
-                <select @bind="SelectedUserId" class="modal-input">
+                <label class="modal-label">Bruger</label>
+                <select class="modal-input" @bind="SelectedUserId">
                     <option value="0">Vælg bruger</option>
                     @foreach (var user in Users)
                     {
@@ -21,18 +29,33 @@
             }
 
             <label for="amount" class="modal-label">Beløb</label>
-            <input id="amount" type="number" class="modal-input" @bind="Amount" min="0" max="500"/>
-            <input type="text" @bind="Comment" placeholder="Kommentar" class="modal-input" maxlength="400"/>
+            <input id="amount"
+                   type="number"
+                   class="modal-input"
+                   min="0"
+                   max="500"
+                   @bind-value="Amount"
+                   @bind-value:event="oninput" />
 
+            <label class="modal-label">Kommentar</label>
+            <input type="text"
+                   class="modal-input"
+                   placeholder="Kommentar"
+                   maxlength="400"
+                   @bind-value="Comment"
+                   @bind-value:event="oninput" />
+
+            @* Fejlbesked fra validering *@
             @if (!string.IsNullOrWhiteSpace(ValidationErrorMessage))
             {
-                <div style="color: red; font-size: 0.9rem;">@ValidationErrorMessage</div>
+                <div class="validation-error">@ValidationErrorMessage</div>
             }
-            
+
             <div class="modal-actions">
                 <button class="modal-btn primary" @onclick="Submit">
                     @(FineToEdit is null ? "Tilføj bøde" : "Gem ændringer")
                 </button>
+
                 <button class="modal-btn cancel" @onclick="Close">Annuller</button>
             </div>
         </div>
@@ -40,71 +63,120 @@
 }
 
 @code {
-    private bool showModal = false;
-    private int SelectedUserId = 0;
-    private decimal Amount = 0;
-    private string Comment = "";
-    private Fine? FineToEdit = null;
-    private string ValidationErrorMessage = null;
+    // =========================
+    // State (formfelter)
+    // =========================
+    private bool showModal;
 
+    private int SelectedUserId;
+    private decimal Amount;
+    private string Comment = "";
+
+    // Hvis sat => rediger-mode. Hvis null => opret-mode.
+    private Fine? FineToEdit;
+
+    // Valideringsfejl vises i UI (bruges kun i denne komponent)
+    private string? ValidationErrorMessage;
+
+    // =========================
+    // Parameters / callbacks
+    // =========================
+
+    /// <summary>
+    /// Parent kaldes når en bøde er oprettet/ændret, så listen kan genindlæses.
+    /// </summary>
     [Parameter] public EventCallback OnFineAdded { get; set; }
+
+    /// <summary>
+    /// Liste af brugere til dropdown.
+    /// OBS: Komponenten opdaterer selv listen via LoadUsers() for at sikre “seneste” data.
+    /// </summary>
     [Parameter] public List<User> Users { get; set; } = new();
 
+    // =========================
+    // Public API (kald via @ref fra FinePage)
+    // =========================
+
+    /// <summary>
+    /// Åbner modal.
+    /// - Hvis fine != null: rediger bøde
+    /// - Hvis fine == null: opret ny bøde
+    /// </summary>
     public async Task Show(Fine? fine = null)
     {
         ValidationErrorMessage = null;
         FineToEdit = fine;
+
+        // Hent/refresh brugerlisten (så dropdown altid er up-to-date)
         await LoadUsers();
 
         if (FineToEdit is not null)
         {
-            SelectedUserId = fine.UserId;
-            Amount = fine.Amount;
-            Comment = fine.Comment;
+            // Redigering: udfyld felter
+            SelectedUserId = FineToEdit.UserId;
+            Amount = FineToEdit.Amount;
+            Comment = FineToEdit.Comment;
         }
         else
         {
+            // Oprettelse: reset felter
             SelectedUserId = 0;
             Amount = 0;
             Comment = "";
         }
 
         showModal = true;
+
+        // Vigtigt når Show() kaldes udefra via @ref
         StateHasChanged();
     }
 
+    /// <summary>
+    /// Lukker modal og nulstiller state.
+    /// </summary>
     private void Close()
     {
         showModal = false;
+
         SelectedUserId = 0;
         Amount = 0;
         Comment = "";
         FineToEdit = null;
+
+        ValidationErrorMessage = null;
     }
+
+    // =========================
+    // Submit (create/update)
+    // =========================
 
     private async Task Submit()
     {
-        // Manuelle tjek
+        ValidationErrorMessage = null;
+
+        // --- Manuelle tjek (hurtige og tydelige for brugeren) ---
         if (SelectedUserId <= 0)
         {
             ValidationErrorMessage = "Bruger er påkrævet.";
             return;
         }
-        
+
         if (Amount <= 0)
         {
             ValidationErrorMessage = "Beløbet må ikke være 0.";
             return;
         }
-        
+
         if (Amount > 500)
         {
             ValidationErrorMessage = "Beløbet må maks være på 500 kr.";
             return;
         }
 
+        // --- Gem ---
         if (FineToEdit is not null)
         {
+            // Opdater eksisterende bøde
             FineToEdit.UserId = SelectedUserId;
             FineToEdit.Amount = Amount;
             FineToEdit.Comment = Comment;
@@ -113,6 +185,7 @@
         }
         else
         {
+            // Opret ny bøde
             var fine = new Fine
             {
                 UserId = SelectedUserId,
@@ -125,10 +198,20 @@
             await FineService.Add(fine);
         }
 
+        // Fortæl parent at der er sket en ændring (reload liste)
         await OnFineAdded.InvokeAsync();
+
         Close();
     }
-    
+
+    // =========================
+    // Data
+    // =========================
+
+    /// <summary>
+    /// Henter brugere fra API.
+    /// For 4 brugere er dette helt fint (O(U) hvor U=4).
+    /// </summary>
     private async Task LoadUsers()
     {
         Users = (await UserService.GetAll()).ToList();

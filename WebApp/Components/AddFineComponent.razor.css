@@ -1,3 +1,8 @@
+/* =========================================================
+   AddFineComponent (scoped CSS)
+   Modal til opret/redigér bøde
+   ========================================================= */
+
 /* Modal backdrop */
 .modal-backdrop {
     position: fixed;
@@ -33,6 +38,14 @@
     margin-bottom: 0.5rem;
 }
 
+/* Labels */
+.modal-label {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #555;
+    margin-bottom: -0.3rem;
+}
+
 /* Modal inputs */
 .modal-input {
     padding: 0.6rem 0.8rem;
@@ -47,6 +60,12 @@
 .modal-input:focus {
     border-color: #5b3cc4;
     outline: none;
+}
+
+/* Valideringsfejl */
+.validation-error {
+    color: red;
+    font-size: 0.9rem;
 }
 
 /* Button container */
@@ -82,11 +101,4 @@
 
 .modal-btn.cancel:hover {
     background-color: #ddd;
-}
-
-.modal-label {
-    font-size: 0.95rem;
-    font-weight: 500;
-    color: #555;
-    margin-bottom: -0.3rem;
 }

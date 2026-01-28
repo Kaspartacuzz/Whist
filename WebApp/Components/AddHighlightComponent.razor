@@ -1,4 +1,5 @@
 @using Core
+@using Microsoft.AspNetCore.Components.Forms
 
 @inject Service.HighlightServices.IHighlightService HighlightService
 @inject Service.AuthServices.IAuthService AuthService
@@ -6,20 +7,34 @@
 
 @if (showModal)
 {
-    <div class="modal-backdrop">
-        <div class="modal-container">
-            <h3 class="modal-title">@(HighlightToEdit is null ? "Opret nyt highlight" : "Rediger highlight")</h3>
+    <div class="modal-backdrop" @onclick="Close">
+        @* Stop klik inde i modal fra at lukke den *@
+        <div class="modal-container" @onclick:stopPropagation="true">
+            <h3 class="modal-title">
+                @(HighlightToEdit is null ? "Opret nyt highlight" : "Rediger highlight")
+            </h3>
 
-            <input @bind="Title" placeholder="Titel" class="modal-input" maxlength="80"/>
+            @* oninput giver live-opdatering mens man skriver *@
+            <input class="modal-input"
+                   placeholder="Titel"
+                   maxlength="80"
+                   @bind-value="Title"
+                   @bind-value:event="oninput" />
 
-            <textarea @bind="Description" placeholder="Beskrivelse" class="modal-textarea" maxlength="400"></textarea>
+            <textarea class="modal-textarea"
+                      placeholder="Beskrivelse"
+                      maxlength="400"
+                      @bind-value="Description"
+                      @bind-value:event="oninput"></textarea>
 
+            @* Upload billede (gemmer fil i wwwroot/uploads via UploadController og får en URL retur) *@
             <label for="file-upload" class="custom-file-label">📷 Vedhæft billede</label>
             <div class="file-input-wrapper">
                 <InputFile id="file-upload" OnChange="HandleImageUpload" accept="image/*" />
             </div>
 
-            @if (!string.IsNullOrEmpty(ImagePreview))
+            @* Preview viser URL'en (enten eksisterende billede eller nyligt uploadet) *@
+            @if (!string.IsNullOrWhiteSpace(ImagePreview))
             {
                 <img src="@ImagePreview" alt="Preview" class="modal-image-preview" />
             }
@@ -28,14 +43,21 @@
                 <input type="checkbox" @bind="IsPrivate" />
                 Gør privat (kun synlig for medlemmer)
             </label>
-            
+
+            @* Upload fejl (fx for stor fil eller server-fejl) *@
+            @if (!string.IsNullOrWhiteSpace(UploadErrorMessage))
+            {
+                <div style="color: red; font-size: 0.9rem;">@UploadErrorMessage</div>
+            }
+
+            @* Valideringsfejl (titel/beskrivelse mangler) *@
             @if (!string.IsNullOrWhiteSpace(ValidationErrorMessage))
             {
                 <div style="color: red; font-size: 0.9rem;">@ValidationErrorMessage</div>
             }
 
             <div class="modal-actions">
-                <button class="modal-btn primary" @onclick="CreateHighlight">
+                <button class="modal-btn primary" @onclick="SaveHighlightAsync">
                     @(HighlightToEdit is null ? "Opret highlight" : "Gem ændringer")
                 </button>
                 <button class="modal-btn cancel" @onclick="Close">Annuller</button>
@@ -45,50 +67,102 @@
 }
 
 @code {
-    private bool showModal = false;
+    // =========================
+    // Modal state + formfelter
+    // =========================
+    private bool showModal;
+
     private string Title = "";
     private string Description = "";
-    private IBrowserFile? UploadedImage;
-    private string? ImagePreview;
-    private bool IsPrivate = false;
-    private string? UploadErrorMessage = null;
-    private string? ValidationErrorMessage = null;
 
+    private bool IsPrivate;
+
+    // Upload state
+    private IBrowserFile? UploadedImage;
+    private string? ImagePreview;               // URL til billede (fra UploadService)
+    private string? UploadErrorMessage;
+
+    // Validering
+    private string? ValidationErrorMessage;
+
+    // =========================
+    // Params / callbacks
+    // =========================
+
+    /// <summary>
+    /// Kald fra parent, når highlight er oprettet/ændret, så listen kan reloades.
+    /// </summary>
     [Parameter] public EventCallback OnHighlightAdded { get; set; }
+
+    /// <summary>
+    /// Hvis sat: modal er i "edit mode".
+    /// Hvis null: modal er i "create mode".
+    /// </summary>
     [Parameter] public Highlight? HighlightToEdit { get; set; }
 
+    // =========================
+    // Public API (kaldes via @ref fra parent)
+    // =========================
+
+    /// <summary>
+    /// Åbner modal og udfylder felter hvis det er redigering.
+    /// </summary>
     public void Show(Highlight? highlight = null)
     {
         HighlightToEdit = highlight;
+
+        // Nulstil fejlbeskeder
+        UploadErrorMessage = null;
         ValidationErrorMessage = null;
-        
+
         if (HighlightToEdit is not null)
         {
+            // Redigering: udfyld eksisterende data
             Title = HighlightToEdit.Title;
             Description = HighlightToEdit.Description;
             ImagePreview = HighlightToEdit.ImageUrl;
+
+            // Vigtigt: bevar privacy-state ved redigering
+            IsPrivate = HighlightToEdit.IsPrivate;
         }
         else
         {
+            // Opret: reset felter
             Title = "";
             Description = "";
             UploadedImage = null;
             ImagePreview = null;
+            IsPrivate = false;
         }
 
         showModal = true;
         StateHasChanged();
     }
 
+    /// <summary>
+    /// Lukker modal og rydder felter.
+    /// </summary>
     private void Close()
     {
         showModal = false;
+
         Title = "";
         Description = "";
         UploadedImage = null;
         ImagePreview = null;
+        IsPrivate = false;
+
+        UploadErrorMessage = null;
+        ValidationErrorMessage = null;
     }
 
+    // =========================
+    // Upload
+    // =========================
+
+    /// <summary>
+    /// Uploader billedet og får en offentlig URL retur (som vi gemmer i ImagePreview).
+    /// </summary>
     private async Task HandleImageUpload(InputFileChangeEventArgs e)
     {
         UploadedImage = e.File;
@@ -97,7 +171,8 @@
         try
         {
             var resultUrl = await UploadService.UploadImageAsync(UploadedImage);
-            if (!string.IsNullOrEmpty(resultUrl))
+
+            if (!string.IsNullOrWhiteSpace(resultUrl))
             {
                 ImagePreview = resultUrl;
             }
@@ -110,22 +185,36 @@
         {
             UploadErrorMessage = "Fejl under upload: " + ex.Message;
         }
+
+        await InvokeAsync(StateHasChanged);
     }
 
-    private async Task CreateHighlight()
+    // =========================
+    // Save (create/update)
+    // =========================
+
+    private async Task SaveHighlightAsync()
     {
+        ValidationErrorMessage = null;
+
+        // Auth: komponenten forventer at man er logget ind.
         var user = await AuthService.GetCurrentUser();
-        
-        // Manuelle tjek
-        if (string.IsNullOrWhiteSpace(Title) || Title.Length > 80)
+        if (user is null)
         {
-            ValidationErrorMessage = "Titel er påkrævet.";
+            ValidationErrorMessage = "Du skal være logget ind for at oprette highlights.";
             return;
         }
-        
-        if (string.IsNullOrWhiteSpace(Description) || Title.Length > 400)
+
+        // Manuelle tjek (UI har også maxlength, men vi validerer alligevel)
+        if (string.IsNullOrWhiteSpace(Title) || Title.Length > 80)
         {
-            ValidationErrorMessage = "Beskrivelse er påkrævet.";
+            ValidationErrorMessage = "Titel er påkrævet (maks 80 tegn).";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(Description) || Description.Length > 400)
+        {
+            ValidationErrorMessage = "Beskrivelse er påkrævet (maks 400 tegn).";
             return;
         }
 
@@ -134,8 +223,11 @@
             // Redigér eksisterende highlight
             HighlightToEdit.Title = Title;
             HighlightToEdit.Description = Description;
-            HighlightToEdit.ImageUrl = ImagePreview ?? HighlightToEdit.ImageUrl;
             HighlightToEdit.IsPrivate = IsPrivate;
+
+            // Kun opdatér ImageUrl hvis vi faktisk har en URL (enten eksisterende eller ny upload)
+            if (!string.IsNullOrWhiteSpace(ImagePreview))
+                HighlightToEdit.ImageUrl = ImagePreview;
 
             await HighlightService.Update(HighlightToEdit);
         }
@@ -147,15 +239,17 @@
                 Title = Title,
                 Description = Description,
                 UserId = user.Id,
-                ImageUrl = ImagePreview ?? "",
-                Date = DateTime.UtcNow,
+                ImageUrl = ImagePreview,     // må gerne være null
+                Date = DateTime.UtcNow,      // backend sætter også Date i repo (bevarer adfærd)
                 IsPrivate = IsPrivate
             };
 
             await HighlightService.Add(newHighlight);
         }
 
+        // Giv parent besked om at der er sket ændringer (reload liste)
         await OnHighlightAdded.InvokeAsync();
+
         Close();
     }
 }
