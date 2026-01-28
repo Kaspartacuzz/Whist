@@ -1,3 +1,8 @@
+/* =========================================================
+   AddRuleComponent (scoped CSS)
+   Modal til opret/redigér regel
+   ========================================================= */
+
 /* Modal backdrop */
 .modal-backdrop {
     position: fixed;

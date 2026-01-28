@@ -1,81 +1,166 @@
 @using Core
-@inject Service.RuleServices.IRuleService RuleService
+@inject WebApp.Service.RuleServices.IRuleService RuleService
 
+@* =========================================================
+   AddRuleComponent
+   Formål:
+   - Viser en modal til at oprette eller redigere en regel (Rule)
+   - Genbruges fra RulesPage via @ref (Show/Close)
+   - Ved "gem" kaldes RuleService (Add/Update), og parent informeres via OnRuleSaved
+   ========================================================= *@
+
+@* Modal vises kun når showModal = true *@
 @if (showModal)
 {
-    <div class="modal-backdrop">
-        <div class="modal-container">
-            <h3 class="modal-title">@(RuleToEdit is null ? "Opret ny regel" : "Rediger regel")</h3>
-            
-            <input id="ruleText"
-                   class="modal-input"
-                   placeholder="Skriv reglen her..."
-                   @bind="RuleText" 
-                   maxlength="500"/>
+    @* Backdrop (mørk/sløret baggrund)
+       Klik på baggrunden lukker modal (hurtigt og brugervenligt) *@
+    <div class="modal-backdrop" @onclick="Close">
 
+        @* Modal-boxen:
+           stopPropagation gør at klik inde i boksen ikke lukker modal *@
+        <div class="modal-container" @onclick:stopPropagation="true">
+
+            @* Titel skifter mellem opret og redigér alt efter om RuleToEdit er sat *@
+            <h3 class="modal-title">
+                @(RuleToEdit is null ? "Opret ny regel" : "Rediger regel")
+            </h3>
+
+            @* Regeltekst:
+               oninput => opdaterer state mens man skriver *@
+            <label class="modal-label">Regel tekst</label>
+            <textarea class="modal-input"
+                      rows="5"
+                      maxlength="500"
+                      placeholder="Skriv reglen her..."
+                      @bind-value="RuleText"
+                      @bind-value:event="oninput"></textarea>
+
+            @* Valideringsfejl (vises kun hvis den er sat) *@
             @if (!string.IsNullOrWhiteSpace(ValidationErrorMessage))
             {
                 <div style="color: red; font-size: 0.9rem;">@ValidationErrorMessage</div>
             }
-            
+
+            @* Actions:
+               - Primær knap gemmer (Submit)
+               - Cancel lukker modal uden at gemme *@
             <div class="modal-actions">
-                <button class="modal-btn primary" @onclick="SaveRule">
-                    @(RuleToEdit is null ? "Opret regel" : "Gem ændringer")
+                <button class="modal-btn primary" @onclick="Submit">
+                    @(RuleToEdit is null ? "Tilføj regel" : "Gem ændringer")
                 </button>
+
                 <button class="modal-btn cancel" @onclick="Close">Annuller</button>
             </div>
+
         </div>
     </div>
 }
 
 @code {
-    private bool showModal = false;
-    private string RuleText = string.Empty;
-    private string ValidationErrorMessage = null;
+    // =========================
+    // State
+    // =========================
+    private bool showModal;
 
-    [Parameter] public Rule? RuleToEdit { get; set; }
+    // Textbox/textarea content
+    private string RuleText = "";
+
+    // Hvis sat => rediger-mode. Hvis null => opret-mode.
+    private Rule? RuleToEdit;
+
+    // Fejlbesked fra validering (vises i UI)
+    private string? ValidationErrorMessage;
+
+    // =========================
+    // Parameters / callbacks
+    // =========================
+
+    /// <summary>
+    /// Parent (RulesPage) kaldes efter opret/ændring, så listen kan reloades.
+    /// </summary>
     [Parameter] public EventCallback OnRuleSaved { get; set; }
 
+    // =========================
+    // Public API (kald via @ref fra RulesPage)
+    // =========================
+
+    /// <summary>
+    /// Åbner modal.
+    /// - rule != null => rediger regel
+    /// - rule == null => opret ny regel
+    /// </summary>
     public void Show(Rule? rule = null)
     {
         ValidationErrorMessage = null;
         RuleToEdit = rule;
-        RuleText = rule?.Text ?? string.Empty;
-        showModal = true;
-        StateHasChanged();
-    }
-
-    private void Close()
-    {
-        showModal = false;
-        RuleText = string.Empty;
-        RuleToEdit = null;
-    }
-
-    private async Task SaveRule()
-    {
-        // Manuelle tjek
-        if (string.IsNullOrWhiteSpace(RuleText) || RuleText.Length > 500)
-        {
-            ValidationErrorMessage = "Regel er påkrævet.";
-            return;
-        }
 
         if (RuleToEdit is not null)
         {
+            // Redigering: udfyld eksisterende tekst
+            RuleText = RuleToEdit.Text;
+        }
+        else
+        {
+            // Oprettelse: nulstil
+            RuleText = "";
+        }
+
+        showModal = true;
+
+        // Vigtigt når Show() kaldes udefra via @ref
+        StateHasChanged();
+    }
+
+    /// <summary>
+    /// Lukker modal og nulstiller state.
+    /// </summary>
+    private void Close()
+    {
+        showModal = false;
+
+        RuleText = "";
+        RuleToEdit = null;
+        ValidationErrorMessage = null;
+    }
+
+    // =========================
+    // Submit (create/update)
+    // =========================
+
+    private async Task Submit()
+    {
+        ValidationErrorMessage = null;
+
+        // --- Validering (hurtig og tydelig) ---
+        if (string.IsNullOrWhiteSpace(RuleText))
+        {
+            ValidationErrorMessage = "Regeltekst er påkrævet.";
+            return;
+        }
+
+        if (RuleText.Length > 500)
+        {
+            ValidationErrorMessage = "Regeltekst må maks være 500 tegn.";
+            return;
+        }
+
+        // --- Gem ---
+        if (RuleToEdit is not null)
+        {
+            // Opdater eksisterende regel
             RuleToEdit.Text = RuleText;
             await RuleService.Update(RuleToEdit);
         }
         else
         {
-            var newRule = new Rule
-            {
-                Text = RuleText
-            };
-            await RuleService.Add(newRule);
+            // Opret ny regel
+            var rule = new Rule { Text = RuleText };
+            await RuleService.Add(rule);
         }
 
+        // Fortæl parent at der er sket ændringer (reload liste)
         await OnRuleSaved.InvokeAsync();
+
         Close();
     }
 }
