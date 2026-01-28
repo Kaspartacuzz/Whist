@@ -1,7 +1,9 @@
 using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+
 using WebApp;
+
 using WebApp.Service;
 using WebApp.Service.AuthServices;
 using WebApp.Service.CalendarServices;
@@ -13,14 +15,37 @@ using WebApp.Service.UploadServices;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 
+// ------------------------------------------------------------
+// Root components (App + HeadOutlet)
+// ------------------------------------------------------------
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
+
+// ------------------------------------------------------------
+// 3rd party / browser storage
+// ------------------------------------------------------------
 builder.Services.AddBlazoredLocalStorage();
 
-builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("http://localhost:5176/") });
+// ------------------------------------------------------------
+// HttpClient (API base address)
+// OBS: Dette er hardcoded til localhost (dev).
+// Ved deploy bør du typisk skifte til config eller HostEnvironment.
+// ------------------------------------------------------------
+builder.Services.AddScoped(_ =>
+    new HttpClient
+    {
+        BaseAddress = new Uri("http://localhost:5176/")
+    });
+
+// ------------------------------------------------------------
+// DI: Services (frontend -> kalder backend API)
+// ------------------------------------------------------------
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+
+// NOTE: Fine bruger mock lige nu (som du også har haft i flowet).
 builder.Services.AddScoped<IFineService, FineServiceMock>();
+
 builder.Services.AddScoped<IHighlightService, HighlightService>();
 builder.Services.AddScoped<IUploadService, UploadService>();
 builder.Services.AddScoped<IRuleService, RuleService>();

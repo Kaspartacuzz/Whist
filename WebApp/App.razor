@@ -1,12 +1,26 @@
-﻿<Router AppAssembly="@typeof(App).Assembly">
+﻿@* 
+    App.razor er dit routing-entrypoint.
+    Router finder den rigtige page baseret på URL, og viser den i MainLayout.
+*@
+
+<Router AppAssembly="@typeof(App).Assembly">
+
+    @* Når en route findes *@
     <Found Context="routeData">
-        <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)"/>
-        <FocusOnNavigate RouteData="@routeData" Selector="h1"/>
+        @* RouteView renderer den matchende page og wrapper den i MainLayout *@
+        <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
+
+        @* Flytter fokus ved navigation (godt for tilgængelighed) *@
+        <FocusOnNavigate RouteData="@routeData" Selector="h1" />
     </Found>
+
+    @* Når der ikke findes en route *@
     <NotFound>
         <PageTitle>Not found</PageTitle>
+
         <LayoutView Layout="@typeof(MainLayout)">
             <p role="alert">Sorry, there's nothing at this address.</p>
         </LayoutView>
     </NotFound>
+
 </Router>
