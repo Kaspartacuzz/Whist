@@ -1,38 +1,48 @@
-.text-center{
-    text-align: center;
+/* =========================================================
+   Home (scoped CSS)
+   - Fokus: centrering + slideshow
+   ========================================================= */
+
+/* Hero-billede (flyttet fra inline style) */
+.home-hero-image {
+    max-width: 300px;
+    width: 60%;
+    height: auto;
 }
 
-.fade-image {
-    transition: opacity 0.6s ease-in-out;
-    opacity: 1;
+/* Tekst container: centreres som blok, men teksten er venstrejusteret */
+.home-text {
+    max-width: 750px;
+    text-align: left;
+    margin: 0 auto;
 }
 
-/* 1) Holder billederne indenfor */
+/* Slideshow wrapper: klipper alt der ryger ud til siderne */
 .slideshow {
     overflow: hidden;
     width: 100%;
     margin: 2rem 0;
 }
 
-/* 2) Den langstrakte række af billeder */
+/* Den langstrakte række af billeder der bevæger sig mod venstre */
 .slideshow-track {
     display: flex;
-    width: max-content; /* Gør hele rækken fleksibel */
+    width: max-content;
     animation: slide-left 20s linear infinite;
 }
 
-/* 3) Hvert billede som firkant */
+/* Hvert billede som firkant */
 .slideshow-image {
     flex-shrink: 0;
-    width: 350px;           /* Ny bredde */
-    height: 350px;          /* Ny højde */
+    width: 350px;
+    height: 350px;
     object-fit: cover;
-    border-radius: 0.7rem;  /* Blødt afrundede hjørner */
+    border-radius: 0.7rem;
     margin-right: 3rem;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
-/* 4) Animation: flyt hele rækken -50% (fordi vi duplikerer) */
+/* Flyt hele rækken -50% (fordi vi duplikerer listen) */
 @keyframes slide-left {
     0%   { transform: translateX(0); }
     100% { transform: translateX(-50%); }

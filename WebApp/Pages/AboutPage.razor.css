@@ -1,4 +1,9 @@
-/* Fjern default margin/padding */
+/* =========================================================
+   AboutPage (scoped CSS)
+   - Full-bleed layout + scroll-snap one-pager
+   ========================================================= */
+
+/* Fjern default margin/padding (kun scoped til komponenten i Blazor) */
 body, html {
     margin: 0;
     padding: 0;
@@ -13,7 +18,7 @@ body, html {
 
 /* Scroll container KUN for Om os siden */
 .about-scroll {
-    height: calc(100vh - 90px);  /* 90px ≈ din navbar-højde */
+    height: calc(100vh - 90px); /* 90px ≈ navbar-højde */
     overflow-y: auto;
 
     scroll-snap-type: y mandatory;
@@ -36,13 +41,8 @@ body, html {
     scroll-snap-stop: always;
 }
 
-.section.light {
-    background-color: #f3f3f3;
-}
-
-.section.dark {
-    background-color: #e0e0e0;
-}
+.section.light { background-color: #f3f3f3; }
+.section.dark  { background-color: #e0e0e0; }
 
 /* Indhold */
 .content {
@@ -54,21 +54,18 @@ body, html {
     box-sizing: border-box;
 }
 
-.content.left-text {
-    align-items: flex-start;
-    text-align: left;
-}
-
+.content.left-text,
 .content.right-text {
     align-items: flex-start;
     text-align: left;
 }
 
+/* Bruges i "Værdier"-sektionen for at undgå for bred tekst */
 .content.narrow {
     max-width: 800px;
 }
 
-/* Billeder */
+/* Billeder (baggrundsbilleder i markup) */
 .image {
     flex: 1;
     background-size: cover;
@@ -76,13 +73,8 @@ body, html {
 }
 
 /* Billedets position */
-.left-image {
-    order: 0;
-}
-
-.right-image {
-    order: 1;
-}
+.left-image  { order: 0; }
+.right-image { order: 1; }
 
 /* Bullet liste i “Værdier” */
 ul {
@@ -99,7 +91,7 @@ ul {
     }
 
     .content, .image {
-        order: 1;
+        /* "order: unset" er nok – fjern dobbelt-ordre */
         order: unset;
         align-items: flex-start !important;
         text-align: left !important;
@@ -108,10 +100,6 @@ ul {
     }
 
     .image {
-        height: auto;
         min-height: 250px;
-        order: 2;
     }
 }
-
-

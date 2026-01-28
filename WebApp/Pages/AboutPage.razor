@@ -1,9 +1,16 @@
 @page "/om_os"
 @inject IJSRuntime JS
 
+<!--
+    OM OS (full-bleed + scroll-snap):
+    - Siden er et "one-pager" layout med sektioner der snapper vertikalt ved scroll.
+    - Hver sektion har tekst + baggrundsbillede.
+    - .full-bleed trækker indholdet ud til 100vw på tværs af layoutets normale container.
+-->
 <div class="full-bleed about-scroll">
-    <!-- Sektion 1 -->
-    <div class="section light">
+
+    <!-- Sektion 1: Introduktion -->
+    <section class="section light">
         <div class="content left-text">
             <h2>Hvem er vi</h2>
             <p>
@@ -13,12 +20,15 @@
                 har vi bygget denne platform til at holde styr på bøder, highlights og minder fra vores spilaftener.
             </p>
         </div>
-        <div class="image right-image" style="background-image: url('/Images/about1.png');"></div>
-    </div>
 
-    <!-- Sektion 2 -->
-    <div class="section dark">
+        <!-- Billedet er sat som background-image for at fylde pænt (cover) -->
+        <div class="image right-image" style="background-image: url('/Images/about1.png');"></div>
+    </section>
+
+    <!-- Sektion 2: Vision -->
+    <section class="section dark">
         <div class="image left-image" style="background-image: url('/images/about2.png');"></div>
+
         <div class="content right-text">
             <h2>Vores vision</h2>
             <p>
@@ -28,10 +38,10 @@
                 og dine spillekammerater.
             </p>
         </div>
-    </div>
+    </section>
 
-    <!-- Sektion 3 -->
-    <div class="section light">
+    <!-- Sektion 3: Mission -->
+    <section class="section light">
         <div class="content left-text">
             <h2>Vores mission</h2>
             <p>
@@ -40,12 +50,14 @@
                 skal det være lige så sjovt og uformelt, som når man sidder fysisk om bordet med en god hånd kort.
             </p>
         </div>
-        <div class="image right-image" style="background-image: url('/images/about3.png');"></div>
-    </div>
 
-    <!-- Sektion 4 -->
-    <div class="section dark">
+        <div class="image right-image" style="background-image: url('/images/about3.png');"></div>
+    </section>
+
+    <!-- Sektion 4: Værdier -->
+    <section class="section dark">
         <div class="image left-image" style="background-image: url('/images/about4.png');"></div>
+
         <div class="content right-text narrow">
             <h2>Værdier</h2>
             <ul>
@@ -55,10 +67,10 @@
                 <li><strong>Bæredygtighed:</strong> Digitalisering fremmer genbrug af papir og kuglepen.</li>
             </ul>
         </div>
-    </div>
+    </section>
 
-    <!-- Sektion 5 -->
-    <div class="section light">
+    <!-- Sektion 5: Kontakt -->
+    <section class="section light">
         <div class="content left-text">
             <h2>Kontakt os</h2>
             <p>
@@ -66,17 +78,18 @@
                 Skriv til os på <a href="mailto:whistholdet@gmail.com">whistholdet@gmail.com</a>
             </p>
         </div>
+
         <div class="image right-image" style="background-image: url('/images/about5.png');"></div>
-    </div>
+    </section>
+
 </div>
 
 @code {
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender)
-        {
-            // Sørger for at nav-hide også hook’er sig på .about-scroll efter siden er rendret
-            await JS.InvokeVoidAsync("navHideInit");
-        }
+        if (!firstRender) return;
+
+        // Sørger for at nav-hide (JS) hook’er sig på .about-scroll efter siden er rendret
+        await JS.InvokeVoidAsync("navHideInit");
     }
 }

@@ -1,5 +1,15 @@
-/* Terms & Conditions side */
+/* =========================================================
+   TermsPage (scoped CSS)
+   - Ren tekstside (statisk)
+   ========================================================= */
 
+.terms {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 1rem;
+}
+
+/* Behold eksisterende typografi */
 h1 {
     font-size: 2rem;
     margin-bottom: 1rem;

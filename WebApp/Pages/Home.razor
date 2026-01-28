@@ -4,20 +4,29 @@
 @inject IUserService UserService
 @inject Service.HighlightServices.IHighlightService HighlightService
 
+<!--
+    HOME:
+    - Intro + tekst
+    - Samler billed-URLs fra:
+        1) Brugeres profilbilleder
+        2) Highlights billeder (kun ikke-private)
+    - Viser dem som et "uendeligt" slideshow via CSS animation (ikke JS/timer).
+-->
+<div class="home text-center mt-4">
 
-<div class="text-center mt-4">
-
+    <!-- Overskrift/intro -->
     <h1 class="display-4 fw-bold">Velkommen til Whist-holdet</h1>
     <p class="lead fst-italic mb-4">
         Kortene flyver, Irish coffeeen flyder, og bøderne falder
     </p>
 
-    <!-- Billede af kort -->
-    <img src="Images/Cards.png" alt="Kortspil"
-         style="max-width: 300px; width: 60%; height: auto;" />
+    <!-- Hero-billede -->
+    <img class="home-hero-image"
+         src="Images/Cards.png"
+         alt="Kortspil" />
 
-    <div class="mx-auto" style="max-width: 750px; text-align: left;">
-
+    <!-- Intro-tekst (centreret container, men venstrejusteret tekst) -->
+    <div class="home-text">
         <p>
             Velkommen til vores lille digitale klubhus – et sted hvor vi holder styr på bøder, skæve highlights og alle de små ting, der gør vores spilleaftener til noget særligt.
         </p>
@@ -29,23 +38,23 @@
         <p>
             Så tag et kig rundt, genbesøg nogle af de bedste øjeblikke, eller hold styr på hvem der skylder fadøllen næste gang. Det hele starter og slutter med en god hånd kort og lidt kærligt kaos.
         </p>
-
     </div>
 
-    <!-- Diasshow som uendeligt, glidende billedevogn -->
-    @if (ImageUrls?.Any() ?? false)
+    <!-- Slideshow (uendeligt loop ved at duplikere listen) -->
+    @if (ImageUrls.Count > 0)
     {
-        <div class="slideshow">
+        <div class="slideshow" aria-label="Billedslideshow">
             <div class="slideshow-track">
                 @* Første runde *@
                 @foreach (var url in ImageUrls)
                 {
-                    <img src="@url" class="slideshow-image" />
+                    <img src="@url" class="slideshow-image" alt="Whist billede" />
                 }
-                @* Duplicate for seamless loop *@
+
+                @* Duplikat runde (seamless loop) *@
                 @foreach (var url in ImageUrls)
                 {
-                    <img src="@url" class="slideshow-image" />
+                    <img src="@url" class="slideshow-image" alt="Whist billede" />
                 }
             </div>
         </div>
@@ -58,47 +67,24 @@
 </div>
 
 @code {
+    // Liste af billed-URLs som vises i slideshowet
     private List<string> ImageUrls = new();
-    private int currentImageIndex = 0;
-    private string? CurrentImage => ImageUrls.Count > 0 ? ImageUrls[currentImageIndex] : null;
-    private string fadeClass = "fade-image";
-
-    private System.Timers.Timer? timer;
 
     protected override async Task OnInitializedAsync()
     {
+        // 1) Hent data fra services
         var users = await UserService.GetAll();
         var highlights = await HighlightService.GetAll();
 
+        // 2) Profilbilleder fra users
         ImageUrls = users
             .Where(u => !string.IsNullOrEmpty(u.ImageUrl))
             .Select(u => u.ImageUrl!)
             .ToList();
 
+        // 3) Offentlige highlight-billeder (ikke private)
         ImageUrls.AddRange(highlights
             .Where(h => !string.IsNullOrEmpty(h.ImageUrl) && !h.IsPrivate)
             .Select(h => h.ImageUrl!));
-
-        timer = new System.Timers.Timer(3000); // Skift hvert 3. sekund
-        timer.Elapsed += (s, e) =>
-        {
-            fadeClass = "";
-            InvokeAsync(StateHasChanged);
-
-            Task.Delay(100).ContinueWith(_ =>
-            {
-                currentImageIndex = (currentImageIndex + 1) % ImageUrls.Count;
-                fadeClass = "fade-image";
-                InvokeAsync(StateHasChanged);
-            });
-        };
-
-        timer.Start(); // ✅ Dette aktiverer billedskiftet!
-    }
-
-    public void Dispose()
-    {
-        timer?.Stop();
-        timer?.Dispose();
     }
 }
