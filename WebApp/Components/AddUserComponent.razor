@@ -5,51 +5,136 @@
 @inject Service.IUserService UserService
 @inject Service.UploadServices.IUploadService UploadService
 
+@* =========================================================
+   AddUserComponent
+   Formål:
+   - Viser en modal til at oprette eller redigere en bruger (User)
+   - Understøtter billede-upload via UploadService (api/upload/image)
+   - Ved gem kaldes UserService (AddUser/Update) og parent får besked via OnUserAdded
+   ========================================================= *@
+
+@* Modal vises kun når showModal = true *@
 @if (showModal)
 {
-    <div class="modal-backdrop">
-        <div class="modal-container">
+    @* Backdrop: klik udenfor lukker modal (samme UX som dine andre modals) *@
+    <div class="modal-backdrop" @onclick="Close">
+
+        @* Modal container: stopPropagation gør at klik i boksen ikke lukker modal *@
+        <div class="modal-container" @onclick:stopPropagation="true">
+
+            @* Titel afhænger af om vi opretter eller redigerer *@
             <h3 class="modal-title">@(UserToEdit is null ? "Opret ny bruger" : "Rediger bruger")</h3>
 
-            <input @bind="Name" placeholder="Fulde navn" class="modal-input" maxlength="40"/>
-            <input @bind="NickName" placeholder="Kaldenavn" class="modal-input" maxlength="30"/>
-            <input @bind="Email" placeholder="Email" class="modal-input" maxlength="100" type="email"/>
-            <input @bind="Password" placeholder="Kodeord" type="password" class="modal-input" maxlength="100"/>
-            <input @bind="Address" placeholder="Adresse" class="modal-input" maxlength="200"/>
-            <input @bind="PhoneNumber" placeholder="Telefonnummer" class="modal-input" maxlength="8" type="tel"/>
-            <textarea @bind="Description" placeholder="Beskrivelse" class="modal-textarea" minlength="8" maxlength="500"></textarea>
-            <input @bind="FunFact" placeholder="Fun fact" class="modal-input" maxlength="200"/>
+            @* Inputfelter:
+               - oninput => state opdateres mens man skriver
+               - maxlength matcher dine nuværende begrænsninger *@
+            <input class="modal-input"
+                   placeholder="Fulde navn"
+                   maxlength="40"
+                   @bind-value="Name"
+                   @bind-value:event="oninput" />
+
+            <input class="modal-input"
+                   placeholder="Kaldenavn"
+                   maxlength="30"
+                   @bind-value="NickName"
+                   @bind-value:event="oninput" />
+
+            <input class="modal-input"
+                   placeholder="Email"
+                   maxlength="100"
+                   type="email"
+                   @bind-value="Email"
+                   @bind-value:event="oninput" />
+
+            <input class="modal-input"
+                   placeholder="Kodeord"
+                   type="password"
+                   maxlength="100"
+                   @bind-value="Password"
+                   @bind-value:event="oninput" />
+
+            <input class="modal-input"
+                   placeholder="Adresse"
+                   maxlength="200"
+                   @bind-value="Address"
+                   @bind-value:event="oninput" />
+
+            <input class="modal-input"
+                   placeholder="Telefonnummer"
+                   maxlength="8"
+                   type="tel"
+                   @bind-value="PhoneNumber"
+                   @bind-value:event="oninput" />
+
+            <textarea class="modal-textarea"
+                      placeholder="Beskrivelse"
+                      minlength="8"
+                      maxlength="500"
+                      @bind-value="Description"
+                      @bind-value:event="oninput"></textarea>
+
+            <input class="modal-input"
+                   placeholder="Fun fact"
+                   maxlength="200"
+                   @bind-value="FunFact"
+                   @bind-value:event="oninput" />
+
+            @* Fødselsdato:
+               - Bruger InputDate for korrekt binding
+               - BirthDate er DateOnly? *@
             <div class="modal-field">
                 <label class="modal-label">Fødselsdato</label>
                 <InputDate @bind-Value="BirthDate" class="modal-input" />
             </div>
+
+            @* Billede upload:
+               - Skjuler standard InputFile og bruger en “lilla knap” label
+               - Når der vælges fil, uploader vi straks og gemmer URL som ImagePreview *@
             <label for="file-upload" class="custom-file-label">📷 Vedhæft billede</label>
             <div class="file-input-wrapper">
                 <InputFile id="file-upload" OnChange="HandleImageUpload" accept="image/*" />
             </div>
 
+            @* Preview af uploaded/eksisterende billede *@
             @if (!string.IsNullOrEmpty(ImagePreview))
             {
                 <img src="@ImagePreview" alt="Preview" class="modal-image-preview" />
             }
-            
+
+            @* Upload-fejl (fx for stor fil eller server-fejl) *@
+            @if (!string.IsNullOrWhiteSpace(UploadErrorMessage))
+            {
+                <div style="color: red; font-size: 0.9rem;">@UploadErrorMessage</div>
+            }
+
+            @* Valideringsfejl (manglende felter osv.) *@
             @if (!string.IsNullOrWhiteSpace(ValidationErrorMessage))
             {
                 <div style="color: red; font-size: 0.9rem;">@ValidationErrorMessage</div>
             }
 
+            @* Actions:
+               - Primær knap gemmer (CreateUser)
+               - Cancel lukker uden at gemme *@
             <div class="modal-actions">
                 <button class="modal-btn primary" @onclick="CreateUser">
                     @(UserToEdit is null ? "Opret bruger" : "Gem ændringer")
                 </button>
+
                 <button class="modal-btn cancel" @onclick="Close">Annuller</button>
             </div>
+
         </div>
     </div>
 }
 
 @code {
-    private bool showModal = false;
+    // =========================
+    // State (modal + formfelter)
+    // =========================
+    private bool showModal;
+
     private string Name = "";
     private string NickName = "";
     private string Email = "";
@@ -59,24 +144,47 @@
     private DateOnly? BirthDate = null;
     private string Description = "";
     private string FunFact = "";
-    private IBrowserFile? UploadedImage;
-    private string? ImagePreview;
-    private User? UserToEdit = null;
-    private string ImageUrl = "";
-    private string? UploadErrorMessage = null;
-    private string? ValidationErrorMessage = null;
 
+    // Upload state
+    private IBrowserFile? UploadedImage;
+    private string? ImagePreview;               // URL fra UploadService (bruges som preview + gemmes på user)
+    private string? UploadErrorMessage;
+
+    // Edit state
+    private User? UserToEdit;
+    private string ImageUrl = "";               // eksisterende url (bruges når man redigerer)
+
+    // Validering
+    private string? ValidationErrorMessage;
+
+    // =========================
+    // Callback til parent
+    // =========================
+
+    /// <summary>
+    /// Parent (UserPage) kaldes når bruger er oprettet/ændret, så listen kan reloades.
+    /// </summary>
     [Parameter] public EventCallback OnUserAdded { get; set; }
 
+    // =========================
+    // Public API (kald via @ref)
+    // =========================
+
+    /// <summary>
+    /// Åbner modal.
+    /// - userToEdit != null => rediger eksisterende bruger
+    /// - userToEdit == null => opret ny bruger
+    /// </summary>
     public Task Show(User? userToEdit = null)
     {
         ValidationErrorMessage = null;
+        UploadErrorMessage = null;
 
         UserToEdit = userToEdit;
 
         if (userToEdit is not null)
         {
-            // Udfyld formular med eksisterende brugerdata
+            // Redigering: udfyld formular med eksisterende data
             Name = userToEdit.Name;
             Email = userToEdit.Email;
             NickName = userToEdit.NickName;
@@ -86,37 +194,64 @@
             BirthDate = userToEdit.BirthDate;
             Description = userToEdit.Description;
             FunFact = userToEdit.FunFact;
+
+            // Billede: bevar eksisterende url (og brug den som preview hvis der ikke uploades nyt)
             ImageUrl = userToEdit.ImageUrl;
+            ImagePreview = userToEdit.ImageUrl;
         }
         else
         {
-            // Nulstil felter
+            // Oprettelse: nulstil felter
             Name = "";
             Email = "";
             NickName = "";
             Password = "";
             Address = "";
             PhoneNumber = "";
+
+            // OBS: beholdt din eksisterende adfærd.
+            // InputDate kan være følsom ift. null i nogle setups, så du brugte MaxValue som “default”.
             BirthDate = DateOnly.MaxValue;
+
             Description = "";
             FunFact = "";
+
             ImageUrl = "";
+            ImagePreview = null;
         }
 
         showModal = true;
-        StateHasChanged();
+        StateHasChanged(); // vigtigt når Show() kaldes udefra via @ref
         return Task.CompletedTask;
     }
 
+    /// <summary>
+    /// Lukker modal og rydder form-state.
+    /// </summary>
     private void Close()
     {
         showModal = false;
+
         Name = NickName = Email = Password = Address = PhoneNumber = Description = FunFact = "";
         BirthDate = DateOnly.MaxValue;
+
         UploadedImage = null;
         ImagePreview = null;
+        ImageUrl = "";
+
+        ValidationErrorMessage = null;
+        UploadErrorMessage = null;
+        UserToEdit = null;
     }
 
+    // =========================
+    // Upload
+    // =========================
+
+    /// <summary>
+    /// Uploader et valgt billede og gemmer den URL som backend returnerer.
+    /// URL’en bruges både som preview og gemmes i user.ImageUrl ved submit.
+    /// </summary>
     private async Task HandleImageUpload(InputFileChangeEventArgs e)
     {
         UploadedImage = e.File;
@@ -125,6 +260,7 @@
         try
         {
             var resultUrl = await UploadService.UploadImageAsync(UploadedImage);
+
             if (!string.IsNullOrEmpty(resultUrl))
             {
                 ImagePreview = resultUrl;
@@ -138,28 +274,30 @@
         {
             UploadErrorMessage = "Fejl under upload: " + ex.Message;
         }
+
+        await InvokeAsync(StateHasChanged);
     }
-    
+
+    // =========================
+    // Create / Update
+    // =========================
+
     private async Task CreateUser()
     {
         ValidationErrorMessage = null;
 
-        // Manuelle tjek
+        // -------------------------
+        // Manuelle valideringer
+        // -------------------------
         if (string.IsNullOrWhiteSpace(Name) || Name.Length > 40)
         {
-            ValidationErrorMessage = "Navn er påkrævet.";
+            ValidationErrorMessage = "Navn er påkrævet (maks 40 tegn).";
             return;
         }
-        
+
         if (string.IsNullOrWhiteSpace(NickName))
         {
             ValidationErrorMessage = "Kaldenavn er påkrævet.";
-            return;
-        }
-        
-        if (Name.Length > 40)
-        {
-            ValidationErrorMessage = "Navn navnet må højst være 40 tegn.";
             return;
         }
 
@@ -174,7 +312,7 @@
             ValidationErrorMessage = "Kodeord er påkrævet og skal være mindst 6 tegn.";
             return;
         }
-        
+
         if (string.IsNullOrWhiteSpace(Address))
         {
             ValidationErrorMessage = "Adresse skal udfyldes.";
@@ -186,14 +324,16 @@
             ValidationErrorMessage = "Telefonnummer skal udfyldes.";
             return;
         }
-        
-        else if (!new PhoneAttribute().IsValid(PhoneNumber) || PhoneNumber.Length < 8 || PhoneNumber.Length > 8)
+
+        if (!new PhoneAttribute().IsValid(PhoneNumber) || PhoneNumber.Length != 8)
         {
-            ValidationErrorMessage = "Ugyldigt telefonnummer.";
+            ValidationErrorMessage = "Ugyldigt telefonnummer (skal være 8 cifre).";
             return;
         }
 
-        
+        // -------------------------
+        // Gem (update eller create)
+        // -------------------------
         if (UserToEdit is not null)
         {
             // Rediger eksisterende bruger
@@ -206,6 +346,9 @@
             UserToEdit.BirthDate = BirthDate;
             UserToEdit.Description = Description;
             UserToEdit.FunFact = FunFact;
+
+            // Hvis der er uploadet et nyt billede, bruger vi det.
+            // Ellers bevarer vi det eksisterende.
             UserToEdit.ImageUrl = ImagePreview ?? UserToEdit.ImageUrl;
 
             await UserService.Update(UserToEdit);
@@ -230,7 +373,9 @@
             await UserService.AddUser(newUser);
         }
 
+        // Fortæl parent at listen skal reloades
         await OnUserAdded.InvokeAsync();
+
         Close();
     }
 }
