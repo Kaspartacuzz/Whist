@@ -7,7 +7,10 @@ namespace ServerAPI.Repositories.Calendars;
 /// </summary>
 public interface ICalendarRepository
 {
+    /// <summary>Henter alle kalender-events.</summary>
     Task<List<Calendar>> GetAll();
+    
+    // Henter et event ud fra dato.
     Task<Calendar?> GetByDate(DateTime date);
 
     /// <summary>
@@ -16,6 +19,7 @@ public interface ICalendarRepository
     /// </summary>
     Task AddOrUpdate(Calendar evt);
 
+    /// <summary>Sletter et event ud fra id.</summary>
     Task Delete(int id);
 
     /// <summary>
