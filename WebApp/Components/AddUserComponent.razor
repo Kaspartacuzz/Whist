@@ -211,7 +211,7 @@
 
             // OBS: beholdt din eksisterende adfærd.
             // InputDate kan være følsom ift. null i nogle setups, så du brugte MaxValue som “default”.
-            BirthDate = DateOnly.MaxValue;
+            BirthDate = DateOnly.FromDateTime(DateTime.Now);
 
             Description = "";
             FunFact = "";
