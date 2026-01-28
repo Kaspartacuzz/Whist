@@ -4,15 +4,23 @@ using ServerAPI.Repositories.Fines;
 using ServerAPI.Repositories.Highlights;
 using ServerAPI.Repositories.Points;
 using ServerAPI.Repositories.Rules;
-using ServerAPI.Workers;  
+using ServerAPI.Workers;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// =========================================================
+// Services (Dependency Injection)
+// =========================================================
+
+// Controllers (API endpoints)
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+
+// Swagger (API dokumentation / test)
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+// Repositories (MongoDB implementeringer)
+// Singleton er ok her, så længe dine repos bruger thread-safe MongoClient (typisk).
 builder.Services.AddSingleton<IUserRepository, UserRepositoryMongoDB>();
 builder.Services.AddSingleton<IFineRepository, FineRepositoryMongoDB>();
 builder.Services.AddSingleton<IHighlightRepository, HighlightRepositoryMongoDB>();
@@ -20,37 +28,52 @@ builder.Services.AddSingleton<IRuleRepository, RuleRepositoryMongoDB>();
 builder.Services.AddSingleton<ICalendarRepository, CalendarRepositoryMongoDB>();
 builder.Services.AddSingleton<IPointRepository, PointRepositoryMongoDB>();
 
+// Authorization er slået til (men kræver stadig at du har auth + policies for at gøre noget reelt)
 builder.Services.AddAuthorization();
+
+// Background worker (mail reminders)
 builder.Services.AddHostedService<MailReminderWorker>();
 
+// CORS (frontend tilladt origin i dev)
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
         policy.WithOrigins("http://localhost:5102")
-            .AllowAnyHeader()
-            .AllowAnyMethod();
+              .AllowAnyHeader()
+              .AllowAnyMethod();
     });
 });
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// =========================================================
+// Middleware pipeline (rækkefølgen betyder noget)
+// =========================================================
+
+// Swagger kun i development
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
+// Static files (uploads under wwwroot/uploads)
 app.UseStaticFiles();
 
+// Redirect HTTP -> HTTPS
 app.UseHttpsRedirection();
 
+// Auth middleware
+// OBS: UseAuthentication gør i praksis ingenting før du har builder.Services.AddAuthentication(...)
+// Men det er fint at lade den stå, hvis du planlægger auth senere.
 app.UseAuthentication();
 app.UseAuthorization();
 
+// CORS (skal ligge før MapControllers så den gælder for API endpoints)
 app.UseCors();
 
+// Map controllers (api/*)
 app.MapControllers();
 
 app.Run();
