@@ -1,5 +1,6 @@
 using Core;
 using MongoDB.Driver;
+using ServerAPI.Utils;
 
 namespace ServerAPI.Repositories.Rules;
 
@@ -60,6 +61,9 @@ public class RuleRepositoryMongoDB : IRuleRepository
             .FirstOrDefaultAsync();
 
         rule.Id = highest?.Id + 1 ?? 1;
+        
+        // Automatisk: erstatter "KSDH" med BIF<3.
+        TextAutoReplace.Apply(rule);
 
         await _rules.InsertOneAsync(rule);
         return rule;
@@ -69,7 +73,12 @@ public class RuleRepositoryMongoDB : IRuleRepository
     /// Opdaterer en eksisterende regel ved at erstatte dokumentet med samme Id.
     /// </summary>
     public async Task Update(Rule rule)
-        => await _rules.ReplaceOneAsync(r => r.Id == rule.Id, rule);
+    {
+        // Automatisk: erstatter "KSDH" med BIF<3.
+        TextAutoReplace.Apply(rule);
+        
+        await _rules.ReplaceOneAsync(r => r.Id == rule.Id, rule);
+    }
 
     /// <summary>
     /// Sletter en regel ud fra Id.

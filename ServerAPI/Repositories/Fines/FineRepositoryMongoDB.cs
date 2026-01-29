@@ -1,5 +1,6 @@
 using Core;
 using MongoDB.Driver;
+using ServerAPI.Utils;
 
 namespace ServerAPI.Repositories.Fines;
 
@@ -81,6 +82,9 @@ public class FineRepositoryMongoDB : IFineRepository
         // Bøder får "nu" dato ved oprettelse (uanset hvad klienten sender).
         fine.Date = DateTime.Now;
 
+        // Automatisk: erstatter "KSDH" med BIF<3.
+        TextAutoReplace.Apply(fine);
+        
         user.Fines.Add(fine);
 
         // Når fines ligger embedded i user, erstatter vi hele user dokumentet.
@@ -106,6 +110,9 @@ public class FineRepositoryMongoDB : IFineRepository
 
         if (index >= 0)
         {
+            // Automatisk: erstatter "KSDH" med BIF<3.
+            TextAutoReplace.Apply(fine);
+            
             finesList[index] = fine;
             user.Fines = finesList;
 

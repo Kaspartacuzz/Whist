@@ -1,6 +1,7 @@
 using Core;
 using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Driver;
+using ServerAPI.Utils;
 
 namespace ServerAPI.Repositories.Calendars;
 
@@ -93,6 +94,9 @@ public class CalendarRepositoryMongoDB : ICalendarRepository
             calendarEvent.Id = existing.Id;
             calendarEvent.ReminderSent = existing.ReminderSent;
         }
+        
+        // Automatisk: erstatter "KSDH" med BIF<3.
+        TextAutoReplace.Apply(calendarEvent);
 
         // Upsert på dato (unik index sørger for at der ikke kan komme dubletter).
         var filter = Builders<Calendar>.Filter.Eq(x => x.Date, calendarEvent.Date);

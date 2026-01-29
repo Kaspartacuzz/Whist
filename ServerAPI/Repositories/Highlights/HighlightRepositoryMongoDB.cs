@@ -2,6 +2,7 @@ using Core;
 using MongoDB.Driver;
 using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Bson;
+using ServerAPI.Utils;
 
 namespace ServerAPI.Repositories.Highlights;
 
@@ -130,6 +131,9 @@ public class HighlightRepositoryMongoDB : IHighlightRepository
 
         // NOTE: Id genereres sekventielt via counter-pattern (1, 2, 3, ...), uden at scanne hele collectionen.
         highlight.Id = await GetNextIdAsync();
+        
+        // Automatisk: erstatter "KSDH" med BIF<3.
+        TextAutoReplace.Apply(highlight);
 
         await _highlights.InsertOneAsync(highlight);
         return highlight;
@@ -150,6 +154,9 @@ public class HighlightRepositoryMongoDB : IHighlightRepository
     /// <inheritdoc />
     public async Task Update(Highlight highlight)
     {
+        // Automatisk: erstatter "KSDH" med BIF<3.
+        TextAutoReplace.Apply(highlight);
+        
         await _highlights.ReplaceOneAsync(h => h.Id == highlight.Id, highlight);
     }
 

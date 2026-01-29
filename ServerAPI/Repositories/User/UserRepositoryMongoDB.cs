@@ -1,5 +1,6 @@
 using Core;
 using MongoDB.Driver;
+using ServerAPI.Utils;
 
 namespace ServerAPI.Repositories;
 
@@ -54,6 +55,9 @@ public class UserRepositoryMongoDB : IUserRepository
         // Næste id = max + 1 (eller 1 hvis tom collection)
         var query = _users.AsQueryable();
         user.Id = query.Any() ? query.Max(u => u.Id) + 1 : 1;
+        
+        // Automatisk: erstatter "KSDH" med BIF<3.
+        TextAutoReplace.Apply(user);
 
         _users.InsertOne(user);
     }
@@ -72,6 +76,10 @@ public class UserRepositoryMongoDB : IUserRepository
     public async Task UpdateUser(User user)
     {
         var filter = Builders<User>.Filter.Eq(u => u.Id, user.Id);
+        
+        // Automatisk: erstatter "KSDH" med BIF<3.
+        TextAutoReplace.Apply(user);
+
         await _users.ReplaceOneAsync(filter, user);
     }
 }
