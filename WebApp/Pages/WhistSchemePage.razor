@@ -20,47 +20,49 @@
 <h3 class="whist-point-title">Whist Point Skema</h3>
 
 @* Hovedskema: rækker = meldinger/labels, kolonner = niveauer (Columns) *@
-<table class="point-table">
-    <thead>
-    <tr>
-        @* Venstre header til selve rækkernes label *@
-        <th>Melding</th>
-
-        @* Dynamiske kolonne-headere (styling afhænger af GetHeaderClass) *@
-        @for (var i = 0; i < Columns.Count; i++)
-        {
-            <th class="@GetHeaderClass(i)">@Columns[i]</th>
-        }
-    </tr>
-    </thead>
-
-    <tbody>
-    @* Alle rækker i grid’et *@
-    @foreach (var row in GridRows)
-    {
+<div class="table-scroll">
+    <table class="point-table">
+        <thead>
         <tr>
-            @* Rækkelabel (blå celle) med intensitet, så man visuelt kan skelne grupper *@
-            <th class="cell-blue @GetIntensityFromLabel(row.Label)">
-                @row.Label
-            </th>
+            @* Venstre header til selve rækkernes label *@
+            <th>Melding</th>
 
-            @* Point-cellerne i rækken *@
-            @for (var i = 0; i < row.Points.Count; i++)
+            @* Dynamiske kolonne-headere (styling afhænger af GetHeaderClass) *@
+            @for (var i = 0; i < Columns.Count; i++)
             {
-                @* value kan være null (ingen celle/ikke relevant), eller et tal *@
-                var value = row.Points[i];
-
-                @* Klik åbner modal via OnPointClick (typisk først relevant når bruger er logget ind) *@
-                <td class="@GetCellClass(value, i, row.Label) @(_currentUser is null ? "disabled" : "")"
-                    @onclick="() => OnPointClick(value)">
-                    @* Vis kun positive point-tal (ellers vises tom streng) *@
-                    @((value.HasValue && value.Value > 0) ? value.Value.ToString() : "")
-                </td>
+                <th class="@GetHeaderClass(i)">@Columns[i]</th>
             }
         </tr>
-    }
-    </tbody>
-</table>
+        </thead>
+
+        <tbody>
+        @* Alle rækker i grid’et *@
+        @foreach (var row in GridRows)
+        {
+            <tr>
+                @* Rækkelabel (blå celle) med intensitet, så man visuelt kan skelne grupper *@
+                <th class="cell-blue @GetIntensityFromLabel(row.Label)">
+                    @row.Label
+                </th>
+
+                @* Point-cellerne i rækken *@
+                @for (var i = 0; i < row.Points.Count; i++)
+                {
+                    @* value kan være null (ingen celle/ikke relevant), eller et tal *@
+                    var value = row.Points[i];
+
+                    @* Klik åbner modal via OnPointClick (typisk først relevant når bruger er logget ind) *@
+                    <td class="@GetCellClass(value, i, row.Label) @(_currentUser is null ? "disabled" : "")"
+                        @onclick="() => OnPointClick(value)">
+                        @* Vis kun positive point-tal (ellers vises tom streng) *@
+                        @((value.HasValue && value.Value > 0) ? value.Value.ToString() : "")
+                    </td>
+                }
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>
 
 @* ------------------------------------------------------------
    Sektion under tabellen:

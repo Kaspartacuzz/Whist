@@ -292,4 +292,16 @@ h3.whist-point-title {
     .btn-add {
         margin-left: auto;
     }
+
+    .table-scroll {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Lad tabellen være så bred som den skal (så den kan scrolle) */
+    .table-scroll > table {
+        width: max-content;
+        min-width: 100%;
+    }
 }
