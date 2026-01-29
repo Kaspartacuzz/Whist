@@ -18,7 +18,6 @@ body, html {
 
 /* Scroll container KUN for Om os siden */
 .about-scroll {
-    height: calc(100vh - 90px); /* 90px ≈ navbar-højde */
     overflow-y: auto;
 
     scroll-snap-type: y mandatory;
