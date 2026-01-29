@@ -14,7 +14,7 @@ public class PointRepositoryMongoDB : IPointRepository
     private readonly IMongoCollection<PointEntry> _points;
 
     /// <summary>
-    /// Opretter forbindelse til MongoDB baseret på appsettings.
+    /// Opretter forbindelse til MongoDB baseret på appsettings og initialiserer points-collection.
     /// </summary>
     public PointRepositoryMongoDB(IConfiguration config)
     {
@@ -27,6 +27,9 @@ public class PointRepositoryMongoDB : IPointRepository
     // READ
     // =========================
 
+    /// <summary>
+    /// Returnerer alle point-entries fra databasen.
+    /// </summary>
     /// <inheritdoc />
     public async Task<List<PointEntry>> GetAll()
     {
@@ -37,6 +40,9 @@ public class PointRepositoryMongoDB : IPointRepository
     // WRITE
     // =========================
 
+    /// <summary>
+    /// Opretter et nyt point-entry ved at generere et Id og indsætte dokumentet i databasen.
+    /// </summary>
     /// <inheritdoc />
     public async Task Add(PointEntry point)
     {
@@ -45,12 +51,18 @@ public class PointRepositoryMongoDB : IPointRepository
         await _points.InsertOneAsync(point);
     }
 
+    /// <summary>
+    /// Sletter et point-entry ud fra Id.
+    /// </summary>
     /// <inheritdoc />
     public async Task Delete(int id)
     {
         await _points.DeleteOneAsync(p => p.Id == id);
     }
 
+    /// <summary>
+    /// Sletter alle point-entries (bruges typisk til reset af point).
+    /// </summary>
     /// <inheritdoc />
     public async Task DeleteAll()
     {
@@ -61,6 +73,9 @@ public class PointRepositoryMongoDB : IPointRepository
     // Helpers
     // =========================
 
+    /// <summary>
+    /// Finder næste Id til et nyt point-entry ved at hente den højeste eksisterende Id og lægge 1 til.
+    /// </summary>
     /// <inheritdoc />
     public async Task<int> GetNextId()
     {

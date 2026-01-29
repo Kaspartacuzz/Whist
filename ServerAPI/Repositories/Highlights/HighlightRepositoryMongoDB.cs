@@ -15,14 +15,14 @@ public class HighlightRepositoryMongoDB : IHighlightRepository
     private readonly IMongoCollection<CounterDoc> _counters;
 
     /// <summary>
-    /// Opretter forbindelse til MongoDB baseret på appsettings.
-/// </summary>
+    /// Opretter forbindelse til MongoDB, initialiserer collections og forsøger at oprette et index på Date for hurtig sortering/paging.
+    /// </summary>
     public HighlightRepositoryMongoDB(IConfiguration config)
     {
         var client = new MongoClient(config["MongoDbSettings:ConnectionString"]);
         var db = client.GetDatabase(config["MongoDbSettings:DatabaseName"]);
         _highlights = db.GetCollection<Highlight>("highlights");
-        
+
         // Collection til tællere (counter pattern)
         _counters = db.GetCollection<CounterDoc>("counters");
 
@@ -47,18 +47,27 @@ public class HighlightRepositoryMongoDB : IHighlightRepository
     // READ
     // =========================
 
+    /// <summary>
+    /// Returnerer alle highlights fra databasen (uden filtrering/paging).
+    /// </summary>
     /// <inheritdoc />
     public async Task<IEnumerable<Highlight>> GetAll()
     {
         return await _highlights.Find(_ => true).ToListAsync();
     }
 
+    /// <summary>
+    /// Finder ét highlight ud fra Id (returnerer null hvis det ikke findes).
+    /// </summary>
     /// <inheritdoc />
     public async Task<Highlight?> GetById(int id)
     {
         return await _highlights.Find(h => h.Id == id).FirstOrDefaultAsync();
     }
 
+    /// <summary>
+    /// Henter highlights pagineret med valgfri søgning, dato-interval og mulighed for at inkludere/ekskludere private highlights.
+    /// </summary>
     /// <inheritdoc />
     public async Task<PagedResult<Highlight>> GetPaged(
         int page,
@@ -110,6 +119,9 @@ public class HighlightRepositoryMongoDB : IHighlightRepository
     // WRITE
     // =========================
 
+    /// <summary>
+    /// Opretter et nyt highlight: sætter dato, genererer sekventielt Id og indsætter dokumentet i databasen.
+    /// </summary>
     /// <inheritdoc />
     public async Task<Highlight> Add(Highlight highlight)
     {
@@ -123,12 +135,18 @@ public class HighlightRepositoryMongoDB : IHighlightRepository
         return highlight;
     }
 
+    /// <summary>
+    /// Sletter et highlight ud fra Id.
+    /// </summary>
     /// <inheritdoc />
     public async Task Delete(int id)
     {
         await _highlights.DeleteOneAsync(h => h.Id == id);
     }
 
+    /// <summary>
+    /// Opdaterer et highlight ved at erstatte hele dokumentet med samme Id.
+    /// </summary>
     /// <inheritdoc />
     public async Task Update(Highlight highlight)
     {
@@ -139,6 +157,9 @@ public class HighlightRepositoryMongoDB : IHighlightRepository
     // Helpers
     // =========================
 
+    /// <summary>
+    /// Genererer næste sekventielle Id via counter-pattern (atomisk increment med upsert).
+    /// </summary>
     private async Task<int> GetNextIdAsync()
     {
         // Automatisk: find counter doc for "highlights" og increment med 1.
@@ -156,7 +177,6 @@ public class HighlightRepositoryMongoDB : IHighlightRepository
         return counter.Seq;
     }
 
-    
     /// <summary>
     /// Bruges til at generere sekventielle ids (max+1) uden at scanne hele collectionen.
     /// </summary>

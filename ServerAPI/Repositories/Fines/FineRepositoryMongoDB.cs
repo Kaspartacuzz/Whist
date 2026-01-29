@@ -6,7 +6,7 @@ namespace ServerAPI.Repositories.Fines;
 /// <summary>
 /// MongoDB implementation af IFineRepository.
 /// Her ligger bøder som en "embedded list" på User-dokumentet:
-///   User { Id, ..., List&lt;Fine&gt; Fines }
+///   User { Id, ..., List<Fine> Fines }
 ///
 /// Fordel: simpelt for et lille projekt.
 /// Ulempe: ved store datamængder kan updates blive tungere (read-modify-write på hele user-dokumentet).
@@ -17,7 +17,7 @@ public class FineRepositoryMongoDB : IFineRepository
 
     /// <summary>
     /// Opretter forbindelse til MongoDB baseret på appsettings.
-/// </summary>
+    /// </summary>
     public FineRepositoryMongoDB(IConfiguration config)
     {
         var client = new MongoClient(config["MongoDbSettings:ConnectionString"]);
@@ -29,6 +29,9 @@ public class FineRepositoryMongoDB : IFineRepository
     // READ
     // =========================
 
+    /// <summary>
+    /// Returnerer alle bøder på tværs af alle brugere (fladet ud) sorteret nyeste først.
+    /// </summary>
     /// <inheritdoc />
     public Fine[] GetAll()
     {
@@ -42,6 +45,9 @@ public class FineRepositoryMongoDB : IFineRepository
             .ToArray();
     }
 
+    /// <summary>
+    /// Returnerer alle bøder for én bruger (sorteret nyeste først).
+    /// </summary>
     /// <inheritdoc />
     public Fine[] GetByUserId(int userId)
     {
@@ -58,6 +64,9 @@ public class FineRepositoryMongoDB : IFineRepository
     // CREATE
     // =========================
 
+    /// <summary>
+    /// Tilføjer en ny bøde til den relevante bruger (embedded i User-dokumentet) og gemmer brugeren igen.
+    /// </summary>
     /// <inheritdoc />
     public void AddFine(Fine fine)
     {
@@ -82,6 +91,9 @@ public class FineRepositoryMongoDB : IFineRepository
     // UPDATE
     // =========================
 
+    /// <summary>
+    /// Opdaterer en eksisterende bøde ved at erstatte elementet i brugerens fines-liste og gemme brugeren igen.
+    /// </summary>
     /// <inheritdoc />
     public void Update(Fine fine)
     {
@@ -105,6 +117,9 @@ public class FineRepositoryMongoDB : IFineRepository
     // DELETE
     // =========================
 
+    /// <summary>
+    /// Sletter en bøde fra en bestemt bruger ved at filtrere bøden ud af fines-listen og gemme brugeren igen.
+    /// </summary>
     /// <inheritdoc />
     public void Delete(int userId, int id)
     {
@@ -129,98 +144,101 @@ public class FineRepositoryMongoDB : IFineRepository
         public Fine Fines { get; set; } = default!;
     }
 
+    /// <summary>
+    /// Henter bøder pagineret med valgfri filtrering (bruger, søgning, dato, beløb og betalt-status) via aggregation pipeline.
+    /// </summary>
     /// <inheritdoc />
     public PagedResult<Fine> GetPaged(int page, int pageSize, int? userId = null, string? searchTerm = null, DateTime? fromDate = null, DateTime? toDate = null, decimal? minAmount = null, decimal? maxAmount = null, bool? isPaid = null)
-{
-    if (page < 1) page = 1;
-    if (pageSize < 1) pageSize = 5;
-
-    var skip = (page - 1) * pageSize;
-
-    var userFilter = userId.HasValue
-        ? Builders<User>.Filter.Eq(u => u.Id, userId.Value)
-        : Builders<User>.Filter.Empty;
-
-    // 1) Hvis vi søger på navn, så find userIds der matcher (case-insensitive)
-    HashSet<int>? matchedUserIds = null;
-
-    if (!string.IsNullOrWhiteSpace(searchTerm))
     {
-        var term = searchTerm.Trim().ToLowerInvariant();
+        if (page < 1) page = 1;
+        if (pageSize < 1) pageSize = 5;
 
-        matchedUserIds = _users.Find(_ => true)
-            .Project(u => new { u.Id, u.NickName })
-            .ToList()
-            .Where(u => (u.NickName ?? "").ToLowerInvariant().Contains(term))
-            .Select(u => u.Id)
-            .ToHashSet();
-    }
+        var skip = (page - 1) * pageSize;
 
-    // 2) Byg fine-level filter (efter unwind)
-    var fineFilters = new List<FilterDefinition<FineWrapper>>();
+        var userFilter = userId.HasValue
+            ? Builders<User>.Filter.Eq(u => u.Id, userId.Value)
+            : Builders<User>.Filter.Empty;
 
-    // Paid filter
-    if (isPaid.HasValue)
-        fineFilters.Add(Builders<FineWrapper>.Filter.Eq(f => f.Fines.IsPaid, isPaid.Value));
+        // 1) Hvis vi søger på navn, så find userIds der matcher (case-insensitive)
+        HashSet<int>? matchedUserIds = null;
 
-    // Date range (inklusive)
-    if (fromDate.HasValue)
-        fineFilters.Add(Builders<FineWrapper>.Filter.Gte(f => f.Fines.Date, fromDate.Value.Date));
-
-    if (toDate.HasValue)
-        fineFilters.Add(Builders<FineWrapper>.Filter.Lt(f => f.Fines.Date, toDate.Value.Date.AddDays(1)));
-
-    // Amount range
-    if (minAmount.HasValue)
-        fineFilters.Add(Builders<FineWrapper>.Filter.Gte(f => f.Fines.Amount, minAmount.Value));
-
-    if (maxAmount.HasValue)
-        fineFilters.Add(Builders<FineWrapper>.Filter.Lte(f => f.Fines.Amount, maxAmount.Value));
-    
-    // SearchTerm: comment contains OR userId in matchedUserIds
-    if (!string.IsNullOrWhiteSpace(searchTerm))
-    {
-        var term = searchTerm.Trim();
-
-        var commentMatch = Builders<FineWrapper>.Filter.Regex(
-            f => f.Fines.Comment,
-            new MongoDB.Bson.BsonRegularExpression(term, "i"));
-
-        var orParts = new List<FilterDefinition<FineWrapper>> { commentMatch };
-
-        if (matchedUserIds is { Count: > 0 })
+        if (!string.IsNullOrWhiteSpace(searchTerm))
         {
-            var userIdMatch = Builders<FineWrapper>.Filter.In(f => f.Fines.UserId, matchedUserIds);
-            orParts.Add(userIdMatch);
+            var term = searchTerm.Trim().ToLowerInvariant();
+
+            matchedUserIds = _users.Find(_ => true)
+                .Project(u => new { u.Id, u.NickName })
+                .ToList()
+                .Where(u => (u.NickName ?? "").ToLowerInvariant().Contains(term))
+                .Select(u => u.Id)
+                .ToHashSet();
         }
 
-        fineFilters.Add(Builders<FineWrapper>.Filter.Or(orParts));
+        // 2) Byg fine-level filter (efter unwind)
+        var fineFilters = new List<FilterDefinition<FineWrapper>>();
+
+        // Paid filter
+        if (isPaid.HasValue)
+            fineFilters.Add(Builders<FineWrapper>.Filter.Eq(f => f.Fines.IsPaid, isPaid.Value));
+
+        // Date range (inklusive)
+        if (fromDate.HasValue)
+            fineFilters.Add(Builders<FineWrapper>.Filter.Gte(f => f.Fines.Date, fromDate.Value.Date));
+
+        if (toDate.HasValue)
+            fineFilters.Add(Builders<FineWrapper>.Filter.Lt(f => f.Fines.Date, toDate.Value.Date.AddDays(1)));
+
+        // Amount range
+        if (minAmount.HasValue)
+            fineFilters.Add(Builders<FineWrapper>.Filter.Gte(f => f.Fines.Amount, minAmount.Value));
+
+        if (maxAmount.HasValue)
+            fineFilters.Add(Builders<FineWrapper>.Filter.Lte(f => f.Fines.Amount, maxAmount.Value));
+
+        // SearchTerm: comment contains OR userId in matchedUserIds
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            var term = searchTerm.Trim();
+
+            var commentMatch = Builders<FineWrapper>.Filter.Regex(
+                f => f.Fines.Comment,
+                new MongoDB.Bson.BsonRegularExpression(term, "i"));
+
+            var orParts = new List<FilterDefinition<FineWrapper>> { commentMatch };
+
+            if (matchedUserIds is { Count: > 0 })
+            {
+                var userIdMatch = Builders<FineWrapper>.Filter.In(f => f.Fines.UserId, matchedUserIds);
+                orParts.Add(userIdMatch);
+            }
+
+            fineFilters.Add(Builders<FineWrapper>.Filter.Or(orParts));
+        }
+
+        var fineFilter = fineFilters.Count == 0
+            ? Builders<FineWrapper>.Filter.Empty
+            : Builders<FineWrapper>.Filter.And(fineFilters);
+
+        // 3) TotalCount: count efter samme filtre
+        var totalCount = _users.Aggregate()
+            .Match(userFilter)
+            .Unwind<User, FineWrapper>(u => u.Fines)
+            .Match(fineFilter)
+            .Count()
+            .FirstOrDefault()
+            ?.Count ?? 0;
+
+        // 4) Items: match + sort + skip + limit
+        var items = _users.Aggregate()
+            .Match(userFilter)
+            .Unwind<User, FineWrapper>(u => u.Fines)
+            .Match(fineFilter)
+            .SortByDescending(fw => fw.Fines.Date)
+            .Skip(skip)
+            .Limit(pageSize)
+            .Project(fw => fw.Fines)
+            .ToList();
+
+        return new PagedResult<Fine>(items, (int)totalCount, page, pageSize);
     }
-
-    var fineFilter = fineFilters.Count == 0
-        ? Builders<FineWrapper>.Filter.Empty
-        : Builders<FineWrapper>.Filter.And(fineFilters);
-
-    // 3) TotalCount: count efter samme filtre
-    var totalCount = _users.Aggregate()
-        .Match(userFilter)
-        .Unwind<User, FineWrapper>(u => u.Fines)
-        .Match(fineFilter)
-        .Count()
-        .FirstOrDefault()
-        ?.Count ?? 0;
-
-    // 4) Items: match + sort + skip + limit
-    var items = _users.Aggregate()
-        .Match(userFilter)
-        .Unwind<User, FineWrapper>(u => u.Fines)
-        .Match(fineFilter)
-        .SortByDescending(fw => fw.Fines.Date)
-        .Skip(skip)
-        .Limit(pageSize)
-        .Project(fw => fw.Fines)
-        .ToList();
-
-    return new PagedResult<Fine>(items, (int)totalCount, page, pageSize);
-}
 }

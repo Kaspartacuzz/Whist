@@ -18,6 +18,9 @@ public class RuleRepositoryMongoDB : IRuleRepository
 
     private readonly IMongoCollection<Rule> _rules;
 
+    /// <summary>
+    /// Opretter forbindelse til MongoDB baseret på appsettings og initialiserer rules-collection.
+    /// </summary>
     public RuleRepositoryMongoDB(IConfiguration config)
     {
         var client = new MongoClient(config["MongoDbSettings:ConnectionString"]);
@@ -29,9 +32,15 @@ public class RuleRepositoryMongoDB : IRuleRepository
     // READ
     // =========================
 
+    /// <summary>
+    /// Returnerer alle regler fra databasen.
+    /// </summary>
     public async Task<List<Rule>> GetAll()
         => await _rules.Find(_ => true).ToListAsync();
 
+    /// <summary>
+    /// Finder én regel ud fra Id (returnerer null hvis den ikke findes).
+    /// </summary>
     public async Task<Rule?> GetById(int id)
         => await _rules.Find(r => r.Id == id).FirstOrDefaultAsync();
 
@@ -39,6 +48,9 @@ public class RuleRepositoryMongoDB : IRuleRepository
     // WRITE
     // =========================
 
+    /// <summary>
+    /// Opretter en ny regel ved at finde næste ledige Id og indsætte reglen i databasen.
+    /// </summary>
     public async Task<Rule> Add(Rule rule)
     {
         // Find næste ledige Id (manuelt, da vi ikke bruger ObjectId).
@@ -53,9 +65,15 @@ public class RuleRepositoryMongoDB : IRuleRepository
         return rule;
     }
 
+    /// <summary>
+    /// Opdaterer en eksisterende regel ved at erstatte dokumentet med samme Id.
+    /// </summary>
     public async Task Update(Rule rule)
         => await _rules.ReplaceOneAsync(r => r.Id == rule.Id, rule);
 
+    /// <summary>
+    /// Sletter en regel ud fra Id.
+    /// </summary>
     public async Task Delete(int id)
         => await _rules.DeleteOneAsync(r => r.Id == id);
 }

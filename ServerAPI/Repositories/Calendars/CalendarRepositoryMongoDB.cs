@@ -17,6 +17,9 @@ public class CalendarRepositoryMongoDB : ICalendarRepository
     private readonly IMongoCollection<Calendar> _calendar;
     private readonly IMongoCollection<CounterDoc> _counters;
 
+    /// <summary>
+    /// Initialiserer repository: opretter MongoDB-klient, vælger DB/collections og sikrer relevante indexes.
+    /// </summary>
     public CalendarRepositoryMongoDB(IConfiguration config)
     {
         var client = new MongoClient(config["MongoDbSettings:ConnectionString"]);
@@ -28,6 +31,9 @@ public class CalendarRepositoryMongoDB : ICalendarRepository
         EnsureIndexes();
     }
 
+    /// <summary>
+    /// Sikrer nødvendige indexes for kalender-collection (unik dato + worker-venlige søgefelter).
+    /// </summary>
     private void EnsureIndexes()
     {
         // 1) Én event pr. dato (unik)
@@ -42,11 +48,17 @@ public class CalendarRepositoryMongoDB : ICalendarRepository
         _calendar.Indexes.CreateMany(new[] { dateIndex, reminderIndex });
     }
 
+    /// <summary>
+    /// Returnerer alle kalender-events fra databasen.
+    /// </summary>
     public async Task<List<Calendar>> GetAll()
     {
         return await _calendar.Find(_ => true).ToListAsync();
     }
 
+    /// <summary>
+    /// Finder et kalender-event ud fra en dato (dato behandles som UTC "date-only").
+    /// </summary>
     public async Task<Calendar?> GetByDate(DateTime date)
     {
         // Dato gemmes som UTC "date-only"
@@ -54,6 +66,9 @@ public class CalendarRepositoryMongoDB : ICalendarRepository
         return await _calendar.Find(x => x.Date == utcDateOnly).FirstOrDefaultAsync();
     }
 
+    /// <summary>
+    /// Opretter et nyt event eller opdaterer eksisterende event på samme dato (upsert), uden at nulstille ReminderSent.
+    /// </summary>
     public async Task AddOrUpdate(Calendar calendarEvent)
     {
         // Ensure date stored as UTC date-only
@@ -84,11 +99,17 @@ public class CalendarRepositoryMongoDB : ICalendarRepository
         await _calendar.ReplaceOneAsync(filter, calendarEvent, new ReplaceOptions { IsUpsert = true });
     }
 
+    /// <summary>
+    /// Sletter et kalender-event ud fra dets Id.
+    /// </summary>
     public async Task Delete(int id)
     {
         await _calendar.DeleteOneAsync(c => c.Id == id);
     }
 
+    /// <summary>
+    /// Finder events der ligger præcis offsetDays fra i dag (lokal tid), og som endnu ikke har fået sendt reminder.
+    /// </summary>
     public async Task<List<Calendar>> FindByExactOffsetDays(int offsetDays)
     {
         // Europe/Copenhagen (Windows-id = "Central Europe Standard Time")
@@ -107,12 +128,18 @@ public class CalendarRepositoryMongoDB : ICalendarRepository
         return await _calendar.Find(filter).ToListAsync();
     }
 
+    /// <summary>
+    /// Marker et enkelt kalender-event som "reminder sendt" (ReminderSent = true).
+    /// </summary>
     public async Task MarkReminderSent(int calendarId)
     {
         var update = Builders<Calendar>.Update.Set(x => x.ReminderSent, true);
         await _calendar.UpdateOneAsync(c => c.Id == calendarId, update);
     }
 
+    /// <summary>
+    /// Marker flere kalender-events som "reminders sendt" i ét bulk update-kald.
+    /// </summary>
     public async Task MarkRemindersSent(IEnumerable<int> calendarIds)
     {
         var ids = calendarIds?.Distinct().ToArray() ?? Array.Empty<int>();
@@ -128,6 +155,9 @@ public class CalendarRepositoryMongoDB : ICalendarRepository
     // Counter (O(1) id)
     // --------------------------
 
+    /// <summary>
+    /// Henter næste sekventielle Id via counter-pattern (FindOneAndUpdate + Inc), så vi undgår at scanne hele collectionen.
+    /// </summary>
     private async Task<int> GetNextId()
     {
         var filter = Builders<CounterDoc>.Filter.Eq(x => x.Id, CalendarCounterKey);
