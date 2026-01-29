@@ -18,11 +18,6 @@ body, html {
 
 /* Scroll container KUN for Om os siden */
 .about-scroll {
-    overflow-y: auto;
-
-    scroll-snap-type: y mandatory;
-    scroll-behavior: smooth;
-
     /* Så den ikke “snapper” ind under navbar */
     scroll-padding-top: 0;
 }
@@ -89,16 +84,20 @@ ul {
         height: auto;
     }
 
-    .content, .image {
-        /* "order: unset" er nok – fjern dobbelt-ordre */
-        order: unset;
+    /* VIGTIGT: altid tekst først, så billede – uanset desktop-alternation */
+    .content {
+        order: 0;
+        justify-content: flex-start;  /* fjerner “hulrum” over teksten */
         align-items: flex-start !important;
         text-align: left !important;
         height: auto;
-        padding: 2rem;
+        padding: 1.5rem;
     }
 
     .image {
-        min-height: 250px;
+        order: 1;
+        height: auto;
+        min-height: 240px;
     }
 }
+

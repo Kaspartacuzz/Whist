@@ -1,5 +1,4 @@
 @page "/om_os"
-@inject IJSRuntime JS
 
 <!--
     OM OS (full-bleed + scroll-snap):
@@ -83,13 +82,3 @@
     </section>
 
 </div>
-
-@code {
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (!firstRender) return;
-
-        // Sørger for at nav-hide (JS) hook’er sig på .about-scroll efter siden er rendret
-        await JS.InvokeVoidAsync("navHideInit");
-    }
-}
