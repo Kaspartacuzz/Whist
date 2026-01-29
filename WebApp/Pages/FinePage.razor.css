@@ -316,7 +316,6 @@
 .fine-table table {
     width: 100%;
     border-collapse: collapse;
-    table-layout: fixed;
 }
 
 .fine-table th, .fine-table td {
