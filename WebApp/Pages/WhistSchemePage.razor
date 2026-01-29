@@ -10,12 +10,23 @@
 @inject IJSRuntime JS
 @inject Service.AuthServices.IAuthService AuthService
 
+@* ------------------------------------------------------------
+   Side: Whist Point Skema
+   - Viser pointskemaet som “grid”
+   - Viser sol-meldinger + pointoversigt (inkl. stjerner)
+   - Modal åbnes ved klik på en gyldig point-celle
+   ------------------------------------------------------------ *@
+
 <h3 class="whist-point-title">Whist Point Skema</h3>
 
+@* Hovedskema: rækker = meldinger/labels, kolonner = niveauer (Columns) *@
 <table class="point-table">
     <thead>
     <tr>
+        @* Venstre header til selve rækkernes label *@
         <th>Melding</th>
+
+        @* Dynamiske kolonne-headere (styling afhænger af GetHeaderClass) *@
         @for (var i = 0; i < Columns.Count; i++)
         {
             <th class="@GetHeaderClass(i)">@Columns[i]</th>
@@ -24,19 +35,25 @@
     </thead>
 
     <tbody>
+    @* Alle rækker i grid’et *@
     @foreach (var row in GridRows)
     {
         <tr>
+            @* Rækkelabel (blå celle) med intensitet, så man visuelt kan skelne grupper *@
             <th class="cell-blue @GetIntensityFromLabel(row.Label)">
                 @row.Label
             </th>
 
+            @* Point-cellerne i rækken *@
             @for (var i = 0; i < row.Points.Count; i++)
             {
+                @* value kan være null (ingen celle/ikke relevant), eller et tal *@
                 var value = row.Points[i];
 
+                @* Klik åbner modal via OnPointClick (typisk først relevant når bruger er logget ind) *@
                 <td class="@GetCellClass(value, i, row.Label) @(_currentUser is null ? "disabled" : "")"
                     @onclick="() => OnPointClick(value)">
+                    @* Vis kun positive point-tal (ellers vises tom streng) *@
                     @((value.HasValue && value.Value > 0) ? value.Value.ToString() : "")
                 </td>
             }
@@ -45,19 +62,28 @@
     </tbody>
 </table>
 
+@* ------------------------------------------------------------
+   Sektion under tabellen:
+   - Venstre: Sol-meldinger (egen komponent)
+   - Højre: Pointoversigt (summering pr. spiller + stjerner)
+   ------------------------------------------------------------ *@
 <div class="below-tables-container">
+    @* Sol-meldinger (separate komponent) *@
     <div class="sun-scheme">
         <div class="top-bar">
             <h4>Sol-meldinger</h4>
         </div>
 
+        @* Når sol-point ændres, genindlæses pointdata via LoadPoints *@
         <SunSchemeComponent PointsChanged="LoadPoints" />
     </div>
 
+    @* Pointoversigt pr. spiller *@
     <div class="point-summary">
         <div class="top-bar">
             <h4>Pointoversigt</h4>
 
+            @* Kun logget-in bruger kan “tilføje bøder” ud fra point *@
             @if (_currentUser is not null)
             {
                 <button class="btn-add" @onclick="ResetPointsAndCreateFines">+ Tilføj bøder</button>
@@ -73,6 +99,10 @@
             </thead>
 
             <tbody>
+            @* Bygger en “view-model” til tabellen:
+               - Name fra PlayerNames
+               - Total fra PlayerTotals (fallback = 0)
+               - Sortér: flest point først, derefter navn *@
             @foreach (var row in PlayerNames
                           .Select(kvp => new
                           {
@@ -83,18 +113,24 @@
                           .OrderByDescending(x => x.Total)   // behold “flest point først”
                           .ThenBy(x => x.Name))              // pæn stabil sortering
             {
+                @* CSS-klasse til farvekodning af positive/negative totals *@
                 var cssClass = row.Total > 0 ? "positive" : row.Total < 0 ? "negative" : "";
 
                 <tr>
                     <td>@row.Name</td>
+
                     <td class="@cssClass point-cell">
+                        @* Selve totalsummen *@
                         <span class="point-value">@row.Total</span>
 
+                        @* Stjerneknap pr. spiller (session-stjerner) *@
                         <div class="star-button-wrapper star-in-table">
+                            @* Klik giver en stjerne til spilleren i den aktuelle session *@
                             <button class="star-button @(_currentUser is null ? "disabled" : "")"
                                     type="button"
                                     @onclick="() => AddSessionStar(row.Id)">
                                 ⭐
+                                @* Vis antal stjerner kun når der er mindst 1 *@
                                 @if (GetSessionStars(row.Id) > 0)
                                 {
                                     <span class="star-count">@GetSessionStars(row.Id)</span>
@@ -109,6 +145,11 @@
     </div>
 </div>
 
+@* ------------------------------------------------------------
+   Modal: vælg spillere når man klikker på et point i skemaet
+   - IsModalOpen styrer om den vises
+   - OnConfirm / OnCancel håndteres i code-behind
+   ------------------------------------------------------------ *@
 @if (IsModalOpen)
 {
     <SelectPlayersComponent
