@@ -2,13 +2,29 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Core;
 
-// Repræsenterer en bøde givet til en bruger
+/// <summary>
+/// Bøde der tilhører en bruger.
+/// Bøder kan filtreres/pagineres og kan markeres som betalt.
+/// </summary>
 public class Fine
 {
-    public int Id { get; set; }                 // Unikt ID for bøden
-    public int UserId { get; set; }             // ID på den bruger, bøden tilhører
-    [Range(1, 500)] public decimal Amount { get; set; }         // Beløb for bøden
-    [MaxLength(400)] public string Comment { get; set; } = "";   // Valgfri kommentar til bøden
-    public DateTime Date { get; set; }          // Hvornår bøden blev givet
-    public bool IsPaid { get; set; } = false;   // Om bøden er betalt
+    /// <summary>Unikt ID for bøden.</summary>
+    public int Id { get; set; }
+
+    /// <summary>ID på brugeren som bøden tilhører.</summary>
+    public int UserId { get; set; }
+
+    /// <summary>Beløb (1-500).</summary>
+    [Range(1, 500)]
+    public decimal Amount { get; set; }
+
+    /// <summary>Valgfri kommentar (maks 400 tegn).</summary>
+    [MaxLength(400)]
+    public string Comment { get; set; } = "";
+
+    /// <summary>Hvornår bøden blev givet.</summary>
+    public DateTime Date { get; set; }
+
+    /// <summary>Om bøden er betalt.</summary>
+    public bool IsPaid { get; set; } = false;
 }

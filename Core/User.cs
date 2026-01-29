@@ -2,20 +2,61 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Core;
 
-// Repræsenterer en bruger i systemet
+/// <summary>
+/// Bruger i systemet.
+/// Indeholder profil-data samt relationer (fx bøder).
+/// </summary>
 public class User
 {
-    public int Id { get; set; }                                             // Unikt ID for brugeren
-    [MaxLength(40)] public string Name { get; set; } = "";                                  // Brugerens fulde navn
-    [MaxLength(30)] public string NickName { get; set; } = "";                              // Brugerens kaldenavn (visningsnavn)
-    [MaxLength(100)] [EmailAddress] public string Email { get; set; } = "";                                 // Brugerens e-mailadresse
-    [MaxLength(100)] public string Password { get; set; } = "";                              // Brugerens adgangskode (skal senere hashes i rigtig database)
-    [MaxLength(200)] public string Address { get; set; } = "";
-    [MaxLength(8)] [MinLength(8)] [Phone]public string PhoneNumber { get; set; } = "";      // Brugerens Telefonnummer - bruges til mobilepay
-    
-    public DateOnly? BirthDate { get; set; }                                                // Brugerens fødselsdato
-    [MaxLength(500)] public string Description { get; set; } = "";                           // Lang tekst om personen
-    [MaxLength(200)] public string FunFact { get; set; } = "";                               // Sjov info
-    public string ImageUrl { get; set; } = "";                                               // Profilbillede
-    public ICollection<Fine> Fines { get; set; } = new List<Fine>();                         // Liste over bøder
+    /// <summary>Unikt ID for brugeren.</summary>
+    public int Id { get; set; }
+
+    /// <summary>Fulde navn (maks 40 tegn).</summary>
+    [MaxLength(40)]
+    public string Name { get; set; } = "";
+
+    /// <summary>Kaldenavn/visningsnavn (maks 30 tegn).</summary>
+    [MaxLength(30)]
+    public string NickName { get; set; } = "";
+
+    /// <summary>Email (maks 100 tegn).</summary>
+    [MaxLength(100)]
+    [EmailAddress]
+    public string Email { get; set; } = "";
+
+    /// <summary>
+    /// Password (maks 100 tegn).
+    /// NOTE: I prod bør dette altid være hashed/saltet i DB (ikke plaintext).
+    /// </summary>
+    [MaxLength(100)]
+    public string Password { get; set; } = "";
+
+    /// <summary>Adresse (maks 200 tegn).</summary>
+    [MaxLength(200)]
+    public string Address { get; set; } = "";
+
+    /// <summary>
+    /// Telefonnummer (8 cifre) – bruges fx til MobilePay.
+    /// </summary>
+    [MaxLength(8)]
+    [MinLength(8)]
+    [Phone]
+    public string PhoneNumber { get; set; } = "";
+
+    /// <summary>Fødselsdato (valgfri).</summary>
+    public DateOnly? BirthDate { get; set; }
+
+    /// <summary>Beskrivelse/biografi (maks 500 tegn).</summary>
+    [MaxLength(500)]
+    public string Description { get; set; } = "";
+
+    /// <summary>Fun fact (maks 200 tegn).</summary>
+    [MaxLength(200)]
+    public string FunFact { get; set; } = "";
+
+    /// <summary>URL til profilbillede.</summary>
+    public string ImageUrl { get; set; } = "";
+
+    /// <summary>Liste over bøder tilknyttet brugeren.</summary>
+    public ICollection<Fine> Fines { get; set; } = new List<Fine>();
 }

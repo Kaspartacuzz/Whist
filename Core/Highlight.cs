@@ -2,14 +2,35 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Core;
 
-// Repræsenterer et højdepunkt knyttet til en bruger
+/// <summary>
+/// Et "highlight" (minde/hændelse) knyttet til en bruger.
+/// Kan have titel, beskrivelse og evt. et billede.
+/// </summary>
 public class Highlight
 {
-    public int Id { get; set; }                             // Unikt ID for highlightet
-    [MaxLength(80)] public string Title { get; set; } = "";                 // Kort titel for highlightet
-    [MaxLength(400)] public string Description { get; set; } = "";           // Beskrivelse af hvad highlightet handler om
-    public DateTime Date { get; set; } = DateTime.Today;    // Dato for highlightet
-    public string? ImageUrl { get; set; }                   // Billede uploadet eller taget
-    public int UserId { get; set; }                         // ID på den bruger, highlightet tilhører
-    public bool IsPrivate { get; set; } = false;            // Bruges til at gøre highlights private
-}  
+    /// <summary>Unikt ID for highlightet.</summary>
+    public int Id { get; set; }
+
+    /// <summary>Kort titel (maks 80 tegn).</summary>
+    [MaxLength(80)]
+    public string Title { get; set; } = "";
+
+    /// <summary>Beskrivelse (maks 400 tegn).</summary>
+    [MaxLength(400)]
+    public string Description { get; set; } = "";
+
+    /// <summary>Dato for highlightet (default: i dag).</summary>
+    public DateTime Date { get; set; } = DateTime.Today;
+
+    /// <summary>URL til billede (hvis der er uploadet et).</summary>
+    public string? ImageUrl { get; set; }
+
+    /// <summary>ID på brugeren som highlightet tilhører.</summary>
+    public int UserId { get; set; }
+
+    /// <summary>
+    /// Om highlightet er privat.
+    /// Private highlights skal kun kunne ses af ejeren.
+    /// </summary>
+    public bool IsPrivate { get; set; } = false;
+}
