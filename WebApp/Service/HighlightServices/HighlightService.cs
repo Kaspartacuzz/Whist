@@ -1,5 +1,6 @@
 using System.Net.Http.Json;
 using Core;
+using WebApp.Service.AuthServices;
 
 namespace WebApp.Service.HighlightServices;
 
@@ -10,13 +11,15 @@ namespace WebApp.Service.HighlightServices;
 public class HighlightService : IHighlightService
 {
     private readonly HttpClient _http;
+    private readonly IAuthService _auth;
 
     /// <summary>
     /// HttpClient er konfigureret via DI (typisk med BaseAddress til ServerAPI).
     /// </summary>
-    public HighlightService(HttpClient http)
+    public HighlightService(HttpClient http, IAuthService auth)
     {
         _http = http;
+        _auth = auth;
     }
 
     // =========================
@@ -46,6 +49,7 @@ public class HighlightService : IHighlightService
     public async Task<Highlight> Add(Highlight highlight)
     {
         // Opretter highlight i backend og forventer at backend returnerer highlight objektet.
+        await AddDevKeyHeaderIfLoggedIn();
         var response = await _http.PostAsJsonAsync("api/highlight", highlight);
         response.EnsureSuccessStatusCode();
 
@@ -56,13 +60,16 @@ public class HighlightService : IHighlightService
     public async Task Delete(int id)
     {
         // Sletter highlight i backend (ingen response-body forventes).
-        await _http.DeleteAsync($"api/highlight/{id}");
+        await AddDevKeyHeaderIfLoggedIn();
+        var res = await _http.DeleteAsync($"api/highlight/{id}");
+        res.EnsureSuccessStatusCode();
     }
 
     /// <inheritdoc />
     public async Task Update(Highlight highlight)
     {
         // Opdaterer highlight i backend (ingen response-body forventes).
+        await AddDevKeyHeaderIfLoggedIn();
         var response = await _http.PutAsJsonAsync($"api/highlight/{highlight.Id}", highlight);
         response.EnsureSuccessStatusCode();
     }
@@ -94,4 +101,15 @@ public class HighlightService : IHighlightService
         return await _http.GetFromJsonAsync<PagedResult<Highlight>>(url)
                ?? new PagedResult<Highlight>(new List<Highlight>(), 0, page, pageSize);
     }
+    
+    // Helper til authentication
+    private async Task AddDevKeyHeaderIfLoggedIn()
+    {
+        var user = await _auth.GetCurrentUser();
+        _http.DefaultRequestHeaders.Remove("X-Whist-Key");
+
+        if (user is not null)
+            _http.DefaultRequestHeaders.Add("X-Whist-Key", "whist-dev-key");
+    }
+
 }

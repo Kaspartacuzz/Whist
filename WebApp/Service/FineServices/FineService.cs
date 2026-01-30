@@ -1,5 +1,6 @@
 using Core;
 using System.Net.Http.Json;
+using WebApp.Service.AuthServices;
 
 namespace WebApp.Service.FineServices;
 
@@ -7,16 +8,18 @@ namespace WebApp.Service.FineServices;
 /// Implementation af IFineService via HttpClient.
 /// OBS: Klassen hedder "Mock", men kalder et rigtigt API (det er bare navnet i projektet).
 /// </summary>
-public class FineServiceMock : IFineService
+public class FineService : IFineService
 {
     private readonly HttpClient _http;
+    private readonly IAuthService _auth;
 
     /// <summary>
     /// HttpClient er typisk konfigureret i DI med BaseAddress mod din ServerAPI.
     /// </summary>
-    public FineServiceMock(HttpClient http)
+    public FineService(HttpClient http, IAuthService auth)
     {
         _http = http;
+        _auth = auth;
     }
 
     /// <inheritdoc />
@@ -37,21 +40,27 @@ public class FineServiceMock : IFineService
     public async Task Add(Fine fine)
     {
         // Opretter en ny bøde i backend.
-        await _http.PostAsJsonAsync("api/fine", fine);
+        await AddDevKeyHeaderIfLoggedIn();
+        var res = await _http.PostAsJsonAsync("api/fine", fine);
+        res.EnsureSuccessStatusCode();
     }
 
     /// <inheritdoc />
     public async Task Update(Fine fine)
     {
         // Opdaterer en bøde i backend.
-        await _http.PutAsJsonAsync("api/fine", fine);
+        await AddDevKeyHeaderIfLoggedIn();
+        var res = await _http.PutAsJsonAsync("api/fine", fine);
+        res.EnsureSuccessStatusCode();
     }
 
     /// <inheritdoc />
     public async Task Delete(int userId, int id)
     {
         // Sletter en bøde for en given bruger.
-        await _http.DeleteAsync($"api/fine/user/{userId}/{id}");
+        await AddDevKeyHeaderIfLoggedIn();
+        var res = await _http.DeleteAsync($"api/fine/user/{userId}/{id}");
+        res.EnsureSuccessStatusCode();
     }
 
     /// <inheritdoc />
@@ -72,4 +81,15 @@ public class FineServiceMock : IFineService
 
         return _http.GetFromJsonAsync<PagedResult<Fine>>(url)!;
     }
+    
+    // Helper til authentication
+    private async Task AddDevKeyHeaderIfLoggedIn()
+    {
+        var user = await _auth.GetCurrentUser();
+        _http.DefaultRequestHeaders.Remove("X-Whist-Key");
+
+        if (user is not null)
+            _http.DefaultRequestHeaders.Add("X-Whist-Key", "whist-dev-key");
+    }
+
 }

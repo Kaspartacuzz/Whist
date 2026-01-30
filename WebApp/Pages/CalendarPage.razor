@@ -79,7 +79,7 @@
 <!-- Modal: tilføj/redigér note -->
 @if (ShowNoteModal && SelectedDate.HasValue && CurrentUser is not null)
 {
-    <div class="modal-backdrop">
+    <div class="modal-backdrop" tabindex="0" @onkeydown="HandleKeyDown">
         <div class="modal-container">
             <h3 class="modal-title">
                 @SelectedDate.Value.ToString("d. MMMM yyyy", new CultureInfo("da-DK"))
@@ -361,6 +361,8 @@
         SelectedDate = date;
         NewNote = EventDates.TryGetValue(date.Date, out var note) ? note : "";
         ShowNoteModal = true;
+        _shouldFocusConfirmButton = true;
+
     }
 
     private void CloseModal()

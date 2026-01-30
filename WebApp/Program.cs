@@ -44,7 +44,7 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 
 // NOTE: Fine bruger mock lige nu (som du også har haft i flowet).
-builder.Services.AddScoped<IFineService, FineServiceMock>();
+builder.Services.AddScoped<IFineService, FineService>();
 
 builder.Services.AddScoped<IHighlightService, HighlightService>();
 builder.Services.AddScoped<IUploadService, UploadService>();

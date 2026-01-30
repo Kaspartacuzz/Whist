@@ -5,6 +5,7 @@ using ServerAPI.Repositories.Highlights;
 using ServerAPI.Repositories.Points;
 using ServerAPI.Repositories.Rules;
 using ServerAPI.Workers;
+using Microsoft.AspNetCore.Authentication;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,6 +28,12 @@ builder.Services.AddSingleton<IHighlightRepository, HighlightRepositoryMongoDB>(
 builder.Services.AddSingleton<IRuleRepository, RuleRepositoryMongoDB>();
 builder.Services.AddSingleton<ICalendarRepository, CalendarRepositoryMongoDB>();
 builder.Services.AddSingleton<IPointRepository, PointRepositoryMongoDB>();
+
+builder.Services
+    .AddAuthentication("DevKey")
+    .AddScheme<AuthenticationSchemeOptions, DevKeyAuthHandler>("DevKey", options => { });
+
+
 
 // Authorization er slået til (men kræver stadig at du har auth + policies for at gøre noget reelt)
 builder.Services.AddAuthorization();
@@ -64,14 +71,15 @@ app.UseStaticFiles();
 // Redirect HTTP -> HTTPS
 app.UseHttpsRedirection();
 
+// CORS (skal ligge før MapControllers så den gælder for API endpoints)
+app.UseCors();
+
 // Auth middleware
 // OBS: UseAuthentication gør i praksis ingenting før du har builder.Services.AddAuthentication(...)
 // Men det er fint at lade den stå, hvis du planlægger auth senere.
 app.UseAuthentication();
 app.UseAuthorization();
 
-// CORS (skal ligge før MapControllers så den gælder for API endpoints)
-app.UseCors();
 
 // Map controllers (api/*)
 app.MapControllers();
