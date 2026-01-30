@@ -2,10 +2,16 @@
 @inject IAuthService AuthService
 @inject NavigationManager Navigation
 
+@using Microsoft.AspNetCore.Components.Web
+
 @* Vises kun når "show" er true *@
 @if (show)
 {
-    <div class="modal-overlay" @onclick="OnBackdropClick">
+    <div class="modal-overlay" 
+         @onclick="OnBackdropClick"
+         tabindex="0"
+         @onkeydown="HandleKeyDown"
+         @onclick="Hide">
         @* Stop klik i selve boksen fra at lukke modal *@
         <div class="modal-box" @onclick:stopPropagation="true">
             <h3>Log ind</h3>
@@ -22,7 +28,7 @@
                    @bind-value:event="oninput" />
 
             <div class="modal-actions">
-                <button class="primary" @onclick="Login">Log ind</button>
+                <button @ref="ConfirmButtonRef" class="primary" @onclick="Login">Log ind</button>
                 <button class="secondary" @onclick="Hide">Annuller</button>
             </div>
 
@@ -43,6 +49,10 @@
 
     // Parent kan hooke på "login success" (typisk til at opdatere NavMenu state)
     [Parameter] public EventCallback OnLoginSuccess { get; set; }
+    
+    // Fokus-håndtering (så Enter virker direkte)
+    private ElementReference ConfirmButtonRef;
+    private bool _shouldFocusConfirmButton;
 
     /// <summary>
     /// Vises udefra (fx via @ref i NavMenu).
@@ -90,4 +100,28 @@
         errorMessage = "Forkert email eller adgangskode";
         StateHasChanged(); // sørg for fejltekst kommer frem med det samme
     }
+    
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_shouldFocusConfirmButton)
+        {
+            _shouldFocusConfirmButton = false;
+            try { await ConfirmButtonRef.FocusAsync(); } catch { }
+        }
+    }
+
+    private async Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        // Enter => gem/bekræft
+        if (e.Key == "Enter")
+            await OnEnter();
+
+        // Escape => annuller/luk
+        else if (e.Key == "Escape")
+            await OnEscape();
+    }
+    
+    private Task OnEnter() => Login();
+    private Task OnEscape() { Hide(); return Task.CompletedTask; }
+
 }
