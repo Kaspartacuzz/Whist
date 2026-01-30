@@ -1,5 +1,6 @@
 @using Core
 @using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Web
 
 @inject Service.HighlightServices.IHighlightService HighlightService
 @inject Service.AuthServices.IAuthService AuthService
@@ -7,7 +8,10 @@
 
 @if (showModal)
 {
-    <div class="modal-backdrop" @onclick="Close">
+    <div class="modal-backdrop" 
+         tabindex="0"
+         @onkeydown="HandleKeyDown"
+         @onclick="Close">
         @* Stop klik inde i modal fra at lukke den *@
         <div class="modal-container" @onclick:stopPropagation="true">
             <h3 class="modal-title">
@@ -57,7 +61,7 @@
             }
 
             <div class="modal-actions">
-                <button class="modal-btn primary" @onclick="SaveHighlightAsync">
+                <button @ref="ConfirmButtonRef" class="modal-btn primary" @onclick="SaveHighlightAsync">
                     @(HighlightToEdit is null ? "Opret highlight" : "Gem ændringer")
                 </button>
                 <button class="modal-btn cancel" @onclick="Close">Annuller</button>
@@ -81,6 +85,10 @@
     private IBrowserFile? UploadedImage;
     private string? ImagePreview;               // URL til billede (fra UploadService)
     private string? UploadErrorMessage;
+    
+    // Fokus-håndtering (så Enter virker direkte)
+    private ElementReference ConfirmButtonRef;
+    private bool _shouldFocusConfirmButton;
 
     // Validering
     private string? ValidationErrorMessage;
@@ -136,6 +144,8 @@
         }
 
         showModal = true;
+        _shouldFocusConfirmButton = true;
+        
         StateHasChanged();
     }
 
@@ -252,4 +262,38 @@
 
         Close();
     }
+    
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        // Når modalen åbner, fokusér "Ja"-knappen én gang
+        if (_shouldFocusConfirmButton)
+        {
+            _shouldFocusConfirmButton = false;
+            try { await ConfirmButtonRef.FocusAsync(); } catch { }
+        }
+    }
+
+    // Keyboard handling
+    // =========================
+
+    /// <summary>
+    /// Enter => Confirm
+    /// Escape => Cancel
+    /// </summary>
+    private async Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        // Enter => gem/bekræft
+        if (e.Key == "Enter")
+            await OnEnter();
+
+        // Escape => annuller/luk
+        else if (e.Key == "Escape")
+            await OnEscape();
+    }
+    
+    // =========================
+    // Actions
+    // =========================
+    private Task OnEnter() => SaveHighlightAsync();
+    private Task OnEscape() { Close(); return Task.CompletedTask; }
 }

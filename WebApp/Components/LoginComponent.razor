@@ -103,6 +103,7 @@
     
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        // Når modalen åbner, fokusér "Ja"-knappen én gang
         if (_shouldFocusConfirmButton)
         {
             _shouldFocusConfirmButton = false;
@@ -110,6 +111,13 @@
         }
     }
 
+    // Keyboard handling
+    // =========================
+
+    /// <summary>
+    /// Enter => Confirm
+    /// Escape => Cancel
+    /// </summary>
     private async Task HandleKeyDown(KeyboardEventArgs e)
     {
         // Enter => gem/bekræft
@@ -121,6 +129,9 @@
             await OnEscape();
     }
     
+    // =========================
+    // Actions
+    // =========================
     private Task OnEnter() => Login();
     private Task OnEscape() { Hide(); return Task.CompletedTask; }
 

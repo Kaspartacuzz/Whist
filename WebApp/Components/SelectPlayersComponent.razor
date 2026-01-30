@@ -1,4 +1,5 @@
 @using Core
+@using Microsoft.AspNetCore.Components.Web
 
 @* =========================================================
    SelectPlayersComponent
@@ -21,7 +22,9 @@
 @if (true)
 {
     @* Backdrop: fast overlay der dækker hele skærmen *@
-    <div class="modal-backdrop">
+    <div class="modal-backdrop"
+         tabindex="0"
+         @onkeydown="HandleKeyDown">
 
         @* Modal container:
            Indeholder titel, valg af vindere/tabere og actions *@
@@ -111,7 +114,7 @@
                - Bekræft => validerer kombinationen og kalder OnConfirm
                - Annuller => kalder OnCancel *@
             <div class="modal-actions">
-                <button class="modal-btn primary" @onclick="Confirm">Bekræft</button>
+                <button @ref="ConfirmButtonRef" class="modal-btn primary" @onclick="Confirm">Bekræft</button>
                 <button class="modal-btn cancel" @onclick="Close">Annuller</button>
             </div>
 
@@ -154,6 +157,10 @@
     /// <summary>Selvmakker kan markeres som vinder/taber i normal mode.</summary>
     private bool IsSelfmakkerWinner = false;
     private bool IsSelfmakkerLoser = false;
+    
+    // Fokus-håndtering (så Enter virker direkte)
+    private ElementReference ConfirmButtonRef;
+    private bool _shouldFocusConfirmButton;
 
     // =========================
     // Model til UI-valg
@@ -382,4 +389,37 @@
                 p.IsWinner = false;
         }
     }
+    
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try { await ConfirmButtonRef.FocusAsync(); } catch { }
+        }
+    }
+
+    // Keyboard handling
+    // =========================
+
+    /// <summary>
+    /// Enter => Confirm
+    /// Escape => Cancel
+    /// </summary>
+    private async Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await Confirm();
+        }
+        else if (e.Key == "Escape")
+        {
+            await Close();
+        }
+    }
+    
+    // =========================
+    // Actions
+    // =========================
+    private Task OnEnter() => Confirm();
+    private Task OnEscape() { Close(); return Task.CompletedTask; }
 }

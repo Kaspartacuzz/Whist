@@ -1,4 +1,5 @@
 @using Core
+@using Microsoft.AspNetCore.Components.Web
 @inject WebApp.Service.RuleServices.IRuleService RuleService
 
 @* =========================================================
@@ -14,7 +15,10 @@
 {
     @* Backdrop (mørk/sløret baggrund)
        Klik på baggrunden lukker modal (hurtigt og brugervenligt) *@
-    <div class="modal-backdrop" @onclick="Close">
+    <div class="modal-backdrop" 
+         tabindex="0"
+         @onkeydown="HandleKeyDown"
+         @onclick="Close">
 
         @* Modal-boxen:
            stopPropagation gør at klik inde i boksen ikke lukker modal *@
@@ -45,7 +49,7 @@
                - Primær knap gemmer (Submit)
                - Cancel lukker modal uden at gemme *@
             <div class="modal-actions">
-                <button class="modal-btn primary" @onclick="Submit">
+                <button @ref="ConfirmButtonRef" class="modal-btn primary" @onclick="Submit">
                     @(RuleToEdit is null ? "Tilføj regel" : "Gem ændringer")
                 </button>
 
@@ -70,6 +74,10 @@
 
     // Fejlbesked fra validering (vises i UI)
     private string? ValidationErrorMessage;
+    
+    // Fokus-håndtering (så Enter virker direkte)
+    private ElementReference ConfirmButtonRef;
+    private bool _shouldFocusConfirmButton;
 
     // =========================
     // Parameters / callbacks
@@ -106,7 +114,8 @@
         }
 
         showModal = true;
-
+        _shouldFocusConfirmButton = true;
+        
         // Vigtigt når Show() kaldes udefra via @ref
         StateHasChanged();
     }
@@ -163,4 +172,38 @@
 
         Close();
     }
+    
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        // Når modalen åbner, fokusér "Ja"-knappen én gang
+        if (_shouldFocusConfirmButton)
+        {
+            _shouldFocusConfirmButton = false;
+            try { await ConfirmButtonRef.FocusAsync(); } catch { }
+        }
+    }
+
+    // Keyboard handling
+    // =========================
+
+    /// <summary>
+    /// Enter => Confirm
+    /// Escape => Cancel
+    /// </summary>
+    private async Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        // Enter => gem/bekræft
+        if (e.Key == "Enter")
+            await OnEnter();
+
+        // Escape => annuller/luk
+        else if (e.Key == "Escape")
+            await OnEscape();
+    }
+    
+    // =========================
+    // Actions
+    // =========================
+    private Task OnEnter() => Submit();
+    private Task OnEscape() { Close(); return Task.CompletedTask; }
 }

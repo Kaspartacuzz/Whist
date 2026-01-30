@@ -2,6 +2,7 @@
 @using System.Globalization
 @using Core
 @using WebApp.Components
+@using Microsoft.AspNetCore.Components.Web
 
 @inject Service.CalendarServices.ICalendarService CalendarService
 @inject Service.AuthServices.IAuthService AuthService
@@ -45,7 +46,9 @@
 </div>
 
 <!-- Kalender grid -->
-<div class="calendar-grid">
+<div class="calendar-grid"
+     tabindex="0"
+     @onkeydown="HandleKeyDown">
     @foreach (var day in DayHeaders)
     {
         <div class="day-header">@day</div>
@@ -83,10 +86,13 @@
             </h3>
 
             <textarea class="modal-input"
-                      rows="4"
-                      maxlength="100"
-                      @bind="NewNote"
-                      placeholder="Skriv note eller begivenhed her..."></textarea>
+                rows="4"
+                maxlength="100"
+                @bind="NewNote"
+                @bind:event="oninput"
+                @onkeydown="OnNoteKeyDown"
+                placeholder="Skriv note eller begivenhed her..."></textarea>
+
             
             @* Valideringsfejl (vises kun hvis den er sat) *@
             @if (!string.IsNullOrWhiteSpace(ValidationErrorMessage))
@@ -95,14 +101,9 @@
             }
 
             <div class="modal-actions">
-                <button class="modal-btn primary" @onclick="SaveNote">
+                <button @ref="ConfirmButtonRef" class="modal-btn primary" @onclick="SaveNote">
                     @(EventDates.ContainsKey(SelectedDate.Value.Date) ? "Gem ændringer" : "Tilføj til kalender")
                 </button>
-
-                @if (EventDates.ContainsKey(SelectedDate.Value.Date))
-                {
-                    <button class="modal-btn danger" @onclick="() => RequestDelete(SelectedDate.Value)">Slet</button>
-                }
 
                 <button class="modal-btn cancel" @onclick="CloseModal">Annuller</button>
             </div>
@@ -242,6 +243,10 @@
     
     // Fejlbesked fra validering (vises i UI)
     private string? ValidationErrorMessage;
+    
+    // Fokus-håndtering (så Enter virker direkte)
+    private ElementReference ConfirmButtonRef;
+    private bool _shouldFocusConfirmButton;
 
     // ------------------------------------------------------------
     // Kalender data
@@ -336,7 +341,9 @@
         EventDates = allEvents
             .GroupBy(e => e.Date.ToLocalTime().Date)
             .ToDictionary(g => g.Key, g => g.First().Note);
-
+        
+        _shouldFocusConfirmButton = true;
+        
         StateHasChanged();
     }
 
@@ -389,6 +396,8 @@
             ValidationErrorMessage = "Regeltekst må maks være 100 tegn.";
             return;
         }
+        
+        
 
         // --- Gem ---
         if (calendar is not null)
@@ -477,4 +486,60 @@
     private void ToggleShowAllPastEvents() => ShowAllPastEvents = !ShowAllPastEvents;
 
     private void ToggleShowAllUpcomingEvents() => ShowAllUpcomingEvents = !ShowAllUpcomingEvents;
+    
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        // Når modalen åbner, fokusér "Ja"-knappen én gang
+        if (_shouldFocusConfirmButton)
+        {
+            _shouldFocusConfirmButton = false;
+            try { await ConfirmButtonRef.FocusAsync(); } catch { }
+        }
+    }
+
+    // Keyboard handling
+    // =========================
+
+    /// <summary>
+    /// Enter => Confirm
+    /// Escape => Cancel
+    /// </summary>
+    private async Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        // Enter => gem/bekræft
+        if (e.Key == "Enter")
+            await OnEnter();
+
+        // Escape => annuller/luk
+        else if (e.Key == "Escape")
+            await OnEscape();
+    }
+    
+    /// <summary>
+    /// Enter of escape i note
+    /// </summary>
+    private async Task OnNoteKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Escape")
+        {
+            await OnEscape(); // din cancel/luk
+            return;
+        }
+        
+        if (e.Key == "Enter")
+        {
+            // Ellers: Enter = gem/confirm
+            await OnEnter();
+            
+            // Hvis du vil tillade ny linje, så brug fx Shift+Enter til newline:
+            if (e.ShiftKey)
+                return; // lad browseren lave newline
+        }
+    }
+    
+    // =========================
+    // Actions
+    // =========================
+    private Task OnEnter() => SaveNote();
+    private Task OnEscape() { CloseModal(); return Task.CompletedTask; }
 }

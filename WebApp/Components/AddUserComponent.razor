@@ -1,6 +1,7 @@
 @using System.ComponentModel.DataAnnotations
 @using Core
 @using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Web
 
 @inject Service.IUserService UserService
 @inject Service.UploadServices.IUploadService UploadService
@@ -17,7 +18,10 @@
 @if (showModal)
 {
     @* Backdrop: klik udenfor lukker modal (samme UX som dine andre modals) *@
-    <div class="modal-backdrop" @onclick="Close">
+    <div class="modal-backdrop" 
+         tabindex="0"
+         @onkeydown="HandleKeyDown"
+         @onclick="Close">
 
         @* Modal container: stopPropagation gør at klik i boksen ikke lukker modal *@
         <div class="modal-container" @onclick:stopPropagation="true">
@@ -118,7 +122,7 @@
                - Primær knap gemmer (CreateUser)
                - Cancel lukker uden at gemme *@
             <div class="modal-actions">
-                <button class="modal-btn primary" @onclick="CreateUser">
+                <button @ref="ConfirmButtonRef" class="modal-btn primary" @onclick="CreateUser">
                     @(UserToEdit is null ? "Opret bruger" : "Gem ændringer")
                 </button>
 
@@ -156,6 +160,10 @@
 
     // Validering
     private string? ValidationErrorMessage;
+    
+    // Fokus-håndtering (så Enter virker direkte)
+    private ElementReference ConfirmButtonRef;
+    private bool _shouldFocusConfirmButton;
 
     // =========================
     // Callback til parent
@@ -221,6 +229,8 @@
         }
 
         showModal = true;
+        _shouldFocusConfirmButton = true;
+        
         StateHasChanged(); // vigtigt når Show() kaldes udefra via @ref
         return Task.CompletedTask;
     }
@@ -378,4 +388,38 @@
 
         Close();
     }
+    
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        // Når modalen åbner, fokusér "Ja"-knappen én gang
+        if (_shouldFocusConfirmButton)
+        {
+            _shouldFocusConfirmButton = false;
+            try { await ConfirmButtonRef.FocusAsync(); } catch { }
+        }
+    }
+
+    // Keyboard handling
+    // =========================
+
+    /// <summary>
+    /// Enter => Confirm
+    /// Escape => Cancel
+    /// </summary>
+    private async Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        // Enter => gem/bekræft
+        if (e.Key == "Enter")
+            await OnEnter();
+
+        // Escape => annuller/luk
+        else if (e.Key == "Escape")
+            await OnEscape();
+    }
+    
+    // =========================
+    // Actions
+    // =========================
+    private Task OnEnter() => CreateUser();
+    private Task OnEscape() { Close(); return Task.CompletedTask; }
 }
