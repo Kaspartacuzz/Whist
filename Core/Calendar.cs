@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace Core;
 
 /// <summary>
@@ -13,6 +15,7 @@ public class Calendar
     public DateTime Date { get; set; }
 
     /// <summary>Tekst/nota for begivenheden.</summary>
+    [MaxLength(100)]
     public string Note { get; set; } = "";
 
     /// <summary>

@@ -84,8 +84,15 @@
 
             <textarea class="modal-input"
                       rows="4"
+                      maxlength="100"
                       @bind="NewNote"
                       placeholder="Skriv note eller begivenhed her..."></textarea>
+            
+            @* Valideringsfejl (vises kun hvis den er sat) *@
+            @if (!string.IsNullOrWhiteSpace(ValidationErrorMessage))
+            {
+                <div style="color: red; font-size: 0.9rem;">@ValidationErrorMessage</div>
+            }
 
             <div class="modal-actions">
                 <button class="modal-btn primary" @onclick="SaveNote">
@@ -232,6 +239,9 @@
     private int idToDelete;
     private DateTime dateToDelete;
     private ConfirmDeleteComponent? confirmComponent;
+    
+    // Fejlbesked fra validering (vises i UI)
+    private string? ValidationErrorMessage;
 
     // ------------------------------------------------------------
     // Kalender data
@@ -338,6 +348,8 @@
     {
         if (CurrentUser is null)
             return;
+        
+        ValidationErrorMessage = null;
 
         SelectedDate = date;
         NewNote = EventDates.TryGetValue(date.Date, out var note) ? note : "";
@@ -349,20 +361,41 @@
         SelectedDate = null;
         NewNote = "";
         ShowNoteModal = false;
+        ValidationErrorMessage = null;
     }
 
     private async Task SaveNote()
     {
         if (!SelectedDate.HasValue)
             return;
+        
+        ValidationErrorMessage = null;
 
         var calendar = new Core.Calendar
         {
             Date = SelectedDate.Value.Date,
             Note = NewNote
         };
+        
+        // --- Validering (hurtig og tydelig) ---
+        if (string.IsNullOrWhiteSpace(calendar.Note))
+        {
+            ValidationErrorMessage = "Note er påkrævet.";
+            return;
+        }
 
-        await CalendarService.Save(calendar);
+        if (calendar.Note.Length > 100)
+        {
+            ValidationErrorMessage = "Regeltekst må maks være 100 tegn.";
+            return;
+        }
+
+        // --- Gem ---
+        if (calendar is not null)
+        {
+            await CalendarService.Save(calendar);
+        }
+        
         await LoadEvents();
 
         CloseModal();
