@@ -22,7 +22,10 @@
 
         @* Modal-boxen:
            stopPropagation gør at klik inde i boksen ikke lukker modal *@
-        <div class="modal-container" @onclick:stopPropagation="true">
+        <div class="modal-container" 
+             tabindex="0"
+             @onkeydown="HandleKeyDown"
+             @onclick:stopPropagation="true">
 
             @* Titel skifter mellem opret og redigér alt efter om RuleToEdit er sat *@
             <h3 class="modal-title">
@@ -176,7 +179,7 @@
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         // Når modalen åbner, fokusér "Ja"-knappen én gang
-        if (_shouldFocusConfirmButton)
+        if (_shouldFocusConfirmButton && showModal)
         {
             _shouldFocusConfirmButton = false;
             try { await ConfirmButtonRef.FocusAsync(); } catch { }
@@ -192,6 +195,8 @@
     /// </summary>
     private async Task HandleKeyDown(KeyboardEventArgs e)
     {
+        if (!showModal) return;
+        
         // Enter => gem/bekræft
         if (e.Key == "Enter")
             await OnEnter();
@@ -207,3 +212,8 @@
     private Task OnEnter() => Submit();
     private Task OnEscape() { Close(); return Task.CompletedTask; }
 }
+
+linje:
+25
+182
+198
