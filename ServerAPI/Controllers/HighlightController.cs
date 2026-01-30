@@ -1,4 +1,5 @@
 using Core;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ServerAPI.Repositories.Highlights;
 
@@ -77,6 +78,7 @@ public class HighlightController : ControllerBase
     /// Opretter et nyt highlight.
     /// </summary>
     [HttpPost]
+    [Authorize]
     public async Task<ActionResult<Highlight>> Create(Highlight highlight)
     {
         var created = await _repository.Add(highlight);
@@ -89,6 +91,7 @@ public class HighlightController : ControllerBase
     /// Opdaterer et eksisterende highlight.
     /// </summary>
     [HttpPut("{id}")]
+    [Authorize]
     public async Task<IActionResult> Update(int id, [FromBody] Highlight highlight)
     {
         // Beskytter mod mismatch mellem url og body.
@@ -104,6 +107,7 @@ public class HighlightController : ControllerBase
     /// Hvis highlight har et billede (ImageUrl), forsøger vi også at slette filen fra wwwroot.
     /// </summary>
     [HttpDelete("{id}")]
+    [Authorize]
     public async Task<IActionResult> Delete(int id)
     {
         var highlight = await _repository.GetById(id);

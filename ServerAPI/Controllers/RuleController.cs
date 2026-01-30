@@ -1,4 +1,5 @@
 using Core;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ServerAPI.Repositories.Rules;
 
@@ -45,6 +46,7 @@ public class RuleController : ControllerBase
     /// Returnerer 400 hvis tekst mangler.
     /// </summary>
     [HttpPost]
+    [Authorize]
     public async Task<ActionResult<Rule>> Add([FromBody] Rule rule)
     {
         if (string.IsNullOrWhiteSpace(rule.Text))
@@ -62,6 +64,7 @@ public class RuleController : ControllerBase
     /// Returnerer 400 hvis id i route ikke matcher rule.Id.
     /// </summary>
     [HttpPut("{id:int}")]
+    [Authorize]
     public async Task<IActionResult> Update(int id, [FromBody] Rule rule)
     {
         if (id != rule.Id)
@@ -75,6 +78,7 @@ public class RuleController : ControllerBase
     /// Sletter en regel ud fra id.
     /// </summary>
     [HttpDelete("{id:int}")]
+    [Authorize]
     public async Task<IActionResult> Delete(int id)
     {
         await _repo.Delete(id);

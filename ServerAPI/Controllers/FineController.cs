@@ -1,4 +1,5 @@
 using Core;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ServerAPI.Repositories.Fines;
 
@@ -76,6 +77,7 @@ public class FineController : ControllerBase
     /// Opretter en ny bøde.
     /// </summary>
     [HttpPost]
+    [Authorize]
     public IActionResult Add(Fine fine)
     {
         _fineRepository.AddFine(fine);
@@ -86,6 +88,7 @@ public class FineController : ControllerBase
     /// Opdaterer en eksisterende bøde (fx IsPaid/kommentar/beløb).
     /// </summary>
     [HttpPut]
+    [Authorize]
     public IActionResult Update(Fine fine)
     {
         _fineRepository.Update(fine);
@@ -96,6 +99,7 @@ public class FineController : ControllerBase
     /// Sletter en bøde for en given bruger.
     /// </summary>
     [HttpDelete("user/{userId}/{id}")]
+    [Authorize]
     public IActionResult Delete(int userId, int id)
     {
         _fineRepository.Delete(userId, id);

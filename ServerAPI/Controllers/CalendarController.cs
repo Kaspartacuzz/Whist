@@ -1,4 +1,5 @@
 using Core;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ServerAPI.Repositories.Calendars;
 
@@ -34,6 +35,7 @@ public class CalendarController : ControllerBase
     /// Repository håndterer selv om det er add/update.
     /// </summary>
     [HttpPost]
+    [Authorize]
     public async Task<IActionResult> Save(Calendar calendar)
     {
         await _repo.AddOrUpdate(calendar);
@@ -42,6 +44,7 @@ public class CalendarController : ControllerBase
 
     /// <summary>Sletter et event ud fra id.</summary>
     [HttpDelete("{id:int}")]
+    [Authorize]
     public async Task<IActionResult> Delete(int id)
     {
         await _repo.Delete(id);

@@ -1,4 +1,5 @@
 using Core;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ServerAPI.Repositories;
 
@@ -58,6 +59,7 @@ public class UserController : ControllerBase
     /// Opretter en ny bruger.
     /// </summary>
     [HttpPost]
+    [Authorize]
     public IActionResult Add([FromBody] User user)
     {
         _repo.AddUser(user);
@@ -69,6 +71,7 @@ public class UserController : ControllerBase
     /// hvis brugeren har ImageUrl sat.
     /// </summary>
     [HttpDelete("{id:int}")]
+    [Authorize]
     public IActionResult Delete(int id)
     {
         var user = _repo.GetById(id);
@@ -88,6 +91,7 @@ public class UserController : ControllerBase
     /// Returnerer 400 hvis id i URL ikke matcher body.Id.
     /// </summary>
     [HttpPut("{id:int}")]
+    [Authorize]
     public async Task<IActionResult> UpdateUser(int id, [FromBody] User updatedUser)
     {
         if (id != updatedUser.Id)

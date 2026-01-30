@@ -1,4 +1,5 @@
 using Core;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ServerAPI.Repositories.Points;
 
@@ -44,6 +45,7 @@ public class PointController : ControllerBase
     /// Tilføjer en ny point entry.
     /// </summary>
     [HttpPost]
+    [Authorize]
     public async Task<ActionResult> Add(PointEntry point)
     {
         await _repository.Add(point);
@@ -54,6 +56,7 @@ public class PointController : ControllerBase
     /// Sletter en enkelt point entry ud fra id.
     /// </summary>
     [HttpDelete("{id}")]
+    [Authorize]
     public async Task<ActionResult> Delete(int id)
     {
         await _repository.Delete(id);
@@ -65,6 +68,7 @@ public class PointController : ControllerBase
     /// Bruges når points konverteres til bøder.
     /// </summary>
     [HttpDelete("all")]
+    [Authorize]
     public async Task<ActionResult> DeleteAll()
     {
         await _repository.DeleteAll();

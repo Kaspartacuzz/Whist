@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ServerAPI.Controllers;
@@ -32,6 +33,7 @@ public class UploadController : ControllerBase
     /// Feltet skal hedde "file".
     /// </summary>
     [HttpPost("image")]
+    [Authorize]
     public async Task<IActionResult> UploadImage([FromForm] IFormFile file, CancellationToken ct)
     {
         // 1) Basis validering
