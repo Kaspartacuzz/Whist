@@ -44,9 +44,11 @@
                 <td class="cell-red very-high">@row.Name</td>
 
                 @* Klik på point åbner spiller-valg (modal) *@
-                <td class="cell-red very-high clickable" @onclick="() => OnPointClick(row.Point)">
+                <td class="cell-red very-high @(CanInteract ? "clickable" : "disabled")"
+                    @onclick="() => OnPointClick(row.Point)">
                     @row.Point
                 </td>
+
 
                 <td class="cell-red very-high">@row.BeatenBy</td>
             </tr>
@@ -78,6 +80,10 @@
     /// </summary>
     [Parameter] public EventCallback PointsChanged { get; set; }
 
+    /// <summary>
+    /// CanInteract er true, hvis brugeren er logget ind og har adgang til admin-siden.
+    /// </summary>
+    [Parameter] public bool CanInteract { get; set; }
     // =========================
     // UI-state
     // =========================
@@ -126,6 +132,9 @@
     /// </summary>
     private async Task OnPointClick(int point)
     {
+        if (!CanInteract)
+            return;
+        
         SelectedPoint = point;
 
         // Hent spillere (for jer: U=4 => i praksis O(1))

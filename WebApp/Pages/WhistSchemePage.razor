@@ -77,7 +77,7 @@
         </div>
 
         @* Når sol-point ændres, genindlæses pointdata via LoadPoints *@
-        <SunSchemeComponent PointsChanged="LoadPoints" />
+        <SunSchemeComponent PointsChanged="LoadPoints" CanInteract="@(_currentUser is not null)"/>
     </div>
 
     @* Pointoversigt pr. spiller *@
